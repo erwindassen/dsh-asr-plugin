@@ -1545,19 +1545,20 @@ window.__ModuleLoader__.load({
 		* view of the recording state.
 		*/
 		function RecognizerSelect(props) {
-			const { settings, translate } = props;
+			const { revision, settings, translate } = props;
 			const snapshot = settings?.getSnapshot();
 			const engine = engineOf(snapshot?.value);
 			const selectable = settings !== void 0 && snapshot?.writable === true && snapshot.status === "ready";
 			const label = translate("panel.recognizer");
 			const change = (value) => {
 				const next = value === "parakeet" ? "parakeet" : "paraformer";
-				if (settings === void 0 || !selectable || next === engine || snapshot?.revision === void 0) return;
+				const fence = revision ?? snapshot?.revision;
+				if (settings === void 0 || !selectable || next === engine || fence === void 0) return;
 				settings.mutate([{
 					op: "set",
 					path: ["asr_engine"],
 					value: next
-				}], snapshot.revision).catch(() => void 0);
+				}], fence).catch(() => void 0);
 			};
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
 				className: RecordingPanel_module_default.recognizer,
@@ -1840,6 +1841,7 @@ window.__ModuleLoader__.load({
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingControls, { ...props }),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: RecordingPanel_module_default.spacer }),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecognizerSelect, {
+							revision: props.settingsRevision,
 							settings: props.settings,
 							translate
 						}),
@@ -2221,6 +2223,7 @@ window.__ModuleLoader__.load({
 				translate,
 				view: snapshot.view?.recordingStartedAtMs === null ? null : snapshot.view
 			});
+			const settingsSnapshot = (0, react.useSyncExternalStore)((0, react.useCallback)((listener) => settings?.subscribe(listener) ?? (() => void 0), [settings]), (0, react.useCallback)(() => settings?.getSnapshot() ?? null, [settings]));
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingPanelView, {
 				failure: snapshot.error ?? trackError(snapshot.view),
 				join,
@@ -2231,6 +2234,7 @@ window.__ModuleLoader__.load({
 				preview: snapshot.preview,
 				run,
 				settings,
+				settingsRevision: settingsSnapshot?.revision,
 				translate,
 				view: snapshot.view
 			});

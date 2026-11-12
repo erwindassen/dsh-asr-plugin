@@ -11,6 +11,7 @@ export interface PanelViewProps {
     readonly preview: readonly RecordingRpcSegment[];
     readonly run: (payload: RecordingRpcControlPayload) => Promise<void>;
     readonly settings?: ConfigForm<Record<string, unknown>> | undefined;
+    readonly settingsRevision?: number | undefined;
     readonly translate: Translate;
     readonly view: RecordingRpcView | null;
 }
