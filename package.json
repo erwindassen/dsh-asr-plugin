@@ -14,7 +14,7 @@
     "url": "https://github.com/huliux",
     "email": "dasenrising@gmail.com"
   },
-  "version": "0.1.6-fork.2",
+  "version": "0.1.6-fork.3",
   "license": "Apache-2.0",
   "type": "module",
   "publishConfig": {
@@ -86,7 +86,6 @@
       "patch": "./cordis.patch.yml"
     }
   },
-  "packageManager": "pnpm@10.33.2",
   "engines": {
     "node": ">=24.0.0 <25",
     "dsh": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0"
@@ -97,42 +96,6 @@
   "cpu": [
     "arm64"
   ],
-  "scripts": {
-    "build:site": "node scripts/build-site.mjs",
-    "build": "node scripts/clean-build.mjs && tsc -p tsconfig.build.json && tsc -p tsconfig.client.build.json && tsdown --config tsdown.config.ts && node scripts/copy-build-assets.mjs",
-    "build:closed-pilot": "pnpm run build && node scripts/materialize-closed-pilot-natives.mjs && node scripts/build-recording-helper.mjs --public-release && node scripts/verify-closed-pilot-pack.mjs",
-    "pack:release": "node scripts/pack-public-release.mjs",
-    "build:model-pack": "pnpm run build && node scripts/build-model-pack.mjs",
-    "build:native:fbank": "node scripts/build-fbank.mjs",
-    "build:native:hcluster": "node scripts/build-hcluster.mjs",
-    "build:native:recording-helper": "node scripts/build-recording-helper.mjs",
-    "check": "pnpm run typecheck && pnpm run test && pnpm run build",
-    "probe:p0-01": "DSH_RUN_NATIVE_ADAPTERS=1 vitest run tests/integration/native-adapters.spec.ts",
-    "probe:p0-02": "pnpm run build && node scripts/probe-vad.mjs",
-    "probe:p0-03": "pnpm run build && node scripts/probe-funasr.mjs",
-    "probe:p0-04": "pnpm run build && node scripts/probe-diarization.mjs",
-    "probe:p0-05": "pnpm run build && node scripts/probe-workers.mjs data/p0-wav/worker-smoke.wav",
-    "probe:p0-05:payload": "pnpm run build && node scripts/probe-worker-payload.mjs",
-    "probe:p0-05:cancel": "pnpm run build && node scripts/probe-worker-cancellation.mjs data/p0-wav/worker-smoke.wav",
-    "probe:p0-07:config": "node scripts/probe-dsh-config.mjs",
-    "probe:p0-07": "pnpm run build && pnpm run probe:p0-07:config && DSH_RUN_DSH_ASSEMBLED=1 vitest run tests/integration/dsh-assembled.spec.ts",
-    "probe:native:fbank": "pnpm run build:closed-pilot && pnpm run build:native:fbank && DSH_RUN_FBANK_REBUILD=1 vitest run tests/integration/fbank-rebuild.spec.ts",
-    "probe:native:recording-helper": "pnpm run build:native:recording-helper && DSH_RUN_RECORDING_HELPER_REBUILD=1 vitest run tests/integration/recording-helper-rebuild.spec.ts",
-    "probe:native:recording-helper:release": "pnpm run build:closed-pilot && DSH_RUN_PUBLIC_HELPER_RELEASE=1 vitest run tests/integration/public-recording-helper-release.spec.ts",
-    "probe:p1a-02": "DSH_RUN_MANAGED_AUDIO_REAL=1 vitest run tests/integration/managed-audio-real.spec.ts",
-    "probe:p1a-04": "pnpm run build:closed-pilot && DSH_RUN_P1A_APPLICATION_REAL=1 vitest run tests/integration/meeting-application-real.spec.ts",
-    "probe:p1a-05": "pnpm run build:closed-pilot && node scripts/probe-host-restart.mjs && vitest run tests/integration/meeting-application-lifecycle.spec.ts",
-    "probe:p1a-06": "pnpm run build:closed-pilot && DSH_RUN_P1A_PLUGIN_BUILT=1 vitest run tests/integration/plugin-assembly.spec.ts tests/integration/meeting-tools.spec.ts",
-    "probe:p1b-01:sources": "pnpm run build && node scripts/probe-public-assets.mjs",
-    "probe:p1b-03": "pnpm run build && node scripts/probe-data-root-lease.mjs",
-    "probe:p1b": "pnpm run build:closed-pilot && node scripts/probe-p1b.mjs",
-    "probe:p1c": "node scripts/probe-p1c.mjs",
-    "probe:mre04:disk-full": "DSH_RUN_EXPORT_DISK_FULL=1 vitest run tests/integration/transcript-export-disk-full-real.spec.ts",
-    "stage:assets": "pnpm run build && node scripts/stage-assets.mjs",
-    "test": "vitest run --passWithNoTests",
-    "test:workers:real": "pnpm run build && DSH_RUN_WORKERS=1 vitest run tests/integration/workers-real.spec.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit"
-  },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.1.0",
     "@deepseek-ai/cordis-plugin-group": "1.1.0",
@@ -183,7 +146,7 @@
     "@deepseek-ai/dsh-home-paths": "0.2.2-rc.1",
     "@deepseek-ai/schemastery": "3.19.0",
     "onnxruntime-node": "1.19.2",
-    "sherpa-onnx-node": "1.13.8"
+    "sherpa-onnx-node": "^1.13.8"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.4 || ~4.1.0",
@@ -209,5 +172,41 @@
   },
   "bugs": {
     "url": "https://github.com/huliux/dsh-asr-plugin/issues"
+  },
+  "scripts": {
+    "build:site": "node scripts/build-site.mjs",
+    "build": "node scripts/clean-build.mjs && tsc -p tsconfig.build.json && tsc -p tsconfig.client.build.json && tsdown --config tsdown.config.ts && node scripts/copy-build-assets.mjs",
+    "build:closed-pilot": "pnpm run build && node scripts/materialize-closed-pilot-natives.mjs && node scripts/build-recording-helper.mjs --public-release && node scripts/verify-closed-pilot-pack.mjs",
+    "pack:release": "node scripts/pack-public-release.mjs",
+    "build:model-pack": "pnpm run build && node scripts/build-model-pack.mjs",
+    "build:native:fbank": "node scripts/build-fbank.mjs",
+    "build:native:hcluster": "node scripts/build-hcluster.mjs",
+    "build:native:recording-helper": "node scripts/build-recording-helper.mjs",
+    "check": "pnpm run typecheck && pnpm run test && pnpm run build",
+    "probe:p0-01": "DSH_RUN_NATIVE_ADAPTERS=1 vitest run tests/integration/native-adapters.spec.ts",
+    "probe:p0-02": "pnpm run build && node scripts/probe-vad.mjs",
+    "probe:p0-03": "pnpm run build && node scripts/probe-funasr.mjs",
+    "probe:p0-04": "pnpm run build && node scripts/probe-diarization.mjs",
+    "probe:p0-05": "pnpm run build && node scripts/probe-workers.mjs data/p0-wav/worker-smoke.wav",
+    "probe:p0-05:payload": "pnpm run build && node scripts/probe-worker-payload.mjs",
+    "probe:p0-05:cancel": "pnpm run build && node scripts/probe-worker-cancellation.mjs data/p0-wav/worker-smoke.wav",
+    "probe:p0-07:config": "node scripts/probe-dsh-config.mjs",
+    "probe:p0-07": "pnpm run build && pnpm run probe:p0-07:config && DSH_RUN_DSH_ASSEMBLED=1 vitest run tests/integration/dsh-assembled.spec.ts",
+    "probe:native:fbank": "pnpm run build:closed-pilot && pnpm run build:native:fbank && DSH_RUN_FBANK_REBUILD=1 vitest run tests/integration/fbank-rebuild.spec.ts",
+    "probe:native:recording-helper": "pnpm run build:native:recording-helper && DSH_RUN_RECORDING_HELPER_REBUILD=1 vitest run tests/integration/recording-helper-rebuild.spec.ts",
+    "probe:native:recording-helper:release": "pnpm run build:closed-pilot && DSH_RUN_PUBLIC_HELPER_RELEASE=1 vitest run tests/integration/public-recording-helper-release.spec.ts",
+    "probe:p1a-02": "DSH_RUN_MANAGED_AUDIO_REAL=1 vitest run tests/integration/managed-audio-real.spec.ts",
+    "probe:p1a-04": "pnpm run build:closed-pilot && DSH_RUN_P1A_APPLICATION_REAL=1 vitest run tests/integration/meeting-application-real.spec.ts",
+    "probe:p1a-05": "pnpm run build:closed-pilot && node scripts/probe-host-restart.mjs && vitest run tests/integration/meeting-application-lifecycle.spec.ts",
+    "probe:p1a-06": "pnpm run build:closed-pilot && DSH_RUN_P1A_PLUGIN_BUILT=1 vitest run tests/integration/plugin-assembly.spec.ts tests/integration/meeting-tools.spec.ts",
+    "probe:p1b-01:sources": "pnpm run build && node scripts/probe-public-assets.mjs",
+    "probe:p1b-03": "pnpm run build && node scripts/probe-data-root-lease.mjs",
+    "probe:p1b": "pnpm run build:closed-pilot && node scripts/probe-p1b.mjs",
+    "probe:p1c": "node scripts/probe-p1c.mjs",
+    "probe:mre04:disk-full": "DSH_RUN_EXPORT_DISK_FULL=1 vitest run tests/integration/transcript-export-disk-full-real.spec.ts",
+    "stage:assets": "pnpm run build && node scripts/stage-assets.mjs",
+    "test": "vitest run --passWithNoTests",
+    "test:workers:real": "pnpm run build && DSH_RUN_WORKERS=1 vitest run tests/integration/workers-real.spec.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit"
   }
 }

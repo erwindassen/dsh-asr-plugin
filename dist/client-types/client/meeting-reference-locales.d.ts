@@ -26,6 +26,10 @@ export declare const zh: {
     readonly "panel.move": "移动录音助手";
     readonly "panel.resize": "调整草稿面积";
     readonly "panel.reset": "恢复窗口内位置";
+    readonly "panel.recognizer": "识别语言";
+    readonly "panel.recognizerHint": "下一次录音使用的识别引擎。中文用 Paraformer，英语等欧洲语言用 Parakeet。";
+    readonly "panel.recognizerParaformer": "中文";
+    readonly "panel.recognizerParakeet": "英语 / 欧洲";
     readonly "panel.previewHint": "本次录音草稿 · 正式原稿请通过 @ 引用会议";
     readonly "panel.activity": "录音状态指示（不是声音音量）";
     readonly "panel.track.on": "采集中";
@@ -106,6 +110,10 @@ export declare const en: {
     "panel.move": string;
     "panel.resize": string;
     "panel.reset": string;
+    "panel.recognizer": string;
+    "panel.recognizerHint": string;
+    "panel.recognizerParaformer": string;
+    "panel.recognizerParakeet": string;
     "panel.previewHint": string;
     "panel.activity": string;
     "panel.track.on": string;

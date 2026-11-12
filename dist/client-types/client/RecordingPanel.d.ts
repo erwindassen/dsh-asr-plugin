@@ -1,4 +1,5 @@
 import type { ClientConnectionRpc } from "@deepseek-ai/dsh-client-connection/client";
+import type { ConfigForm } from "@deepseek-ai/dsh-client-ui-settings/client";
 import type { RecordingRpcControlPayload, RecordingRpcView } from "../recording/rpc-contract.js";
 import type { MeetingReferenceLocaleKey } from "./meeting-reference-locales.js";
 export type RecordingPendingAction = RecordingRpcControlPayload["action"] | "join" | null;
@@ -19,6 +20,7 @@ interface RecordingPanelProps {
     readonly locale: LocaleFace;
     readonly references: RecordingReferenceActions;
     readonly rpc: ClientConnectionRpc;
+    readonly settings?: ConfigForm<Record<string, unknown>>;
     readonly translate: Translate;
 }
 export declare function RecordingPanel(props: RecordingPanelProps): import("react/jsx-runtime").JSX.Element;
