@@ -1,0 +1,41 @@
+import type { Context as ClientContext } from "@deepseek-ai/cordis";
+import type { RecordingRpcView } from "../recording/rpc-contract.js";
+import type { RecordingRpcClient } from "./recording-rpc-client.js";
+export declare class MeetingReferenceCoordinator {
+    private readonly options;
+    private readonly lifetime;
+    private currentRecording;
+    private readonly insertions;
+    private readonly storage;
+    private readonly trackers;
+    private readonly unsubscribeSessions;
+    constructor(options: {
+        readonly client: RecordingRpcClient;
+        readonly ctx: ClientContext;
+        readonly storage?: Storage;
+        readonly translate: (key: "auto.current") => string;
+    });
+    recordingStarted(view: RecordingRpcView, sessionId?: string): Promise<void>;
+    observeRecording(view: RecordingRpcView | null): void;
+    join(view: RecordingRpcView | null): Promise<void>;
+    dispose(): void;
+    private addressSession;
+    private waitForSession;
+    private activateSession;
+    private attach;
+    private observeInput;
+    private adopt;
+    private ensureReference;
+    private doEnsureReference;
+    private insertOnce;
+    private insert;
+    private resolveIdentity;
+    private restoreMeeting;
+    private retireOtherMeetings;
+    private reconcileSessions;
+    private persistedEntries;
+    private inputFor;
+    private sessionExists;
+    private writeState;
+    private removeSession;
+}

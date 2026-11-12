@@ -1,0 +1,1 @@
+{"version":3,"file":"errors.js","sourceRoot":"","sources":["../../../src/asr/funasr/errors.ts"],"names":[],"mappings":"AAMA,MAAM,OAAO,WAAY,SAAQ,KAAK;IAC3B,IAAI,CAAkB;IAE/B,YAAY,IAAqB,EAAE,OAAe,EAAE,OAAsB;QACxE,KAAK,CAAC,OAAO,EAAE,OAAO,CAAC,CAAC;QACxB,IAAI,CAAC,IAAI,GAAG,aAAa,CAAC;QAC1B,IAAI,CAAC,IAAI,GAAG,IAAI,CAAC;IACnB,CAAC;CACF"}

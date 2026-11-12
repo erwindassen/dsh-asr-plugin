@@ -1,0 +1,15 @@
+import type { BeginDeletionInput, BeginRecordingFinalizationInput, BeginRetranscriptionInput, CompleteDeletionInput, CommitTranscriptInput, CreateImportInput, CreateRecordingInput, FinishRunInput, RecordManagedSourceInput, RecordRecordingStartedInput, RecordRecoveredRecordingSourceInput, RecordRecordingRecoveryFailureInput, RecordDeletionFailureInput } from "./types.js";
+export declare function validateCreateImport(input: CreateImportInput): void;
+export declare function validateCreateRecording(input: CreateRecordingInput): void;
+export declare function validateRecordRecordingStarted(input: RecordRecordingStartedInput): void;
+export declare function validateBeginRecordingFinalization(input: BeginRecordingFinalizationInput): void;
+export declare function validateRecordManagedSource(input: RecordManagedSourceInput): void;
+export declare function validateRecordRecoveredRecordingSource(input: RecordRecoveredRecordingSourceInput): void;
+export declare function validateRecordRecordingRecoveryFailure(input: RecordRecordingRecoveryFailureInput): void;
+export declare function validateCommitIdentity(input: CommitTranscriptInput): void;
+export declare function validateTranscriptCandidate(input: CommitTranscriptInput): void;
+export declare function validateFinishRun(input: FinishRunInput): void;
+export declare function validateBeginRetranscription(input: BeginRetranscriptionInput): void;
+export declare function validateBeginDeletion(input: BeginDeletionInput): void;
+export declare function validateRecordDeletionFailure(input: RecordDeletionFailureInput): void;
+export declare function validateCompleteDeletion(input: CompleteDeletionInput): void;

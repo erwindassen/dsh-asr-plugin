@@ -1,0 +1,1 @@
+{"version":3,"file":"errors.js","sourceRoot":"","sources":["../../src/diarization/errors.ts"],"names":[],"mappings":"AASA,MAAM,OAAO,gBAAiB,SAAQ,KAAK;IAChC,IAAI,CAAuB;IAEpC,YAAY,IAA0B,EAAE,OAAe,EAAE,OAAsB;QAC7E,KAAK,CAAC,OAAO,EAAE,OAAO,CAAC,CAAC;QACxB,IAAI,CAAC,IAAI,GAAG,kBAAkB,CAAC;QAC/B,IAAI,CAAC,IAAI,GAAG,IAAI,CAAC;IACnB,CAAC;CACF"}

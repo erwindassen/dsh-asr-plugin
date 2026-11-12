@@ -1,0 +1,1 @@
+{"version":3,"file":"managed-audio-error.js","sourceRoot":"","sources":["../../src/audio/managed-audio-error.ts"],"names":[],"mappings":"AAaA,MAAM,OAAO,iBAAkB,SAAQ,KAAK;IAE/B;IADX,YACW,IAA2B,EACpC,OAAe,EACf,OAAsB;QAEtB,KAAK,CAAC,OAAO,EAAE,OAAO,CAAC,CAAC;QAJf,SAAI,GAAJ,IAAI,CAAuB;QAKpC,IAAI,CAAC,IAAI,GAAG,mBAAmB,CAAC;IAClC,CAAC;CACF"}

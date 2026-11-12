@@ -1,0 +1,31 @@
+import type { BeginDeletionInput, BeginDeletionResult, BeginRecordingFinalizationInput, BeginRetranscriptionInput, BeginRetranscriptionResult, CompleteDeletionInput, CommitTranscriptInput, CommitTranscriptResult, CommittedTranscriptSlice, CommittedTranscriptSnapshot, CreateImportInput, CreateRecordingInput, FinishRunInput, FinishRunResult, GetCommittedTranscriptSliceInput, GetMeetingPageInput, ListMeetingReferenceRecordsInput, MeetingPage, MeetingRecord, RecordDeletionFailureInput, RecordManagedSourceInput, RecordManagedSourceResult, RecordRecordingStartedInput, RecordRecoveredRecordingSourceInput, RecordRecordingRecoveryFailureInput, SearchMeetingsInput, SearchMeetingsPage } from "./types.js";
+export interface MeetingRepository {
+    beginDeletion(input: BeginDeletionInput): BeginDeletionResult;
+    beginRecordingFinalization(input: BeginRecordingFinalizationInput): MeetingRecord;
+    beginRetranscription(input: BeginRetranscriptionInput): BeginRetranscriptionResult;
+    close(): void;
+    commitTranscript(input: CommitTranscriptInput): CommitTranscriptResult;
+    completeDeletion(input: CompleteDeletionInput): void;
+    createImport(input: CreateImportInput): void;
+    createRecording(input: CreateRecordingInput): MeetingRecord;
+    finishRun(input: FinishRunInput): FinishRunResult;
+    getMeeting(meetingId: string): MeetingRecord | null;
+    hasRecordingHistory(): boolean;
+    getCommittedTranscriptSlice(input: GetCommittedTranscriptSliceInput): CommittedTranscriptSlice;
+    getCommittedTranscriptSnapshot(meetingId: string): CommittedTranscriptSnapshot;
+    getMeetingPage(input: GetMeetingPageInput): MeetingPage;
+    listMeetingReferenceRecords(input: ListMeetingReferenceRecordsInput): readonly MeetingRecord[];
+    listDeletingMeetings(): readonly MeetingRecord[];
+    listRecordingsNeedingRecovery(): readonly MeetingRecord[];
+    recordDeletionFailure(input: RecordDeletionFailureInput): MeetingRecord;
+    recordManagedSource(input: RecordManagedSourceInput): RecordManagedSourceResult;
+    recordRecoveredRecordingSource(input: RecordRecoveredRecordingSourceInput): MeetingRecord;
+    recordRecordingRecoveryFailure(input: RecordRecordingRecoveryFailureInput): MeetingRecord;
+    recordRecordingStarted(input: RecordRecordingStartedInput): MeetingRecord;
+    reconcileOrphanedRuns(nowMs: number): number;
+    searchMeetings(input: SearchMeetingsInput): SearchMeetingsPage;
+}
+export declare function openMeetingRepository(filename: string): MeetingRepository;
+export type { AnchoredTranscriptSegment, BeginDeletionInput, BeginDeletionResult, BeginRecordingFinalizationInput, BeginRetranscriptionInput, BeginRetranscriptionResult, CommittedStatus, CommitTranscriptInput, CommitTranscriptResult, CommittedTranscriptSlice, CommittedTranscriptSnapshot, CompleteDeletionInput, CreateImportInput, CreateRecordingInput, FinishRunInput, FinishRunResult, GetCommittedTranscriptSliceInput, GetMeetingPageInput, ListMeetingReferenceRecordsInput, MeetingPage, MeetingRecord, MeetingSearchHit, MeetingSearchItem, MeetingStatus, RecordManagedSourceInput, RecordManagedSourceResult, RecordRecoveredRecordingSourceInput, RecordRecordingRecoveryFailureInput, RecordDeletionFailureInput, RunKind, SearchMeetingsInput, SearchMeetingsPage, SourceFormat, TranscriptSegment, } from "./types.js";
+export { MeetingRepositoryError } from "./errors.js";
+export type { MeetingRepositoryErrorCode } from "./errors.js";

@@ -1,0 +1,4 @@
+# The base bundle owns tools, jobs and subprocess providers.
+- insert:
+    - id: dsh-asr
+      name: '@huliux/dsh-asr-plugin'

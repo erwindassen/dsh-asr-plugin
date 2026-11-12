@@ -1,0 +1,216 @@
+import { createHash } from "node:crypto";
+import { constants } from "node:fs";
+import { lstat, open, readdir, } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import { modelSetFingerprint, modelPackAssets, modelPackFingerprint, parseModelPackManifest, } from "./model-pack.js";
+import { readSupplyChainManifest } from "./supply-chain.js";
+import { AssetVerificationError, assertAssetPathDirectories, mapAssetPathError, readAssetManifest, resolveAssetPath, } from "./verify-assets.js";
+import { failModelPackBuildInvalid, fileSystemErrorCode, } from "./model-pack-build-error.js";
+import { writeModelPackArchive } from "./model-pack-archive-writer.js";
+export { ModelPackBuildError } from "./model-pack-build-error.js";
+const MAX_LEGAL_FILES = 64;
+function compareText(left, right) {
+    return left < right ? -1 : left > right ? 1 : 0;
+}
+function failInvalid(message) {
+    return failModelPackBuildInvalid(message);
+}
+async function hashFile(handle, byteLength, assetId, signal) {
+    const hash = createHash("sha256");
+    let position = 0;
+    while (position < byteLength) {
+        signal?.throwIfAborted();
+        const chunk = Buffer.allocUnsafe(Math.min(1_024 * 1_024, byteLength - position));
+        const { bytesRead } = await handle.read(chunk, 0, chunk.byteLength, position);
+        if (bytesRead === 0)
+            break;
+        hash.update(chunk.subarray(0, bytesRead));
+        position += bytesRead;
+    }
+    signal?.throwIfAborted();
+    if (position !== byteLength) {
+        throw new AssetVerificationError("ASSET_SIZE_MISMATCH", `Asset changed during model pack build: ${assetId}`, assetId);
+    }
+    return hash.digest("hex");
+}
+async function openRegularFile(path, assetId) {
+    let handle;
+    try {
+        handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    }
+    catch (error) {
+        const mapped = mapAssetPathError(error, assetId);
+        if (mapped !== undefined)
+            throw mapped;
+        throw error;
+    }
+    const file = await handle.stat();
+    if (!file.isFile()) {
+        await handle.close();
+        throw new AssetVerificationError("ASSET_PATH_INVALID", `Asset is not a regular file: ${assetId}`, assetId);
+    }
+    return handle;
+}
+async function openModelFile(root, asset, signal) {
+    await assertAssetPathDirectories(root, asset);
+    const handle = await openRegularFile(resolveAssetPath(root, asset), asset.id);
+    try {
+        const file = await handle.stat();
+        if (file.size !== asset.byteLength) {
+            throw new AssetVerificationError("ASSET_SIZE_MISMATCH", `Asset size mismatch: ${asset.id}`, asset.id);
+        }
+        const sha256 = await hashFile(handle, file.size, asset.id, signal);
+        if (sha256 !== asset.sha256) {
+            throw new AssetVerificationError("ASSET_HASH_MISMATCH", `Asset hash mismatch: ${asset.id}`, asset.id);
+        }
+        return { assetId: asset.id, handle, ...asset };
+    }
+    catch (error) {
+        await handle.close();
+        throw error;
+    }
+}
+async function collectThirdPartyFiles(root, relativeDirectory) {
+    const directory = join(root, relativeDirectory);
+    try {
+        const entry = await lstat(directory);
+        if (entry.isSymbolicLink() || !entry.isDirectory()) {
+            failInvalid("Package legal material contains an invalid directory");
+        }
+    }
+    catch (error) {
+        if (relativeDirectory === "third_party" && fileSystemErrorCode(error) === "ENOENT")
+            return [];
+        throw error;
+    }
+    let entries;
+    try {
+        entries = await readdir(directory, { withFileTypes: true });
+    }
+    catch (error) {
+        if (relativeDirectory === "third_party" && fileSystemErrorCode(error) === "ENOENT")
+            return [];
+        throw error;
+    }
+    const files = [];
+    for (const entry of entries.sort((left, right) => compareText(left.name, right.name))) {
+        const relativePath = `${relativeDirectory}/${entry.name}`;
+        if (entry.isDirectory()) {
+            files.push(...await collectThirdPartyFiles(root, relativePath));
+        }
+        else if (entry.isFile()) {
+            files.push(relativePath);
+        }
+        else {
+            failInvalid("Package legal material must contain only regular files and directories");
+        }
+    }
+    return files;
+}
+async function openMaterial(packageRoot, relativePath, signal) {
+    const handle = await openRegularFile(join(packageRoot, relativePath), relativePath);
+    try {
+        const file = await handle.stat();
+        const sha256 = await hashFile(handle, file.size, relativePath, signal);
+        return {
+            assetId: relativePath,
+            byteLength: file.size,
+            handle,
+            relativePath,
+            sha256,
+        };
+    }
+    catch (error) {
+        await handle.close();
+        throw error;
+    }
+}
+async function openLegalMaterials(packageRoot, pack, signal) {
+    const paths = [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        ...await collectThirdPartyFiles(packageRoot, "third_party"),
+        ...(pack === undefined ? [] : ["dist/assets/supply-chain.json"]),
+    ].sort(compareText);
+    if (paths.length > MAX_LEGAL_FILES)
+        failInvalid("Package contains too many legal files");
+    const files = [];
+    try {
+        for (const path of paths)
+            files.push(await openMaterial(packageRoot, path, signal));
+        return files;
+    }
+    catch (error) {
+        await closeFiles(files);
+        throw error;
+    }
+}
+function packAsset(asset) {
+    return {
+        id: asset.id,
+        kind: asset.kind,
+        relativePath: asset.relativePath,
+        byteLength: asset.byteLength,
+        sha256: asset.sha256,
+    };
+}
+function packMaterial(file) {
+    return {
+        relativePath: file.relativePath,
+        byteLength: file.byteLength,
+        sha256: file.sha256,
+    };
+}
+function createManifest(runtime, assets, materials, kind) {
+    const fingerprint = modelPackFingerprint(runtime, kind);
+    const pack = {
+        ...(kind === undefined ? { schemaVersion: 1 } : {
+            schemaVersion: 2, packKind: kind,
+            compatibilityFingerprint: modelSetFingerprint(runtime),
+        }),
+        modelSetFingerprint: fingerprint,
+        assets: assets.map(packAsset),
+        materials: materials.map(packMaterial),
+    };
+    const bytes = Buffer.from(JSON.stringify(pack), "utf8");
+    parseModelPackManifest(bytes, runtime);
+    return { bytes, fingerprint };
+}
+async function closeFiles(files) {
+    await Promise.allSettled(files.map(async ({ handle }) => handle.close()));
+}
+export async function buildModelPack(input) {
+    input.signal?.throwIfAborted();
+    const packageRoot = resolve(input.packageRoot);
+    const runtime = await readAssetManifest(join(packageRoot, "dist", "assets", "manifest.json"));
+    if (input.pack !== undefined) {
+        const source = await readSupplyChainManifest({
+            runtimeManifestPath: join(packageRoot, "dist/assets/manifest.json"),
+            supplyChainPath: join(packageRoot, "dist/assets/supply-chain.json"),
+        });
+        const ids = new Set(modelPackAssets(runtime, input.pack).map(({ id }) => id));
+        if (source.assets.some((asset) => ids.has(asset.id) && asset.distribution !== "public")) {
+            failInvalid("Split model packs require public source facts");
+        }
+    }
+    const assets = modelPackAssets(runtime, input.pack);
+    const openFiles = [];
+    try {
+        for (const asset of assets)
+            openFiles.push(await openModelFile(resolve(input.modelRoot), asset, input.signal));
+        const materials = await openLegalMaterials(packageRoot, input.pack, input.signal);
+        openFiles.push(...materials);
+        const manifest = createManifest(runtime, assets, materials, input.pack);
+        const archive = await writeModelPackArchive(resolve(input.outputPath), manifest.bytes, openFiles, input.signal);
+        return {
+            ...archive,
+            assetCount: assets.length,
+            modelBytes: assets.reduce((sum, asset) => sum + asset.byteLength, 0),
+            modelSetFingerprint: manifest.fingerprint,
+        };
+    }
+    finally {
+        await closeFiles(openFiles);
+    }
+}
+//# sourceMappingURL=model-pack-builder.js.map

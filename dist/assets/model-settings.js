@@ -1,0 +1,38 @@
+import { join, resolve } from "node:path";
+import { doctorRuntimeAssets } from "./runtime-assets.js";
+import { configuredProcessingMode } from "./runtime-mode.js";
+import { acquireModelStageLease } from "./runtime-assets-stage-lease.js";
+import { readAssetManifest } from "./verify-assets.js";
+function groupStatus(group) {
+    const allMissing = group.checks.length > 0 && group.checks.every(check => check.hashStatus === "missing");
+    return { state: group.ready ? "ready" : allMissing ? "missing" : "invalid", issues: group.issues };
+}
+async function readModelSettingsWhileLeased(input) {
+    const report = await doctorRuntimeAssets(input);
+    const engine = input.engine ?? "paraformer";
+    const mode = await configuredProcessingMode({
+        manifest: await readAssetManifest(join(resolve(input.packageRoot), "dist/assets/manifest.json")),
+        modelRoot: join(resolve(input.dataRoot), "assets", report.modelSetFingerprint),
+        modelStoreRoot: join(resolve(input.dataRoot), "assets"),
+    }, engine);
+    const selectedReady = engine === "parakeet"
+        ? report.groups.parakeet.ready
+        : mode === "enhanced" ? report.enhancedReady : report.ready;
+    return {
+        engine, mode, preference: null, inheritedLegacy: false,
+        selectedReady,
+        base: groupStatus(report.groups.base), parakeet: groupStatus(report.groups.parakeet),
+        punctuation: groupStatus(report.groups.punctuation),
+        native: groupStatus(report.groups.native), dataDirectory: resolve(input.dataRoot),
+    };
+}
+export async function readModelSettings(input, _legacyPreference) {
+    const lease = await acquireModelStageLease(input.dataRoot, input.signal);
+    try {
+        return await readModelSettingsWhileLeased(input);
+    }
+    finally {
+        await lease[Symbol.asyncDispose]();
+    }
+}
+//# sourceMappingURL=model-settings.js.map

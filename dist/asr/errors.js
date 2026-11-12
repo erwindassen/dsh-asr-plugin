@@ -1,0 +1,9 @@
+export class VadProcessingError extends Error {
+    code;
+    constructor(code, message, options) {
+        super(message, options);
+        this.name = "VadProcessingError";
+        this.code = code;
+    }
+}
+//# sourceMappingURL=errors.js.map
