@@ -18,6 +18,8 @@ export const RECORDING_RPC_ENDPOINTS = [
   "devices/list",
   "transcripts/export",
   "transcripts/choose-directory",
+  "transcripts/speaker-names",
+  "transcripts/save-speaker-names",
   "okf/choose-directory",
 ] as const;
 
@@ -82,6 +84,20 @@ export interface TranscriptExportRpcPayload {
   readonly include_speakers: boolean;
   readonly include_timestamps: boolean;
   readonly meeting_id: string;
+  readonly speaker_names?: Readonly<Record<string, string>>;
+}
+
+export interface SpeakerNamesRpcPayload {
+  readonly meeting_id: string;
+}
+
+export interface SpeakerNamesRpcValue {
+  readonly speaker_names: Readonly<Record<string, string>>;
+}
+
+export interface SaveSpeakerNamesRpcPayload {
+  readonly meeting_id: string;
+  readonly speaker_names: Readonly<Record<string, string>>;
 }
 
 export interface TranscriptExportRpcValue {
@@ -136,7 +152,7 @@ export interface AudioDeviceInventoryRpc {
   readonly devices: readonly AudioDeviceRpcEntry[];
 }
 
-export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | AudioDeviceInventoryRpc | string
+export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string
   | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 
 export type RecordingRpcResult<T = RecordingRpcValue> =

@@ -68,6 +68,12 @@ holds the shared types and ports; storage keeps attempt state in `okf_ingestion`
 wires the slices into `apply`. Bundle writes use `node:fs` from host code because
 the child Agent's workspace is the bundle itself. See [okf](okf.md).
 
+Speaker attribution is one row per meeting and label in `meeting_speaker_names`;
+`src/transcripts/speaker-attribution.ts` owns normalisation and the problem kinds,
+the export control validates a map against the committed labels before it touches
+a file, and the renderer substitutes only the label surface. See
+[speaker attribution](speaker-attribution.md).
+
 Meeting references contain explicit IDs in individual messages. Transcript
 projections read a fixed version with stable cursors. Exports are deterministic
 derivatives of committed text and require host approval for file writes.

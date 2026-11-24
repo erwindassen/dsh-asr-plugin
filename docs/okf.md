@@ -61,7 +61,7 @@ escapes fail the link gate. `http(s)` targets are allowed.
    `git reset --hard <baseline>` plus `git clean -fd`, so the worktree ends
    byte-identical to where it started.
 
-Attempt state lives in the `okf_ingestion` table (schema version 5, additive) and
+Attempt state lives in the `okf_ingestion` table (schema version 6, additive) and
 is surfaced by `meeting_get` as an `okf` block: `state`, `transcript_version`,
 `attempt`, `finished_at`, `error_code`.
 

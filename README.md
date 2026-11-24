@@ -115,6 +115,19 @@ Audio inference runs locally after model preparation. Reading a transcript with
 an LLM can send its content to the provider configured in DSH; host configuration
 and provider terms govern that operation.
 
+## Speaker attribution (optional)
+
+Detected voices are labelled `Speaker A`, `Speaker B`, … Exports can carry the
+real names instead: open **Speaker attribution** in the recording panel's save
+area and type a name next to a label. Only the label surface of the export
+changes — the `speaker:` line in Markdown, the `[label]` token in plain text and
+the cue line in SRT/VTT — never the transcript text or the timings. Names are
+stored per meeting, so they also appear in the bundle's copy of the transcript.
+Leaving a field empty keeps the label.
+
+See [docs/speaker-attribution.md](docs/speaker-attribution.md) for the stored
+schema, the validation rules and the failure behaviour.
+
 ## Open knowledge base (optional)
 
 Set a **Bundle folder** under **Open knowledge base** in plugin settings to have

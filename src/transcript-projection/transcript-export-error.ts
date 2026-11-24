@@ -9,7 +9,10 @@ export type TranscriptProjectionErrorCode =
   | "EXPORT_WRITE_FAILED"
   | "EXPORT_DIRECTORY_REQUIRED"
   | "EXPORT_DIRECTORY_INVALID"
-  | "EXPORT_PICKER_FAILED";
+  | "EXPORT_PICKER_FAILED"
+  | "EXPORT_SPEAKER_UNKNOWN"
+  | "EXPORT_SPEAKER_INVALID"
+  | "EXPORT_SPEAKER_DUPLICATE";
 
 export class TranscriptProjectionError extends Error {
   constructor(readonly code: TranscriptProjectionErrorCode, message: string, options?: ErrorOptions) {

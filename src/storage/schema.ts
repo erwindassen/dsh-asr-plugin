@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 const MEETINGS_V2_TEMPLATE = `
 CREATE TABLE __MEETINGS_TABLE__ (
@@ -257,3 +257,24 @@ PRAGMA user_version = 5;
 `;
 
 export const SCHEMA_V5_SQL = `${SCHEMA_V4_SQL}${MIGRATE_SCHEMA_V4_TO_V5_SQL}`;
+
+/**
+ * A user-assigned display name for one label of one meeting. The primary key
+ * already serves lookups by meeting, so no extra index is needed.
+ */
+const SPEAKER_NAMES_SCHEMA_SQL = `
+CREATE TABLE meeting_speaker_names (
+  meeting_id  TEXT NOT NULL
+              REFERENCES meetings(meeting_id) ON DELETE CASCADE,
+  label       TEXT NOT NULL CHECK (length(label) BETWEEN 1 AND 120),
+  name        TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 60),
+  PRIMARY KEY (meeting_id, label)
+) STRICT;
+`;
+
+export const MIGRATE_SCHEMA_V5_TO_V6_SQL = `
+${SPEAKER_NAMES_SCHEMA_SQL}
+PRAGMA user_version = 6;
+`;
+
+export const SCHEMA_V6_SQL = `${SCHEMA_V5_SQL}${MIGRATE_SCHEMA_V5_TO_V6_SQL}`;

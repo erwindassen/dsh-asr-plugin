@@ -95,6 +95,7 @@ describe("buildOkfMeetingView", () => {
       startedAtMs: CREATED_AT_MS,
       durationMs: 5_000,
       speakers: ["Alice", "Bob", "Carol"],
+      speakerNames: {},
       transcriptVersion: 3,
       committedAtMs: UPDATED_AT_MS,
       partial: true,
@@ -141,6 +142,17 @@ describe("buildOkfMeetingView", () => {
     ];
     const view = buildOkfMeetingView(source(record, segments), MEETING_ID);
     expect(view.speakers).toEqual(["Bob", "Alice"]);
+  });
+
+  it("carries the speaker attribution into the view unchanged", () => {
+    const view = buildOkfMeetingView(source(meetingRecord(), SEGMENTS), MEETING_ID, {
+      Alice: "Erwin",
+    });
+    expect(view.speakerNames).toEqual({ Alice: "Erwin" });
+    expect(view.speakers).toEqual(["Alice", "Bob", "Carol"]);
+    expect(view.segments.map((segment) => segment.speaker)).toEqual([
+      " Alice ", "Bob", "Alice", "   ", "Carol",
+    ]);
   });
 
   it("marks a completed transcript as not partial", () => {

@@ -2,6 +2,7 @@ import type { ModelDownloadControl } from "../assets/model-download-contract.js"
 import type { ModelSettingsStatus } from "../assets/model-settings-contract.js";
 import type { RecordingPermissionControl } from "./permission-contract.js";
 import type { TranscriptExportControl } from "../transcripts/transcript-export-contract.js";
+import { normalizeSpeakerName } from "../transcripts/speaker-attribution.js";
 import type { AudioDeviceService } from "./audio-devices.js";
 import type { MeetingApplication } from "../application/meeting-application.js";
 import type { MeetingReferenceCandidate } from "../application/meeting-reference.js";
@@ -31,6 +32,15 @@ export interface RecordingRpcConnection {
       options: { readonly authority: "loopback" },
     ): () => Promise<void>;
   };
+}
+
+/**
+ * Per-meeting speaker attribution storage. Declared structurally so the RPC layer
+ * does not depend on the SQLite implementation.
+ */
+export interface SpeakerNameStore {
+  list(meetingId: string): readonly { readonly label: string; readonly name: string }[];
+  replace(meetingId: string, names: readonly { readonly label: string; readonly name: string }[]): void;
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -71,16 +81,59 @@ function control(payload: unknown, signal: AbortSignal): RecordingControlInput {
   return { action, meetingId: value.meeting_id, signal };
 }
 
+const MAX_SPEAKER_ENTRIES = 64;
+const MAX_SPEAKER_LABEL_LENGTH = 120;
+const MAX_SPEAKER_NAME_INPUT_LENGTH = 200;
+
+/** Wire shape of a label-to-name map; canonicality is judged by the export control. */
+function speakerNameMap(value: unknown): Readonly<Record<string, string>> {
+  const map = record(value);
+  if (map === null || Object.keys(map).length > MAX_SPEAKER_ENTRIES) inputError();
+  for (const [label, name] of Object.entries(map)) {
+    if (label === "" || label.length > MAX_SPEAKER_LABEL_LENGTH) inputError();
+    if (typeof name !== "string" || name.length > MAX_SPEAKER_NAME_INPUT_LENGTH) inputError();
+  }
+  return map as Readonly<Record<string, string>>;
+}
+
+function speakerNamesPayload(payload: unknown): { readonly meeting_id: string } {
+  const value = record(payload);
+  if (value === null || !exact(value, ["meeting_id"])
+    || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)) inputError();
+  return { meeting_id: value.meeting_id };
+}
+
+function saveSpeakerNamesPayload(payload: unknown): { readonly meeting_id: string; readonly speaker_names: Readonly<Record<string, string>> } {
+  const value = record(payload);
+  if (value === null || !exact(value, ["meeting_id", "speaker_names"])
+    || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)
+    || !Object.hasOwn(value, "speaker_names")) inputError();
+  return { meeting_id: value.meeting_id, speaker_names: speakerNameMap(value.speaker_names) };
+}
+
+/** Stored rows as a wire map, dropping names that are not canonical any more. */
+function speakerNamesValue(store: SpeakerNameStore, meetingId: string): Readonly<Record<string, string>> {
+  const names: Record<string, string> = {};
+  for (const entry of store.list(meetingId)) {
+    const name = normalizeSpeakerName(entry.name);
+    if (name !== "") names[entry.label] = name;
+  }
+  return names;
+}
+
 function transcriptExportPayload(payload: unknown): TranscriptExportRpcPayload {
   const value = record(payload);
   if (value === null || !exact(value,
-    ["destination", "directory", "format", "include_speakers", "include_timestamps", "meeting_id"])
+    ["destination", "directory", "format", "include_speakers", "include_timestamps", "meeting_id", "speaker_names"])
     || (value.directory !== undefined && (typeof value.directory !== "string"
       || !value.directory.startsWith("/") || value.directory.length > 4_096))
     || (value.destination !== "default" && value.destination !== "choose")
     || !(["md", "txt", "srt", "vtt"] as const).includes(value.format as TranscriptExportRpcPayload["format"])
     || typeof value.include_speakers !== "boolean" || typeof value.include_timestamps !== "boolean"
     || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)) inputError();
+  if (Object.hasOwn(value, "speaker_names") && value.speaker_names !== undefined) {
+    speakerNameMap(value.speaker_names);
+  }
   return value as unknown as TranscriptExportRpcPayload;
 }
 
@@ -135,6 +188,7 @@ export function registerRecordingHostRpc(
   transcripts?: TranscriptExportControl,
   devices?: AudioDeviceService,
   chooseOkfDirectory?: (signal?: AbortSignal) => Promise<string | null>,
+  speakerNames?: SpeakerNameStore,
 ): () => Promise<void> {
   return connection.rpc.handle(RECORDING_RPC_CHANNEL, async (endpoint, payload, signal) => {
     try {
@@ -214,6 +268,17 @@ export function registerRecordingHostRpc(
       if (endpoint === "control") {
         return { ok: true, value: await application.controlRecording(control(payload, signal)) };
       }
+      if (speakerNames !== undefined && (endpoint === "transcripts/speaker-names"
+        || endpoint === "transcripts/save-speaker-names")) {
+        if (endpoint === "transcripts/speaker-names") {
+          const request = speakerNamesPayload(payload);
+          return { ok: true, value: { speaker_names: speakerNamesValue(speakerNames, request.meeting_id) } };
+        }
+        const request = saveSpeakerNamesPayload(payload);
+        speakerNames.replace(request.meeting_id, Object.entries(request.speaker_names)
+          .map(([label, name]) => ({ meetingId: request.meeting_id, label, name })));
+        return { ok: true, value: { speaker_names: speakerNamesValue(speakerNames, request.meeting_id) } };
+      }
       if (endpoint.startsWith("transcripts/") && transcripts !== undefined) {
         if (endpoint === "transcripts/choose-directory") {
           emptyPayload(payload);
@@ -228,6 +293,7 @@ export function registerRecordingHostRpc(
             includeSpeakers: request.include_speakers,
             includeTimestamps: request.include_timestamps,
             meetingId: request.meeting_id,
+            ...(request.speaker_names === undefined ? {} : { speakerNames: request.speaker_names }),
           }, signal);
           return {
             ok: true,

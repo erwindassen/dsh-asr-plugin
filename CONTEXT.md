@@ -16,6 +16,9 @@
   version for Agent consumption or export, rather than an independent fact source.
 - **Export**: a user-requested file derived from committed text. It remains the
   user's asset and never updates the source meeting.
+- **Speaker attribution**: a per-meeting map from a detected speaker label to a
+  display name that exports render in place of the label. It never edits segment
+  text and never claims identity.
 - **Transcription run**: one import or retranscription attempt and its immutable
   processing identity, distinct from the persistent meeting.
 - **Open knowledge base (OKF) bundle**: a user-owned folder of OKF pages derived

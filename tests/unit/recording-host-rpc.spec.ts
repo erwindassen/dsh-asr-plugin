@@ -203,6 +203,64 @@ it("exports transcripts and picks folders without accepting destination file pat
   expect(control.exportTranscript).toHaveBeenCalledOnce();
 });
 
+
+
+it("forwards an attribution map to the export control only when one was sent", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  const calls: unknown[] = [];
+  const control = {
+    chooseDirectory: vi.fn(async () => null),
+    exportTranscript: vi.fn(async (request: unknown) => { calls.push(request); return { bytes: 1, format: "md" as const,
+      meetingId: "a4f7e766-928b-4a96-87d7-f81921fddd1c", outputPath: "/tmp/call.md",
+      segmentCount: 1, transcriptVersion: 1 }; }),
+  };
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication,
+  undefined, undefined, undefined, undefined, control);
+  const signal = new AbortController().signal;
+  const payload = { destination: "default", format: "md", include_speakers: true, include_timestamps: true,
+    meeting_id: "a4f7e766-928b-4a96-87d7-f81921fddd1c" };
+  await handler("transcripts/export", payload, signal);
+  expect(calls[0]).not.toHaveProperty("speakerNames");
+  await handler("transcripts/export", { ...payload, speaker_names: { "Speaker A": "Erwin" } }, signal);
+  expect(calls[1]).toMatchObject({ speakerNames: { "Speaker A": "Erwin" } });
+});
+
+it("reads and replaces one meeting's speaker attribution", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  const store: { meetingId: string; label: string; name: string }[] = [];
+  const speakerNames = {
+    list: vi.fn((meetingId: string) => store.filter((row) => row.meetingId === meetingId)),
+    replace: vi.fn((meetingId: string, names: readonly { label: string; name: string }[]) => {
+      store.splice(0, store.length, ...names.map(({ label, name }) => ({ meetingId, label, name })));
+    }),
+  };
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication,
+  undefined, undefined, undefined, undefined, undefined, undefined, undefined, speakerNames);
+  const signal = new AbortController().signal;
+  const meeting = "a4f7e766-928b-4a96-87d7-f81921fddd1c";
+  expect(await handler("transcripts/speaker-names", { meeting_id: meeting }, signal)).toEqual({
+    ok: true, value: { speaker_names: {} },
+  });
+  expect(await handler("transcripts/save-speaker-names",
+    { meeting_id: meeting, speaker_names: { "Speaker A": "Erwin" } }, signal)).toEqual({
+    ok: true, value: { speaker_names: { "Speaker A": "Erwin" } },
+  });
+  expect(speakerNames.replace).toHaveBeenCalledOnce();
+  for (const invalid of [
+    { meeting_id: "not-a-uuid" },
+    { meeting_id: meeting, speaker_names: { "Speaker A": 7 } },
+    { meeting_id: meeting, speaker_names: { "": "Erwin" } },
+    { meeting_id: meeting, speaker_names: {}, extra: true },
+  ]) {
+    expect(await handler("transcripts/save-speaker-names", invalid, signal)).toMatchObject({ ok: false });
+  }
+  expect(speakerNames.replace).toHaveBeenCalledOnce();
+});
+
 it("prepares recording models without accepting paths or recording audio", async () => {
   let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
   const prepare = vi.fn(async () => undefined);

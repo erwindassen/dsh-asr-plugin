@@ -38,6 +38,7 @@ const ALLOWED_ROOT_FILES = new Set([
 ]);
 const PUBLIC_GUIDES = new Set([
   "docs/model-assets.md", "docs/development.md", "docs/publishing.md", "docs/distribution.md",
+  "docs/okf.md", "docs/speaker-attribution.md",
   "assets/screenshots/README.md",
   "assets/screenshots/meeting-summary.jpg",
   "assets/screenshots/recording-live-summary.jpg",

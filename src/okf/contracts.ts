@@ -67,6 +67,8 @@ export interface OkfMeetingView {
   readonly committedAtMs: number;
   /** True while the transcript is still being appended to (draft recording). */
   readonly partial: boolean;
+  /** Optional label-to-name attribution; an empty map prints the labels. */
+  readonly speakerNames: Readonly<Record<string, string>>;
   readonly segments: readonly OkfSegmentView[];
 }
 

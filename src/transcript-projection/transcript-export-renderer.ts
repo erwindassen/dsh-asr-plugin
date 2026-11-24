@@ -1,4 +1,5 @@
 import type { CommittedTranscriptSnapshot, TranscriptSegment } from "../storage/meeting-repository.js";
+import { speakerNameFor, type SpeakerNameMap } from "../transcripts/speaker-attribution.js";
 import type { TranscriptExportFormat } from "./transcript-projection.js";
 
 export interface RenderTranscriptExportOptions {
@@ -6,6 +7,24 @@ export interface RenderTranscriptExportOptions {
   readonly format: TranscriptExportFormat;
   readonly includeSpeakers: boolean;
   readonly includeTimestamps: boolean;
+  /** Optional label-to-name map for the speaker label surface only. */
+  readonly speakerNames?: SpeakerNameMap;
+}
+
+const NO_SPEAKER_NAMES: SpeakerNameMap = {};
+
+/** The label to print for a segment, without touching its text or timing. */
+function speakerLabel(segment: TranscriptSegment, options: RenderTranscriptExportOptions): string {
+  return speakerNameFor(segment.speakerLabel, options.speakerNames ?? NO_SPEAKER_NAMES);
+}
+
+/**
+ * Subtitle cue text must not contain the cue sentinel. Only an assigned name is
+ * rewritten; an unassigned label keeps today's bytes exactly.
+ */
+function cueSpeakerLabel(segment: TranscriptSegment, options: RenderTranscriptExportOptions): string {
+  const label = speakerLabel(segment, options);
+  return label === segment.speakerLabel ? label : label.replaceAll("-->", "\u2192");
 }
 
 function quoted(value: string): string {
@@ -49,7 +68,7 @@ function timeRange(segment: TranscriptSegment, decimal: "." | ","): string {
 function markdownSegment(segment: TranscriptSegment, options: RenderTranscriptExportOptions): string {
   const facts = [
     ...(options.includeTimestamps ? [`time: ${timeRange(segment, ".")}`] : []),
-    ...(options.includeSpeakers ? [`speaker: ${quoted(segment.speakerLabel)}`] : []),
+    ...(options.includeSpeakers ? [`speaker: ${quoted(speakerLabel(segment, options))}`] : []),
   ];
   return `## Segment ${segment.seq + 1}\n${facts.length === 0 ? "" : `\n${facts.join("\n")}\n`}\n${segment.text}`;
 }
@@ -57,13 +76,13 @@ function markdownSegment(segment: TranscriptSegment, options: RenderTranscriptEx
 function textSegment(segment: TranscriptSegment, options: RenderTranscriptExportOptions): string {
   const facts = [
     ...(options.includeTimestamps ? [`[${timeRange(segment, ".")}]`] : []),
-    ...(options.includeSpeakers ? [`[${segment.speakerLabel}]`] : []),
+    ...(options.includeSpeakers ? [`[${speakerLabel(segment, options)}]`] : []),
   ].join(" ");
   return facts === "" ? segment.text : `${facts}\n${segment.text}`;
 }
 
-function cue(segment: TranscriptSegment, decimal: "." | ",", includeSpeakers: boolean): string {
-  const speaker = includeSpeakers ? `${segment.speakerLabel}\n` : "";
+function cue(segment: TranscriptSegment, decimal: "." | ",", options: RenderTranscriptExportOptions): string {
+  const speaker = options.includeSpeakers ? `${cueSpeakerLabel(segment, options)}\n` : "";
   return `${timeRange(segment, decimal)}\n${speaker}${segment.text}`;
 }
 
@@ -84,10 +103,10 @@ export function renderTranscriptExport(
   }
   if (options.format === "srt") {
     return snapshot.segments.map((segment) => `${segment.seq + 1}\n${cue(
-      segment, ",", options.includeSpeakers,
+      segment, ",", options,
     )}`).join("\n\n") + "\n";
   }
   return `WEBVTT\n\nNOTE\n${source}\n\n${snapshot.segments.map(
-    (segment) => cue(segment, ".", options.includeSpeakers),
+    (segment) => cue(segment, ".", options),
   ).join("\n\n")}\n`;
 }

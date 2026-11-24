@@ -16,6 +16,7 @@ const MEETING: OkfMeetingView = {
   transcriptVersion: 2,
   committedAtMs: Date.parse("2026-11-20T09:10:00.000Z"),
   partial: true,
+  speakerNames: {},
   segments: [
     {
       seq: 0,
@@ -120,6 +121,23 @@ describe("renderTranscriptCopy", () => {
     const file = renderTranscriptCopy({ meeting: { ...MEETING, speakers: [] } });
     expect(file.content).toContain("Participants: none identified.");
     expect(file.content).toContain("\nparticipants: []\n");
+  });
+
+
+  it("prints attributed names in the summary, the segment lines and the participants", () => {
+    const file = renderTranscriptCopy({
+      meeting: { ...MEETING, speakerNames: { Alice: "Erwin", "Bob: the builder": "Bob" } },
+    });
+    expect(file.content).toContain("Participants: Erwin, Bob.");
+    expect(file.content).toContain("\nparticipants: [Erwin, Bob]\n");
+    expect(file.content).toContain("**Erwin:**");
+    expect(file.content).not.toContain("**Alice:**");
+  });
+
+  it("keeps the labels when the attribution is empty", () => {
+    const file = renderTranscriptCopy({ meeting: { ...MEETING, speakerNames: { Alice: "   " } } });
+    expect(file.content).toContain("Participants: Alice, Bob: the builder.");
+    expect(file.content).toContain("**Alice:**");
   });
 
   it("falls back to a placeholder heading when the title is only whitespace", () => {

@@ -85,13 +85,13 @@ function captureError(operation: () => unknown): unknown {
   throw new Error("Expected the operation to throw");
 }
 
-it("creates the ingestion table at schema version 5", async () => {
+it("keeps the ingestion table at the current schema version", async () => {
   const fixture = await createFixture();
   const version = fixture.database.prepare("PRAGMA user_version").get() as Record<string, unknown>;
   const table = fixture.database.prepare(`
     SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'okf_ingestion'
   `).get() as Record<string, unknown>;
-  expect(version.user_version).toBe(5);
+  expect(version.user_version).toBe(6);
   expect(table.sql).toContain("PRIMARY KEY (meeting_id, transcript_version, directory)");
 });
 

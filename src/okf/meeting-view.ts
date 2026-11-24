@@ -17,7 +17,7 @@ function meetingDurationMs(meeting: MeetingRecord, segments: readonly OkfSegment
  * Distinct speaker labels in first-appearance order. Labels come from
  * diarization and may be empty; empty labels are dropped rather than merged.
  */
-function speakerNames(segments: readonly OkfSegmentView[]): readonly string[] {
+function speakerLabels(segments: readonly OkfSegmentView[]): readonly string[] {
   const seen = new Set<string>();
   const names: string[] = [];
   for (const segment of segments) {
@@ -33,7 +33,11 @@ function speakerNames(segments: readonly OkfSegmentView[]): readonly string[] {
  * Reads one committed transcript version and freezes it into the bundle view.
  * The view is a plain value so ingestion never re-reads a moving transcript.
  */
-export function buildOkfMeetingView(source: MeetingSource, meetingId: string): OkfMeetingView {
+export function buildOkfMeetingView(
+  source: MeetingSource,
+  meetingId: string,
+  speakerNames: Readonly<Record<string, string>> = {},
+): OkfMeetingView {
   const meeting = source.getMeeting(meetingId);
   if (meeting === null) {
     throw new OkfError("OKF_NO_TRANSCRIPT", `Meeting ${meetingId} does not exist`);
@@ -57,10 +61,11 @@ export function buildOkfMeetingView(source: MeetingSource, meetingId: string): O
     title: meeting.title,
     startedAtMs: meetingStartMs(meeting),
     durationMs: meetingDurationMs(meeting, segments),
-    speakers: speakerNames(segments),
+    speakers: speakerLabels(segments),
     transcriptVersion: meeting.transcriptVersion,
     committedAtMs: meeting.updatedAtMs,
     partial: meeting.committedStatus === "partial",
+    speakerNames,
     segments,
   };
 }
