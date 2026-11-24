@@ -4,7 +4,12 @@ import { Button, Tooltip, StateDot, IconWarningOutlineRegular, IconRefreshOutlin
 import type { StateDotState } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { AudioDeviceInventoryRpc, RecordingRpcControlPayload, RecordingRpcSegment, RecordingRpcView } from "../recording/rpc-contract.js";
 import { durationClock } from "./meeting-reference-source.js";
-import type { RecordingPendingAction, Translate } from "./RecordingPanel.js";
+import {
+  duplicateSpeakerNames,
+  speakerNameFor,
+  SPEAKER_NAME_MAX_LENGTH,
+} from "../transcripts/speaker-attribution.js";
+import type { RecordingPendingAction, SpeakerAttribution, Translate } from "./RecordingPanel.js";
 import { RecordingControls, RecordingIcon } from "./RecordingPanelControls.js";
 import type { ConfigForm } from "@deepseek-ai/dsh-client-ui-settings/client";
 import { RecognizerSelect } from "./RecognizerSelect.js";
@@ -12,6 +17,7 @@ import { useRecordingPanelLayout } from "./use-recording-panel-layout.js";
 import styles from "./RecordingPanel.module.css";
 
 export interface PanelViewProps {
+  readonly attribution?: SpeakerAttribution | undefined;
   readonly exportNotice?: string | null;
   readonly exportTranscript?: (choose: boolean) => Promise<void>;
   readonly prepare?: (signal: AbortSignal) => Promise<void>;
@@ -79,7 +85,8 @@ function RecordingStatus({ pendingAction, translate, view }: Pick<PanelViewProps
   </>;
 }
 
-function Preview({ preview, translate, view }: Pick<PanelViewProps, "preview" | "translate" | "view">) {
+function Preview({ attribution, preview, translate, view }: Pick<PanelViewProps, "attribution" | "preview" | "translate" | "view">) {
+  const names = attribution?.names ?? {};
   return <div className={styles.preview} aria-label={translate("panel.previewAria")}>
     <div className={styles.previewHeading}>
       <span className={styles.previewTitle}>{translate("panel.previewAria")}</span>
@@ -91,11 +98,42 @@ function Preview({ preview, translate, view }: Pick<PanelViewProps, "preview" | 
       </span>}
       {preview.map(segment => <div className={styles.segment} key={segment.seq}>
         <span className={styles.segmentMeta}>{durationClock(segment.startMs)}
-          {segment.speakerLabel !== null && ` · ${segment.speakerLabel}`}</span>
+          {segment.speakerLabel !== null && ` · ${speakerNameFor(segment.speakerLabel, names)}`}</span>
         <span className={styles.text}>{segment.text}</span>
       </div>)}
     </div>
   </div>;
+}
+
+/**
+ * Optional renaming of the detected speaker labels for the exported file. The
+ * stored transcript keeps its labels; only the export applies the names.
+ */
+function SpeakerAttributionSection({ attribution, translate }: Pick<PanelViewProps, "attribution" | "translate">) {
+  if (attribution === undefined || attribution.labels.length === 0) return null;
+  const { failure, labels, names, saving, update } = attribution;
+  const duplicates = duplicateSpeakerNames(labels, names);
+  return <>
+    <details className={styles.attribution}>
+      <summary className={styles.attributionSummary}>{translate("panel.attribution")}</summary>
+      <p className={styles.hint}>{translate("panel.attributionHint")}</p>
+      <div className={styles.attributionFields}>
+        {labels.map(label => <label className={styles.attributionField} key={label}>
+          <span className={styles.attributionLabel}>{label}</span>
+          <input className={styles.attributionInput} type="text" value={names[label] ?? ""}
+            aria-label={label} placeholder={label} maxLength={SPEAKER_NAME_MAX_LENGTH} spellCheck={false}
+            onChange={event => update(label, event.target.value)} />
+        </label>)}
+      </div>
+      {duplicates.length > 0 && <p className={`${styles.hint} ${styles.warning}`} role="status">
+        {translate("panel.attributionDuplicate", { names: duplicates.join(" · ") })}
+      </p>}
+      {saving && <p className={styles.hint} role="status">{translate("panel.attributionSaving")}</p>}
+    </details>
+    {failure !== null && <p className={styles.attributionError} role="alert">
+      {translate(failure.action === "load" ? "panel.attributionLoadFailed" : "panel.attributionSaveFailed")}
+    </p>}
+  </>;
 }
 
 function FooterStatus({ translate, view }: Pick<PanelViewProps, "translate" | "view">) {
@@ -163,6 +201,7 @@ export function RecordingPanelView(props: PanelViewProps) {
         {codes.some(code => /^[A-Z][A-Z0-9_]{0,99}$/.test(code)) && <details><summary>{translate("panel.error.details")}</summary>
           <code>{codes.filter(code => /^[A-Z][A-Z0-9_]{0,99}$/.test(code)).join(" · ")}</code></details>}
         <Preview {...props} />
+        <SpeakerAttributionSection attribution={props.attribution} translate={translate} />
       </div>
       <footer className={styles.footer}>
         {props.exportNotice != null && <span className={styles.hint}>{props.exportNotice}</span>}
