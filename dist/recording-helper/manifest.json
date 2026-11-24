@@ -44,17 +44,17 @@
       "relativePath": "Contents/Helpers/dsh-asr-capture-system"
     }
   },
-  "treeSha256": "9d045e4d4cb42788691bf193c11765909efe11b755bab014ff34e96ab95d9267",
+  "treeSha256": "c6526a66a52b7518e2d348ef6dc8fb2177cfc1a56d697b3e337c64a5566c0598",
   "files": [
     {
       "relativePath": "Contents/Helpers/dsh-asr-capture-mic",
-      "byteLength": 238704,
-      "sha256": "5d94b0573f4ada20ea8168b0105029468a08a1c35900f87f3c33ce6838b9cab4"
+      "byteLength": 220720,
+      "sha256": "6f7855f3988ac23121473cb8b1d41b8d52bfb9e6e32684de2742b5360cecd425"
     },
     {
       "relativePath": "Contents/Helpers/dsh-asr-capture-system",
-      "byteLength": 393536,
-      "sha256": "d4a41066c7c21721fef4d44b39ec1bb585ef5b7a62194b7d23441218b850e5cd"
+      "byteLength": 375552,
+      "sha256": "a6f79f55303a0aa1fde06ba666fbc91882b500acf6927e66d874c44cebb9bcdf"
     },
     {
       "relativePath": "Contents/Info.plist",
@@ -63,8 +63,8 @@
     },
     {
       "relativePath": "Contents/MacOS/DSHASRRecordingHelper",
-      "byteLength": 169584,
-      "sha256": "c24b36af0d08b8341bd15da493e255b55b4b0fe9b2044c7e3b13a0a732a26e3e"
+      "byteLength": 155376,
+      "sha256": "31f18de15e7343fb5d46bede4445f547b684af970d49148d48e4b8f5651363de"
     },
     {
       "relativePath": "Contents/Resources/en.lproj/InfoPlist.strings",
@@ -79,7 +79,7 @@
     {
       "relativePath": "Contents/_CodeSignature/CodeResources",
       "byteLength": 3425,
-      "sha256": "9b919f86017b97a48fc72bdd3a7a52f2bf7859f8a83b9de747ab188b1e9f7079"
+      "sha256": "d312558834104dc972064a8992f92a277ffa756bcb5efc04f9a7c8ed6c8bbee1"
     }
   ]
 }

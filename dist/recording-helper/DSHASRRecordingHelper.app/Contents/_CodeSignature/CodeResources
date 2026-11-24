@@ -29,19 +29,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			tJV0s8XXh5U6l3K3OnfbENpidbA=
+			MyA+Mv3Kc9QstTW0vuVxFPcWn2w=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"b49574b3c5d787953a9772b73a77db10da6275b0"</string>
+			<string>cdhash H"33203e32fdca73d42cb535b4bee57114f7169f6c"</string>
 		</dict>
 		<key>Helpers/dsh-asr-capture-system</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			ons+dAxBjK2T9ft7S/2fq2sC/hI=
+			WF+CKT07TDUr3Zgb6HmsR2nOCl8=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"a27b3e740c418cad93f5fb7b4bfd9fab6b02fe12"</string>
+			<string>cdhash H"585f82293d3b4c352bdd981be879ac4769ce0a5f"</string>
 		</dict>
 		<key>Resources/en.lproj/InfoPlist.strings</key>
 		<dict>
