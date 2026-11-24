@@ -9,6 +9,7 @@ import {
   type MeetingRepository,
 } from "../storage/meeting-repository.js";
 import { decodeTranscriptCursor, encodeTranscriptCursor } from "../storage/query-cursor.js";
+import type { SpeakerNameMap } from "../transcripts/speaker-attribution.js";
 import { TranscriptProjectionError } from "./transcript-export-error.js";
 import {
   publishTranscriptExport,
@@ -61,6 +62,8 @@ export interface ExportCommittedTranscriptInput {
   readonly meetingId: string;
   readonly outputPath: string;
   readonly overwrite?: boolean;
+  /** Optional label-to-name map for the exported speaker label surface. */
+  readonly speakerNames?: SpeakerNameMap;
   readonly signal?: AbortSignal;
 }
 
@@ -409,6 +412,7 @@ class DefaultTranscriptProjection implements TranscriptProjection {
       exportedAtMs: this.options.now(),
       includeTimestamps: options.includeTimestamps,
       includeSpeakers: options.includeSpeakers,
+      ...(input.speakerNames === undefined ? {} : { speakerNames: input.speakerNames }),
     }), "utf8");
     const published = await publishTranscriptExport({
       content,

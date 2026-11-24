@@ -156,6 +156,32 @@ it("把固定版本原子发布到 data root 外并只返回 content-free 回执
   expect(await readdir(outputRoot)).toEqual(["transcript.md"]);
 });
 
+it("按可选说话人名称渲染标签，不改动正文", async () => {
+  const temporary = await createTemporaryMeetingRepository();
+  const outputRoot = await mkdtemp(join(tmpdir(), "dsh-asr-export-output-"));
+  roots.push(temporary.root, outputRoot);
+  repositories.push(temporary.repository);
+  commitMeeting(temporary.repository, 1, { texts: ["第一段。", "第二段。"] });
+  const projection = createTranscriptProjection(
+    temporary.repository,
+    () => null,
+    { dataRoot: temporary.root, now: () => 2_000 },
+  );
+  const outputPath = join(outputRoot, "transcript.md");
+
+  await projection.exportCommittedTranscript({
+    meetingId: meetingId(1),
+    format: "md",
+    outputPath,
+    speakerNames: { "Speaker A": "Alice" },
+  });
+
+  const exported = await readFile(outputPath, "utf8");
+  expect(exported.match(/speaker: .+/g)).toEqual(['speaker: "Alice"', 'speaker: "Speaker B"']);
+  expect(exported).toContain("第一段。");
+  expect(exported).toContain("第二段。");
+});
+
 it("字幕格式强制保留时间戳", async () => {
   const temporary = await createTemporaryMeetingRepository();
   const outputRoot = await mkdtemp(join(tmpdir(), "dsh-asr-export-output-"));

@@ -424,6 +424,16 @@ export class MeetingApplication {
     return this.requiredMeeting(meetingId);
   }
 
+  /** Distinct speaker labels of the committed transcript, for export validation. */
+  getCommittedSpeakerLabels(meetingId: string): readonly string[] {
+    this.assertAccepting();
+    const labels = new Set<string>();
+    for (const segment of this.dependencies.repository.getCommittedTranscriptSnapshot(meetingId).segments) {
+      labels.add(segment.speakerLabel);
+    }
+    return [...labels];
+  }
+
   getMeetingReferenceCandidates(
     input: GetMeetingReferenceCandidatesInput,
   ): readonly MeetingReferenceCandidate[] {

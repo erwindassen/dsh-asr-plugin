@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -20,16 +20,20 @@ const meeting: MeetingRecord = {
 
 interface Harness {
   readonly exported: ExportCommittedTranscriptInput[];
+  readonly labelLookups: string[];
   readonly source: {
     exportTranscript(input: ExportCommittedTranscriptInput): Promise<TranscriptExportReceipt>;
+    getCommittedSpeakerLabels(meetingId: string): readonly string[];
     getMeetingRecord(meetingId: string): MeetingRecord;
   };
 }
 
-function harness(): Harness {
+function harness(labels: readonly string[] = ["Speaker A", "UNKNOWN"]): Harness {
   const exported: ExportCommittedTranscriptInput[] = [];
+  const labelLookups: string[] = [];
   return {
     exported,
+    labelLookups,
     source: {
       async exportTranscript(input) {
         exported.push(input);
@@ -40,6 +44,10 @@ function harness(): Harness {
           outputPath: input.outputPath, overwritten: true, segmentCount: 3, sha256: "c".repeat(64),
           transcriptVersion: 1,
         };
+      },
+      getCommittedSpeakerLabels(meetingId) {
+        labelLookups.push(meetingId);
+        return labels;
       },
       getMeetingRecord(meetingId) {
         if (meetingId !== MEETING_ID) throw Object.assign(new Error("missing"), { code: "MEETING_NOT_FOUND" });
@@ -148,5 +156,107 @@ describe("transcript export control", () => {
       destination: "default", format: "md", includeSpeakers: false, includeTimestamps: false,
       meetingId: "11111111-1111-4111-8111-111111111111",
     })).rejects.toMatchObject({ code: "MEETING_NOT_FOUND" });
+  });
+
+  it("rejects an unknown speaker label before resolving or writing", async () => {
+    const directory = await folder();
+    const test = harness();
+    let directoryReads = 0;
+    let picks = 0;
+    const control = createTranscriptExportControl({
+      directory: () => {
+        directoryReads += 1;
+        return directory;
+      },
+      meeting: test.source,
+      picker: {
+        choose: async () => {
+          picks += 1;
+          return directory;
+        },
+      },
+      pickerPrompt: () => "Pick",
+    });
+    await expect(control.exportTranscript({
+      destination: "choose", format: "md", includeSpeakers: true, includeTimestamps: true,
+      meetingId: MEETING_ID, speakerNames: { "Speaker B": "Bob" },
+    })).rejects.toMatchObject({ code: "EXPORT_SPEAKER_UNKNOWN", message: expect.stringContaining("Speaker B") });
+    expect(picks).toBe(0);
+    expect(directoryReads).toBe(0);
+    expect(test.exported).toHaveLength(0);
+    expect(await readdir(directory)).toEqual([]);
+  });
+
+  it("rejects a speaker name that is not canonical", async () => {
+    const directory = await folder();
+    const test = harness();
+    let directoryReads = 0;
+    const control = createTranscriptExportControl({
+      directory: () => {
+        directoryReads += 1;
+        return directory;
+      },
+      meeting: test.source, picker: picker(null), pickerPrompt: () => "Pick",
+    });
+    await expect(control.exportTranscript({
+      destination: "default", format: "srt", includeSpeakers: true, includeTimestamps: true,
+      meetingId: MEETING_ID, speakerNames: { "Speaker A": " Alice" },
+    })).rejects.toMatchObject({ code: "EXPORT_SPEAKER_INVALID", message: expect.stringContaining("Speaker A") });
+    expect(directoryReads).toBe(0);
+    expect(test.exported).toHaveLength(0);
+    expect(await readdir(directory)).toEqual([]);
+  });
+
+  it("rejects two labels that resolve to one speaker name", async () => {
+    const directory = await folder();
+    const test = harness();
+    let directoryReads = 0;
+    const control = createTranscriptExportControl({
+      directory: () => {
+        directoryReads += 1;
+        return directory;
+      },
+      meeting: test.source, picker: picker(null), pickerPrompt: () => "Pick",
+    });
+    await expect(control.exportTranscript({
+      destination: "default", format: "vtt", includeSpeakers: true, includeTimestamps: true,
+      meetingId: MEETING_ID, speakerNames: { "Speaker A": "Alice", UNKNOWN: "Alice" },
+    })).rejects.toMatchObject({ code: "EXPORT_SPEAKER_DUPLICATE", message: expect.stringContaining("Alice") });
+    expect(directoryReads).toBe(0);
+    expect(test.exported).toHaveLength(0);
+    expect(await readdir(directory)).toEqual([]);
+  });
+
+  it("passes only the assigned names onward and leaves identity maps empty", async () => {
+    const directory = await folder();
+    const test = harness();
+    const control = createTranscriptExportControl({
+      directory: () => directory, meeting: test.source, picker: picker(null), pickerPrompt: () => "Pick",
+    });
+    await control.exportTranscript({
+      destination: "default", format: "md", includeSpeakers: true, includeTimestamps: true,
+      meetingId: MEETING_ID, speakerNames: { "Speaker A": "Alice", UNKNOWN: "UNKNOWN" },
+    });
+    expect(test.exported[0]?.speakerNames).toEqual({ "Speaker A": "Alice" });
+    expect(test.labelLookups).toEqual([MEETING_ID]);
+    await control.exportTranscript({
+      destination: "default", format: "md", includeSpeakers: true, includeTimestamps: true,
+      meetingId: MEETING_ID, speakerNames: { "Speaker A": "Speaker A" },
+    });
+    expect(test.exported[1]?.speakerNames).toEqual({});
+  });
+
+  it("does not read labels when no speaker names are requested", async () => {
+    const directory = await folder();
+    const test = harness();
+    const control = createTranscriptExportControl({
+      directory: () => directory, meeting: test.source, picker: picker(null), pickerPrompt: () => "Pick",
+    });
+    await control.exportTranscript({
+      destination: "default", format: "txt", includeSpeakers: true, includeTimestamps: false,
+      meetingId: MEETING_ID,
+    });
+    expect(test.labelLookups).toEqual([]);
+    expect(test.exported[0]?.speakerNames).toBeUndefined();
   });
 });
