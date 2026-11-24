@@ -88,6 +88,18 @@ by hand; tag the fork and let the workflow replace it. A published build keeps
 the tag's plugin version, so a meeting store migrates once, when the version
 that needs it first starts.
 
+A release builds with `pnpm run build:closed-pilot`, never `pnpm run build`.
+The plain build produces only the compiled JavaScript; the native addons
+(`dist/native/darwin-arm64/*.node`) and the signing helper bundle
+(`dist/recording-helper/DSHASRRecordingHelper.app` and its `manifest.json`) come
+from the closed-pilot steps. A tree without them installs and then reports
+"Local inference components: needs repair", and macOS never lists
+`DSHASRRecordingHelper` for Screen Recording and Microphone permissions because
+the bundle is absent. The assembly script refuses such a tree, so the failure
+now stops the job instead of reaching a user. Rebuilding the helper ad-hoc
+changes its CDHash, so a release that rebuilds it can ask for the permissions
+once more.
+
 ## Source, support and discovery
 
 - [Project site](https://huliux.github.io/dsh-asr-plugin/) provides installation,
