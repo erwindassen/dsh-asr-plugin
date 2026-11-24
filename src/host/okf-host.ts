@@ -5,6 +5,7 @@ import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 import { createUserMessage } from "@deepseek-ai/dsh-llm";
 
 import { createOkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
+import { createSpeakerNameRepository, type SpeakerNameRepository } from "../storage/speaker-name-repository.js";
 import { openMeetingDatabase } from "../storage/database.js";
 import type { MeetingRepository } from "../storage/meeting-repository.js";
 import {
@@ -45,6 +46,8 @@ export interface OkfHost {
   /** Repository whose `commitTranscript` starts an automatic ingestion. */
   readonly repository: MeetingRepository;
   readonly service: OkfIngestionService;
+  /** Per-meeting speaker attribution, shared with the recording panel RPC. */
+  readonly speakerNames: SpeakerNameRepository;
   hasCommand: boolean;
   dispose(): Promise<void>;
 }
@@ -111,9 +114,11 @@ function registerCommand(context: Context, definition: OkfCommandDefinition): bo
 export function installOkfHost(context: Context, options: OkfHostOptions): OkfHost {
   const database = openMeetingDatabase(options.databasePath);
   const attempts = createOkfIngestionRepository(database);
+  const speakerNames = createSpeakerNameRepository(database);
   const service = createOkfIngestionService({
     repository: options.repository,
     attempts,
+    speakerNames,
     git: createOkfGitTransaction(createOkfGitPort(context)),
     lock: createOkfBundleLock(),
     agent: createOkfIngestionAgent({
@@ -164,6 +169,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
   return {
     repository,
     service,
+    speakerNames,
     hasCommand,
     async dispose(): Promise<void> {
       // Abort in-flight ingestions first: closing the connection underneath a

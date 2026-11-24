@@ -349,7 +349,7 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
       const removeRpc = registerRecordingHostRpc(connection, application, signal => readModelSettings(
         { dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT, engine: selectedEngine(context), signal },
       ), downloads, recording.permissions, signal => application.prepareRecording(signal), transcripts,
-      recording.devices, chooseOkfDirectory);
+      recording.devices, chooseOkfDirectory, lifetime.okf?.speakerNames);
       webContext.effect(() => removeRpc, "dsh-asr: recording client RPC");
     });
   } catch (error) {
