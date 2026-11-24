@@ -27,6 +27,18 @@ export type AsrIngestCommandResult = {
     readonly text: string;
 };
 /**
+ * Invocation the host command runtime hands a handler. The current runtime calls
+ * `handler({ commandId, agent, rawInput, attachments, signal })` where `rawInput`
+ * is the unparsed text after the command name, leading space included. `args` is
+ * kept as a fallback for hosts that still pass the older `{ args }` shape.
+ */
+export interface OkfCommandInvocation {
+    readonly rawInput?: string;
+    readonly args?: string;
+}
+/** Text after the command name, tolerating either invocation shape. */
+export declare function commandInputArgs(invocation: OkfCommandInvocation | undefined): string;
+/**
  * Structural copy of the host command runtime shape. `@deepseek-ai/dsh-commands`
  * is not part of this package's installed toolchain, so the host registers this
  * object through `context.get("commands")` and only these fields are relied on.
@@ -37,9 +49,7 @@ export interface OkfCommandDefinition {
     readonly input?: {
         readonly hint: string;
     };
-    readonly handler: (input: {
-        readonly args: string;
-    }) => Promise<AsrIngestCommandResult>;
+    readonly handler: (invocation: OkfCommandInvocation) => Promise<AsrIngestCommandResult>;
 }
 export type ParsedAsrIngestArgs = {
     readonly kind: "ok";

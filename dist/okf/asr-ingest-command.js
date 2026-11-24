@@ -3,6 +3,14 @@ import { OkfError } from "./contracts.js";
 export const ASR_INGEST_COMMAND_NAME = "asr-ingest";
 /** Returned when the bundle folder is not configured yet. */
 export const OKF_DIRECTORY_REQUIRED_MESSAGE = "Choose an Open knowledge base folder in settings first";
+/** Text after the command name, tolerating either invocation shape. */
+export function commandInputArgs(invocation) {
+    if (typeof invocation?.rawInput === "string")
+        return invocation.rawInput;
+    if (typeof invocation?.args === "string")
+        return invocation.args;
+    return "";
+}
 /**
  * Parse `<meeting-id> [--force]`. A bare `--force` leaves the meeting null so
  * the handler can fall back to the meeting the command was invoked from.
@@ -54,8 +62,8 @@ export function createAsrIngestCommand(deps) {
         name: ASR_INGEST_COMMAND_NAME,
         description: "Ingest a committed meeting transcript into the Open knowledge base",
         input: { hint: "<meeting-id> [--force]" },
-        async handler({ args }) {
-            const parsed = parseAsrIngestArgs(args);
+        async handler(invocation) {
+            const parsed = parseAsrIngestArgs(commandInputArgs(invocation));
             if (parsed.kind === "error")
                 return { kind: "error", text: parsed.message };
             let directory;
@@ -76,7 +84,7 @@ export function createAsrIngestCommand(deps) {
             }
             const meetingId = parsed.meetingId ?? referenced;
             if (meetingId === null || meetingId.trim() === "") {
-                return { kind: "error", text: "Pass a meeting id, or run this command from a meeting." };
+                return { kind: "error", text: "Pass a meeting id: /asr-ingest <meeting-id> [--force]." };
             }
             let meeting;
             try {
