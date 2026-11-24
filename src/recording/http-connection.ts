@@ -1,4 +1,4 @@
-import { clientRequestSchema, type HostConnectionHandle, type PeerAdmission } from "@deepseek-ai/dsh-client-connection";
+import { clientRequestSchema, type ConnectionTrustRequest, type PeerAdmission } from "@deepseek-ai/dsh-client-connection";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { isIP } from "node:net";
 import type { RecordingRpcConnection } from "./host-rpc.js";
@@ -6,7 +6,23 @@ import { RECORDING_RPC_ENDPOINTS } from "./rpc-contract.js";
 
 // `admit` is the one trust gate present in every admitted DSH series; DSH 0.2.3
 // dropped the `requestRejection` convenience alias that wrapped it.
-type Connection = Pick<HostConnectionHandle, "admit">;
+export interface RecordingRpcAdmission {
+  admit(request: ConnectionTrustRequest): PeerAdmission;
+}
+type Connection = RecordingRpcAdmission;
+
+/**
+ * DSH 0.2.3 verifies credentials through a `connection.authentication` service
+ * that it resolves through the fiber calling `admit`, so the call has to come
+ * from a context that injected it. Older series expose no such service and
+ * `admit` needs nothing, so the fallback stays the plain connection.
+ */
+export function admittingThrough(
+  preferred: () => RecordingRpcAdmission | undefined,
+  fallback: RecordingRpcAdmission,
+): RecordingRpcAdmission {
+  return { admit: request => (preferred() ?? fallback).admit(request) };
+}
 export interface RecordingWebServer {
   register(route: {
     kind: "exact";
@@ -60,7 +76,15 @@ function admissionRejection(admission: PeerAdmission): number | undefined {
 }
 
 async function serve(request: IncomingMessage, response: ServerResponse, connection: Connection, endpoint: string, handler: Handler): Promise<void> {
-  const rejection = isLoopbackPeer(request.socket.remoteAddress) ? admissionRejection(connection.admit(request)) : 403;
+  let rejection: number | undefined;
+  try {
+    rejection = isLoopbackPeer(request.socket.remoteAddress) ? admissionRejection(connection.admit(request)) : 403;
+  } catch {
+    // `admit` resolves the credential verifier through the calling fiber; if it
+    // throws the gate is unavailable, which is not the caller's fault.
+    if (!response.destroyed) { response.writeHead(503, { connection: "close" }); response.end("authentication unavailable"); }
+    return;
+  }
   if (rejection !== undefined) {
     response.writeHead(rejection, { connection: "close" }); response.end("request rejected"); return;
   }
