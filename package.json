@@ -67,7 +67,8 @@
     "docs/development.md",
     "docs/okf.md",
     "docs/distribution.md",
-    "docs/publishing.md"
+    "docs/publishing.md",
+    "docs/speaker-attribution.md"
   ],
   "dsh": {
     "client": {

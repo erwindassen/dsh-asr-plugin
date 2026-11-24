@@ -27,6 +27,7 @@ describe("closed-pilot pack inventory gate", () => {
   it.each([
     "locale/en.json", "locale/zh.json", "CONTRIBUTING.md",
     "docs/model-assets.md", "docs/development.md", "docs/publishing.md",
+    "docs/okf.md", "docs/speaker-attribution.md",
     "SUPPORT.md", "SECURITY.md", "screenshots.json", "assets/screenshots/README.md",
     "assets/screenshots/meeting-summary.jpg", "assets/screenshots/recording-live-summary.jpg",
     "assets/screenshots/recording-active.jpg", "assets/screenshots/recording-expanded.jpg",
