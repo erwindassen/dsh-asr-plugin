@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { createUserMessage } from "@deepseek-ai/dsh-llm";
 import { createOkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
 import { createSpeakerNameRepository } from "../storage/speaker-name-repository.js";
 import { openMeetingDatabase } from "../storage/database.js";
@@ -9,6 +8,7 @@ import { OkfError } from "../okf/contracts.js";
 import { createOkfGitPort } from "../okf/git-port.js";
 import { createOkfGitTransaction } from "../okf/git-transaction.js";
 import { createOkfIngestionAgent, } from "../okf/ingestion-agent.js";
+import { userTextMessage } from "../okf/user-message.js";
 import { createOkfIngestionService, } from "../okf/ingestion-service.js";
 import { startOkfIngestion, withTranscriptCommitHook } from "../okf/trigger.js";
 /**
@@ -20,10 +20,7 @@ function agentFactory(context) {
         async create(options) {
             const handle = await context.agents.create(options);
             return {
-                followup: (text) => handle.agent.followup(createUserMessage({
-                    content: [{ type: "text", text }],
-                    source: { kind: "user" },
-                })),
+                followup: (text) => handle.agent.followup(userTextMessage(text)),
                 whenIdle: () => handle.agent.whenIdle(),
                 interrupt: () => handle.agent.cancel({ kind: "parent" }),
                 dispose: async () => { await handle.dispose(); },
