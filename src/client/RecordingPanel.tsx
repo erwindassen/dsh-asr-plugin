@@ -8,6 +8,13 @@ import {
 } from "react";
 
 import type { ClientConnectionRpc } from "@deepseek-ai/dsh-client-connection/client";
+import type { ConfigForm } from "@deepseek-ai/dsh-client-ui-settings/client";
+import type { AudioDeviceInventoryRpc } from "../recording/rpc-contract.js";
+
+function recordOrEmpty(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown> : {};
+}
 
 import type {
   RecordingRpcControlPayload,
@@ -20,7 +27,7 @@ import { RecordingRpcClient } from "./recording-rpc-client.js";
 
 const POLL_MS = 2_000;
 
-export type RecordingPendingAction = RecordingRpcControlPayload["action"] | "join" | null;
+export type RecordingPendingAction = RecordingRpcControlPayload["action"] | "export" | "join" | null;
 
 export type Translate = (
   key: MeetingReferenceLocaleKey,
@@ -49,6 +56,7 @@ interface RecordingPanelProps {
   readonly locale: LocaleFace;
   readonly references: RecordingReferenceActions;
   readonly rpc: ClientConnectionRpc;
+  readonly settings?: ConfigForm<Record<string, unknown>>;
   readonly translate: Translate;
 }
 
@@ -149,13 +157,57 @@ function useJoinReference(options: {
   }, [options]);
 }
 
+interface TranscriptExportOptions {
+  readonly client: RecordingRpcClient;
+  readonly mounted: React.RefObject<boolean>;
+  readonly setError: (value: string | null) => void;
+  readonly setNotice: (value: string | null) => void;
+  readonly setPending: (value: RecordingPendingAction) => void;
+  readonly settings: ConfigForm<Record<string, unknown>> | undefined;
+  readonly translate: Translate;
+  readonly view: RecordingRpcView | null;
+}
+
+/**
+ * Exports the committed Markdown transcript. The configured folder is used by
+ * default; modifier-click asks for a folder and remembers it, so the first
+ * export also configures the plugin setting.
+ */
+function useTranscriptExport(options: TranscriptExportOptions) {
+  return useCallback(async (choose: boolean) => {
+    const view = options.view;
+    if (view === null) return;
+    options.setPending("export");
+    options.setError(null);
+    options.setNotice(null);
+    try {
+      const result = await options.client.exportTranscript({
+        destination: choose ? "choose" : "default",
+        format: "md",
+        include_speakers: true,
+        include_timestamps: true,
+        meeting_id: view.meetingId,
+      });
+      if (!options.mounted.current) return;
+      options.setNotice(options.translate("panel.exportSaved", { path: result.output_path }));
+    } catch (cause) {
+      if (!options.mounted.current) return;
+      const code = cause instanceof Error ? cause.message : "ENGINE_FAILURE";
+      options.setError(code);
+    } finally {
+      if (options.mounted.current) options.setPending(null);
+    }
+  }, [options]);
+}
+
 export function RecordingPanel(props: RecordingPanelProps) {
-  const { currentSessionId, locale, references, rpc, translate } = props;
+  const { currentSessionId, locale, references, rpc, settings, translate } = props;
   useSyncExternalStore(listener => locale.subscribe(listener), () => locale.getSnapshot());
   const client = useMemo(() => new RecordingRpcClient(rpc), [rpc]);
   const snapshot = useRecordingSnapshot(client, references);
   const prepare = useCallback((signal: AbortSignal) => client.prepareModels(signal), [client]);
   const [pendingAction, setPending] = useState<RecordingPendingAction>(null);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
   useEffect(() => {
     if (pendingAction !== "stop") return;
     const controller = new AbortController();
@@ -170,8 +222,38 @@ export function RecordingPanel(props: RecordingPanelProps) {
     mounted: snapshot.mounted, references, setError: snapshot.setError,
     setPending, translate, view: snapshot.view?.recordingStartedAtMs === null ? null : snapshot.view,
   });
+  const configSubscribe = useCallback(
+    (listener: () => void) => settings?.subscribe(listener) ?? (() => undefined),
+    [settings],
+  );
+  const configSnapshot = useCallback(() => settings?.getSnapshot() ?? null, [settings]);
+  const settingsSnapshot = useSyncExternalStore(configSubscribe, configSnapshot);
+  const [devices, setDevices] = useState<AudioDeviceInventoryRpc | null>(null);
+  const refreshDevices = useCallback(async () => {
+    try { setDevices(await client.listDevices()); }
+    catch { setDevices(null); }
+  }, [client]);
+  useEffect(() => { void refreshDevices(); }, [refreshDevices]);
+  const selectDevice = useCallback(async (track: "mic" | "system", uid: string) => {
+    const current = settings?.getSnapshot();
+    if (settings === undefined || current === null || current === undefined) return;
+    await settings.mutate([{ op: "set", path: [track === "mic" ? "mic_device_uid" : "system_device_uid"], value: uid }],
+      current.revision);
+  }, [settings]);
+  const configValues = recordOrEmpty(settingsSnapshot?.value);
+  const selectedDevices = useMemo(() => ({
+    mic: typeof configValues.mic_device_uid === "string" ? configValues.mic_device_uid : "",
+    system: typeof configValues.system_device_uid === "string" ? configValues.system_device_uid : "",
+  }), [configValues]);
+  const exportTranscript = useTranscriptExport({
+    client, mounted: snapshot.mounted, setError: snapshot.setError, setNotice: setExportNotice,
+    setPending, settings, translate, view: snapshot.view,
+  });
   const failure = snapshot.error ?? trackError(snapshot.view);
-  return <RecordingPanelView failure={failure} join={join} pending={pendingAction !== null} pendingAction={pendingAction}
+  return <RecordingPanelView devices={devices} exportNotice={exportNotice} exportTranscript={exportTranscript}
+    refreshDevices={refreshDevices} selectDevice={selectDevice} selectedDevices={selectedDevices}
+    failure={failure} join={join} pending={pendingAction !== null} pendingAction={pendingAction}
     hasRecordingHistory={snapshot.hasRecordingHistory} prepare={prepare}
-    preview={snapshot.preview} run={run} translate={translate} view={snapshot.view} />;
+    preview={snapshot.preview} run={run} settings={settings} settingsRevision={settingsSnapshot?.revision}
+    translate={translate} view={snapshot.view} />;
 }

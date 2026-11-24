@@ -2,6 +2,8 @@ import { callRecordingRpc } from "./recording-rpc-transport.js";
 import type { ClientConnectionRpc } from "@deepseek-ai/dsh-client-connection/client";
 
 import {
+  type AudioDeviceInventoryRpc,
+  type AudioDeviceRpcEntry,
   type MeetingReferenceRpcCandidate,
   type MeetingReferenceRpcCandidatesPayload,
   type MeetingReferenceRpcPhase,
@@ -12,6 +14,8 @@ import {
   type RecordingRpcStateValue,
   type RecordingRpcTrack,
   type RecordingRpcView,
+  type TranscriptExportRpcPayload,
+  type TranscriptExportRpcValue,
 } from "../recording/rpc-contract.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -180,6 +184,53 @@ function referenceCandidates(value: unknown): readonly MeetingReferenceRpcCandid
   return value.map(referenceCandidate);
 }
 
+function transcriptExportValue(value: unknown): TranscriptExportRpcValue {
+  const item = record(value);
+  exact(item, ["bytes", "format", "meeting_id", "output_path", "segment_count", "transcript_version"]);
+  if (typeof item.meeting_id !== "string" || !UUID_PATTERN.test(item.meeting_id)
+    || typeof item.output_path !== "string" || !item.output_path.startsWith("/")
+    || (item.format !== "md" && item.format !== "txt" && item.format !== "srt" && item.format !== "vtt")) {
+    throw new Error("INVALID_RESPONSE");
+  }
+  return {
+    bytes: nonnegativeInteger(item.bytes),
+    format: item.format,
+    meeting_id: item.meeting_id,
+    output_path: item.output_path,
+    segment_count: nonnegativeInteger(item.segment_count),
+    transcript_version: nonnegativeInteger(item.transcript_version),
+  };
+}
+
+function audioDevice(value: unknown): AudioDeviceRpcEntry {
+  const item = record(value);
+  exact(item, ["uid", "name", "input_channels", "output_channels", "default_input", "default_output"]);
+  if (typeof item.uid !== "string" || item.uid.length === 0
+    || typeof item.name !== "string" || item.name.length === 0
+    || typeof item.default_input !== "boolean" || typeof item.default_output !== "boolean") {
+    throw new Error("INVALID_RESPONSE");
+  }
+  return {
+    uid: item.uid,
+    name: item.name,
+    input_channels: nonnegativeInteger(item.input_channels),
+    output_channels: nonnegativeInteger(item.output_channels),
+    default_input: item.default_input,
+    default_output: item.default_output,
+  };
+}
+
+function audioDeviceInventory(value: unknown): AudioDeviceInventoryRpc {
+  const item = record(value);
+  exact(item, ["default_input_uid", "default_output_uid", "devices"]);
+  if (!Array.isArray(item.devices)) throw new Error("INVALID_RESPONSE");
+  return {
+    default_input_uid: nullableString(item.default_input_uid),
+    default_output_uid: nullableString(item.default_output_uid),
+    devices: item.devices.map(audioDevice),
+  };
+}
+
 async function call(
   rpc: ClientConnectionRpc,
   endpoint: string,
@@ -226,5 +277,25 @@ export class RecordingRpcClient {
     signal?: AbortSignal,
   ): Promise<RecordingRpcView> {
     return parseRecordingRpcView(await call(this.rpc, "control", payload, signal));
+  }
+
+  async exportTranscript(
+    payload: TranscriptExportRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<TranscriptExportRpcValue> {
+    return transcriptExportValue(await call(this.rpc, "transcripts/export", payload, signal));
+  }
+
+  /** Lists CoreAudio devices through the signed helper. */
+  async listDevices(signal?: AbortSignal): Promise<AudioDeviceInventoryRpc> {
+    return audioDeviceInventory(await call(this.rpc, "devices/list", {}, signal));
+  }
+
+  /** Resolves the folder the user picked, or null when the dialog was cancelled. */
+  async chooseTranscriptDirectory(signal?: AbortSignal): Promise<string | null> {
+    const value = await call(this.rpc, "transcripts/choose-directory", {}, signal);
+    if (value === null) return null;
+    if (typeof value !== "string" || !value.startsWith("/")) throw new Error("INVALID_RESPONSE");
+    return value;
   }
 }

@@ -1,15 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { recordingErrorCopy } from "./recording-error-copy.js";
 import { Button, Tooltip, StateDot, IconWarningOutlineRegular, IconRefreshOutlineRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { StateDotState } from "@deepseek-ai/dsh-client-ui-primitives";
-import type { RecordingRpcControlPayload, RecordingRpcSegment, RecordingRpcView } from "../recording/rpc-contract.js";
+import type { AudioDeviceInventoryRpc, RecordingRpcControlPayload, RecordingRpcSegment, RecordingRpcView } from "../recording/rpc-contract.js";
 import { durationClock } from "./meeting-reference-source.js";
 import type { RecordingPendingAction, Translate } from "./RecordingPanel.js";
 import { RecordingControls, RecordingIcon } from "./RecordingPanelControls.js";
+import type { ConfigForm } from "@deepseek-ai/dsh-client-ui-settings/client";
+import { RecognizerSelect } from "./RecognizerSelect.js";
 import { useRecordingPanelLayout } from "./use-recording-panel-layout.js";
 import styles from "./RecordingPanel.module.css";
 
 export interface PanelViewProps {
+  readonly exportNotice?: string | null;
+  readonly exportTranscript?: (choose: boolean) => Promise<void>;
   readonly prepare?: (signal: AbortSignal) => Promise<void>;
   readonly hasRecordingHistory: boolean;
   readonly failure: string | null;
@@ -17,7 +21,13 @@ export interface PanelViewProps {
   readonly pending: boolean;
   readonly pendingAction: RecordingPendingAction;
   readonly preview: readonly RecordingRpcSegment[];
+  readonly devices: AudioDeviceInventoryRpc | null;
+  readonly refreshDevices: () => Promise<void>;
   readonly run: (payload: RecordingRpcControlPayload) => Promise<void>;
+  readonly selectDevice: (track: "mic" | "system", uid: string) => Promise<void>;
+  readonly selectedDevices: { readonly mic: string; readonly system: string };
+  readonly settings?: ConfigForm<Record<string, unknown>> | undefined;
+  readonly settingsRevision?: number | undefined;
   readonly translate: Translate;
   readonly view: RecordingRpcView | null;
 }
@@ -101,20 +111,44 @@ export function RecordingPanelView(props: PanelViewProps) {
     .filter((code): code is string => code != null))];
   const noSignal = codes.length === 1 && codes[0] === "SYSTEM_AUDIO_NO_SIGNAL";
   const failure = codes.length === 0 ? null : [...new Set(codes.map(code => recordingErrorCopy(code, translate)))].join("\n");
-  const compactWidth = 260 + (failure === null ? 0 : 32);
-  const layout = useRecordingPanelLayout(compactWidth);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const [headerWidth, setHeaderWidth] = useState(0);
+  // The header controls keep their natural size, so their total width is the narrowest
+  // window the panel can open at without squeezing the buttons.
+  const compactWidth = Math.max(260, headerWidth);
+  const layout = useRecordingPanelLayout(compactWidth, Math.max(300, compactWidth));
   useEffect(() => {
     if (!layout.expanded || props.prepare === undefined) return;
     const controller = new AbortController();
     void props.prepare(controller.signal).catch(() => undefined);
     return () => controller.abort();
   }, [layout.expanded, props.prepare]);
+  useEffect(() => {
+    const header = headerRef.current;
+    if (header === null) return undefined;
+    const measure = () => {
+      const children = Array.from(header.children) as HTMLElement[];
+      const gap = 4;
+      const padding = 10;
+      setHeaderWidth(Math.ceil(children.reduce((total, child) => total + child.offsetWidth, 0)
+        + Math.max(0, children.length - 1) * gap + padding));
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(header);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [failure, layout.expanded]);
   const toggleLabel = translate(layout.expanded ? "panel.collapse" : "panel.expand");
   return <section className={styles.panel} data-expanded={layout.expanded} style={layout.style} aria-label={translate("panel.aria")}>
-    <header className={styles.header}>
+    <header className={styles.header} ref={headerRef}>
       <Button className={styles.move} aria-label={translate("panel.move")} {...layout.move}><RecordingIcon name="grip" /></Button>
       <RecordingControls {...props} />
       <span className={styles.spacer} />
+      <RecognizerSelect revision={props.settingsRevision} settings={props.settings} translate={translate} />
       {failure !== null && <Tooltip label={failure}>
         <Button size="sm" className={`${styles.errorControl} ${noSignal ? styles.noSignal : ""}`} aria-label={failure}
           icon={<IconWarningOutlineRegular />} onClick={() => !layout.expanded && layout.toggle()} />
@@ -131,7 +165,15 @@ export function RecordingPanelView(props: PanelViewProps) {
         <Preview {...props} />
       </div>
       <footer className={styles.footer}>
+        {props.exportNotice != null && <span className={styles.hint}>{props.exportNotice}</span>}
         <FooterStatus {...props} />
+        <Tooltip label={translate("panel.exportHint")}>
+          <Button size="sm" className={styles.utility} aria-label={props.pendingAction === "export"
+            ? translate("panel.exporting") : translate("panel.export")} icon={<RecordingIcon name="export" />}
+            aria-busy={props.pendingAction === "export"} disabled={props.exportTranscript === undefined
+            || props.pending || props.view?.transcriptVersion == null}
+            onClick={event => void props.exportTranscript?.(event.altKey)} />
+        </Tooltip>
         <Tooltip label={translate("panel.reset")}>
           <Button size="sm" className={styles.utility} aria-label={translate("panel.reset")} icon={<IconRefreshOutlineRegular />} onClick={layout.reset} />
         </Tooltip>
