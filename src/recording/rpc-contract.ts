@@ -152,7 +152,7 @@ export interface AudioDeviceInventoryRpc {
   readonly devices: readonly AudioDeviceRpcEntry[];
 }
 
-export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | AudioDeviceInventoryRpc | string
+export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string
   | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 
 export type RecordingRpcResult<T = RecordingRpcValue> =
