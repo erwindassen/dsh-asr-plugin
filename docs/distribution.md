@@ -57,6 +57,35 @@ dsh plugin --profile web add --ignore-scripts /absolute/path/to/qualified-packag
 Checksum verification detects changed bytes. Download both files from the
 maintainer's release page. The archive excludes models and user data.
 
+## Installing from a fork
+
+A fork that carries local work publishes its own installable artifacts. Pushing
+a `v*` tag to the fork runs `.github/workflows/fork-release.yml`, which builds
+the plugin, writes the prebuilt tree to that fork's `release/desktop` branch,
+attaches a versioned archive with `SHA256SUMS` to the GitHub release, and needs
+no local build or approval. The tag must become a package version: `v0.2.0` and
+`v0.2.0-fork.3` are used as they are, and a dotted suffix such as
+`v0.2.0.fork-erwindassen` becomes `0.2.0-fork-erwindassen`; anything else fails
+the job before it publishes:
+
+```sh
+dsh plugin --profile desktop add github:erwindassen/dsh-asr-plugin#release/desktop
+```
+
+Use the release archive instead when you need an immutable version, verified
+against its `SHA256SUMS` the same way as the npm download above. Installing a
+source tag directly (`github:owner/repo#v0.2.0`) does not work: this package
+generates `dist/`, and pnpm refuses to run the build script of a Git dependency
+unless that exact URL is allowlisted (`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`),
+so the artifacts branch is the installable form of a source tree.
+
+Assembly stays reproducible — `scripts/assemble-release-artifacts.mjs` derives
+the tree from the package's `files` allowlist and stamps the version, so the
+artifacts branch and the npm tarball cannot drift. Do not edit `release/desktop`
+by hand; tag the fork and let the workflow replace it. A published build keeps
+the tag's plugin version, so a meeting store migrates once, when the version
+that needs it first starts.
+
 ## Source, support and discovery
 
 - [Project site](https://huliux.github.io/dsh-asr-plugin/) provides installation,

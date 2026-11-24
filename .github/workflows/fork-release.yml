@@ -1,0 +1,120 @@
+name: Fork release
+
+# A source tree cannot be installed into a DSH profile: `dist/` is generated,
+# and pnpm refuses the build script a Git dependency would need unless that
+# exact URL is allowlisted. This workflow publishes the installable form
+# instead — a prebuilt artifacts branch plus a signed-off tarball — so the
+# fork can be installed from a stable branch or from a versioned archive.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to publish, for example v0.2.0-fork.3
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fork-release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Publish installable artifacts
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Install the declared pnpm version
+        run: npm install --global "$(node -p "require('./package.json').packageManager")"
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build the plugin
+        run: pnpm run build
+      - name: Derive the release version
+        env:
+          REQUESTED_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          tag="$REQUESTED_TAG"
+          version="$(node --input-type=module -e '
+            const raw = process.argv[1];
+            let version = raw.replace(/^v/u, "");
+            const dotted = /^([0-9]+\.[0-9]+\.[0-9]+)\.([0-9A-Za-z.-]+)$/u.exec(version);
+            if (dotted !== null) version = `${dotted[1]}-${dotted[2]}`;
+            if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
+              console.error(`Tag ${JSON.stringify(raw)} cannot become a package version; tag as vX.Y.Z or vX.Y.Z-suffix.`);
+              process.exit(1);
+            }
+            process.stdout.write(version);
+          ' "$tag")"
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Publishing $tag as $version"
+      - name: Assemble the installable tree
+        run: node scripts/assemble-release-artifacts.mjs --out "$RUNNER_TEMP/release" --version "$RELEASE_VERSION"
+      - name: Pack the archive
+        run: |
+          mkdir -p "$RUNNER_TEMP/packs"
+          (cd "$RUNNER_TEMP/release" && npm pack --pack-destination "$RUNNER_TEMP/packs")
+          archive="$(ls "$RUNNER_TEMP"/packs/*.tgz)"
+          mv "$archive" "$RUNNER_TEMP/packs/dsh-asr-plugin-$RELEASE_VERSION.tgz"
+          (cd "$RUNNER_TEMP/packs" && shasum -a 256 ./*.tgz | sed 's|\./||' > SHA256SUMS)
+          cat "$RUNNER_TEMP/packs/SHA256SUMS"
+      - name: Publish the artifacts branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "dsh-asr release"
+          git config --global user.email "dsh-asr@localhost"
+          artifacts="$RUNNER_TEMP/artifacts"
+          rm -rf "$artifacts"
+          git worktree prune
+          if git fetch --quiet origin "release/desktop:refs/remotes/origin/release/desktop" 2>/dev/null; then
+            git worktree add --quiet --force "$artifacts" refs/remotes/origin/release/desktop
+          else
+            git worktree add --quiet --force --detach "$artifacts" HEAD
+            (cd "$artifacts" && git checkout --quiet --orphan release/desktop)
+          fi
+          cd "$artifacts"
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R "$RUNNER_TEMP/release/." .
+          git add -A
+          git commit --quiet -m "release: $RELEASE_VERSION — built from $RELEASE_TAG"
+          git push --quiet "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:release/desktop
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          notes="$RUNNER_TEMP/release-notes.md"
+          {
+            echo "Prebuilt plugin for DSH. Install the newest build with:"
+            echo
+            echo '```sh'
+            echo "dsh plugin --profile desktop add github:${GITHUB_REPOSITORY}#release/desktop"
+            echo '```'
+            echo
+            echo "Or install the attached \`dsh-asr-plugin-${RELEASE_VERSION}.tgz\` and verify it against \`SHA256SUMS\`."
+          } > "$notes"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$RUNNER_TEMP"/packs/* --clobber
+          else
+            gh release create "$RELEASE_TAG" "$RUNNER_TEMP"/packs/* \
+              --title "$RELEASE_VERSION" --notes-file "$notes"
+          fi
