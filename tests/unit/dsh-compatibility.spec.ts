@@ -8,6 +8,7 @@ describe("DSH host admission", () => {
   it.each([
     "0.2.0-rc.2", "0.2.1-rc.2", "0.2.1-rc.3", "0.2.1-rc.5",
     "0.2.2-rc.1", "0.2.2-rc.2", "0.2.2",
+    "0.2.3-alpha.1", "0.2.3-alpha.2", "0.2.3-rc.1", "0.2.3",
   ])("admits supported host %s without exemptions", runtime => {
     expect(evaluatePluginCompatibility(manifest, {}, runtime)).toBeUndefined();
     // Older hosts decide from peers rather than engines.dsh.
@@ -16,7 +17,7 @@ describe("DSH host admission", () => {
   });
 
   it.each([
-    "0.1.7-rc.2", "0.2.1-rc.4", "0.2.1-rc.6", "0.2.2-alpha.3", "0.2.3-alpha.1", "0.2.3", "0.3.0",
+    "0.1.7-rc.2", "0.2.1-rc.4", "0.2.1-rc.6", "0.2.2-alpha.3", "0.2.4-alpha.1", "0.2.4", "0.3.0",
   ])("keeps host %s outside the declared contract", runtime => {
     expect(evaluatePluginCompatibility(manifest, {}, runtime)).toMatchObject({
       runtimeVersion: runtime, exempted: false,
