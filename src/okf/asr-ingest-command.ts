@@ -29,6 +29,24 @@ export type AsrIngestCommandResult =
   | { readonly kind: "error"; readonly text: string };
 
 /**
+ * Invocation the host command runtime hands a handler. The current runtime calls
+ * `handler({ commandId, agent, rawInput, attachments, signal })` where `rawInput`
+ * is the unparsed text after the command name, leading space included. `args` is
+ * kept as a fallback for hosts that still pass the older `{ args }` shape.
+ */
+export interface OkfCommandInvocation {
+  readonly rawInput?: string;
+  readonly args?: string;
+}
+
+/** Text after the command name, tolerating either invocation shape. */
+export function commandInputArgs(invocation: OkfCommandInvocation | undefined): string {
+  if (typeof invocation?.rawInput === "string") return invocation.rawInput;
+  if (typeof invocation?.args === "string") return invocation.args;
+  return "";
+}
+
+/**
  * Structural copy of the host command runtime shape. `@deepseek-ai/dsh-commands`
  * is not part of this package's installed toolchain, so the host registers this
  * object through `context.get("commands")` and only these fields are relied on.
@@ -37,7 +55,7 @@ export interface OkfCommandDefinition {
   readonly name: typeof ASR_INGEST_COMMAND_NAME;
   readonly description: string;
   readonly input?: { readonly hint: string };
-  readonly handler: (input: { readonly args: string }) => Promise<AsrIngestCommandResult>;
+  readonly handler: (invocation: OkfCommandInvocation) => Promise<AsrIngestCommandResult>;
 }
 
 export type ParsedAsrIngestArgs =
@@ -94,8 +112,8 @@ export function createAsrIngestCommand(deps: AsrIngestCommandDeps): OkfCommandDe
     name: ASR_INGEST_COMMAND_NAME,
     description: "Ingest a committed meeting transcript into the Open knowledge base",
     input: { hint: "<meeting-id> [--force]" },
-    async handler({ args }): Promise<AsrIngestCommandResult> {
-      const parsed = parseAsrIngestArgs(args);
+    async handler(invocation): Promise<AsrIngestCommandResult> {
+      const parsed = parseAsrIngestArgs(commandInputArgs(invocation));
       if (parsed.kind === "error") return { kind: "error", text: parsed.message };
 
       let directory: string;
@@ -114,7 +132,7 @@ export function createAsrIngestCommand(deps: AsrIngestCommandDeps): OkfCommandDe
       }
       const meetingId = parsed.meetingId ?? referenced;
       if (meetingId === null || meetingId.trim() === "") {
-        return { kind: "error", text: "Pass a meeting id, or run this command from a meeting." };
+        return { kind: "error", text: "Pass a meeting id: /asr-ingest <meeting-id> [--force]." };
       }
 
       let meeting: AsrIngestMeeting | null;
