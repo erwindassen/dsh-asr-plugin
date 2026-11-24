@@ -47,8 +47,11 @@ Development dependencies target DSH 0.2.2-rc.1 and Cordis 4.1. The host adapter
 handles both Cordis 4.0 and 4.1 configuration hooks. The recording HTTP adapter
 admits every request through `connection.admit`, the trust gate that each
 admitted series exposes; DSH 0.2.3 removed the `requestRejection` wrapper the
-adapter used before. The client coordinator normalizes composer send states
-before applying the meeting reference policy.
+adapter used before. From 0.2.3 that gate resolves its credential verifier
+through the fiber that calls it, so the route handler admits through a context
+that injected `connection.authentication` and falls back to the plain
+connection where the host has no such service. The client coordinator
+normalizes composer send states before applying the meeting reference policy.
 Check admission and client and host integration before expanding the supported
 series. `probe:p0-07:config` checks the CLI against the development host version.
 
