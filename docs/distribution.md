@@ -16,6 +16,8 @@ dsh plugin --profile web add --ignore-scripts @huliux/dsh-asr-plugin@0.1.6
 
 Plugin 0.1.6 supports DSH 0.2.0-rc.2, 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.5,
 and the 0.2.2 series from rc.1. Later 0.2.2 releases can use the same package.
+The manifests in this repository also admit the DSH 0.2.3 series from alpha.1;
+the next release carries that admission.
 To update the desktop profile, choose **Add plugin** in the app and enter
 `@huliux/dsh-asr-plugin@0.1.6`. Web users can rerun the command above.
 Restart if requested; the supported versions require no compatibility exemption.

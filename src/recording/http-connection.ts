@@ -1,10 +1,12 @@
-import { clientRequestSchema, type HostConnectionHandle } from "@deepseek-ai/dsh-client-connection";
+import { clientRequestSchema, type HostConnectionHandle, type PeerAdmission } from "@deepseek-ai/dsh-client-connection";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { isIP } from "node:net";
 import type { RecordingRpcConnection } from "./host-rpc.js";
 import { RECORDING_RPC_ENDPOINTS } from "./rpc-contract.js";
 
-type Connection = Pick<HostConnectionHandle, "requestRejection">;
+// `admit` is the one trust gate present in every admitted DSH series; DSH 0.2.3
+// dropped the `requestRejection` convenience alias that wrapped it.
+type Connection = Pick<HostConnectionHandle, "admit">;
 export interface RecordingWebServer {
   register(route: {
     kind: "exact";
@@ -53,8 +55,12 @@ async function dispatch(request: IncomingMessage, endpoint: string, handler: Han
   return Response.json({ type: "server-response", rpcId: parsed.data.rpcId, result });
 }
 
+function admissionRejection(admission: PeerAdmission): number | undefined {
+  return "rejection" in admission ? admission.rejection : undefined;
+}
+
 async function serve(request: IncomingMessage, response: ServerResponse, connection: Connection, endpoint: string, handler: Handler): Promise<void> {
-  const rejection = isLoopbackPeer(request.socket.remoteAddress) ? connection.requestRejection(request) : 403;
+  const rejection = isLoopbackPeer(request.socket.remoteAddress) ? admissionRejection(connection.admit(request)) : 403;
   if (rejection !== undefined) {
     response.writeHead(rejection, { connection: "close" }); response.end("request rejected"); return;
   }
