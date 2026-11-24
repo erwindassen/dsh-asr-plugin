@@ -144,6 +144,37 @@ it("debounces a save to the renamed labels only and skips unchanged names", asyn
   expect(saveSpeakerNames).toHaveBeenCalledTimes(1);
 });
 
+it("flushes a rename typed right before the panel closes", async () => {
+  reset();
+  vi.useFakeTimers();
+  const saveSpeakerNames = vi.fn(async (payload: { speaker_names: Readonly<Record<string, string>> }) =>
+    ({ speaker_names: payload.speaker_names }));
+  const mounted: { current: boolean } = { current: true };
+  const closing = options(fakeClient({ saveSpeakerNames }), { mounted });
+  render(closing);
+  await vi.advanceTimersByTimeAsync(0);
+  render(closing).update("Speaker B", "Mira");
+  render(closing);
+  mounted.current = false;
+  unmount();
+  expect(saveSpeakerNames).toHaveBeenCalledTimes(1);
+  expect(saveSpeakerNames.mock.calls[0]![0]).toEqual({
+    meeting_id: "meeting-1", speaker_names: { "Speaker B": "Mira" },
+  });
+});
+
+it("does not flush anything when no rename is pending", async () => {
+  reset();
+  const saveSpeakerNames = vi.fn(async (payload: { speaker_names: Readonly<Record<string, string>> }) =>
+    ({ speaker_names: payload.speaker_names }));
+  const handle = options(fakeClient({ saveSpeakerNames }));
+  render(handle);
+  await flush();
+  render(handle);
+  unmount();
+  expect(saveSpeakerNames).not.toHaveBeenCalled();
+});
+
 it("reports a failed save instead of swallowing it", async () => {
   reset();
   vi.useFakeTimers();

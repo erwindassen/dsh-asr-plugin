@@ -306,6 +306,19 @@ export function useSpeakerAttribution(options: SpeakerAttributionOptions): Speak
     };
   }, [assigned, client, loadKey, meetingId, mounted, readyKey]);
 
+  // Closing the panel inside the debounce window must not throw a rename away:
+  // the map that is still waiting for its timer is flushed once on unmount.
+  const pendingSave = useRef<{ readonly meetingId: string; readonly names: SpeakerNameMap } | null>(null);
+  pendingSave.current = meetingId === null || readyKey !== loadKey
+    ? null
+    : { meetingId, names: assigned };
+  useEffect(() => () => {
+    const pending = pendingSave.current;
+    if (pending === null || sameSpeakerNames(pending.names, lastSaved.current)) return;
+    void client.saveSpeakerNames({ meeting_id: pending.meetingId, speaker_names: pending.names })
+      .catch(() => undefined);
+  }, [client]);
+
   const update = useCallback((label: string, name: string) => {
     setNames(current => {
       const next: Record<string, string> = { ...current };
