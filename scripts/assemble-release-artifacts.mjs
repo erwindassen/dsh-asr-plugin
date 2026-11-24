@@ -18,6 +18,21 @@ import { fileURLToPath } from "node:url";
 /** Version strings accepted for an artifact tree. */
 export const RELEASE_VERSION_PATTERN = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u;
 
+/**
+ * Files a release must carry besides the compiled JavaScript.
+ *
+ * `pnpm run build` produces only TypeScript output, so a tree assembled from it
+ * installs but cannot record: the helper bundle is missing and macOS never lists
+ * `DSHASRRecordingHelper` for permissions. `pnpm run build:closed-pilot` builds
+ * these, and a release that lacks them is refused instead of published.
+ */
+export const REQUIRED_RELEASE_PAYLOAD = Object.freeze([
+  "dist/recording-helper/DSHASRRecordingHelper.app/Contents/MacOS/DSHASRRecordingHelper",
+  "dist/recording-helper/manifest.json",
+  "dist/native/darwin-arm64/fbank.node",
+  "dist/native/darwin-arm64/hcluster.node",
+]);
+
 /** Expand one `files` entry into repository-relative paths. */
 async function expand(root, entry) {
   if (entry.endsWith("/**")) {
@@ -84,6 +99,21 @@ export async function releaseArtifactFiles(root) {
 }
 
 /**
+ * List the required runtime payload files that `root` does not carry.
+ *
+ * @param root - directory holding a built plugin tree.
+ * @returns repository-relative paths that are missing or not regular files.
+ */
+export async function missingReleasePayload(root) {
+  const missing = [];
+  for (const relative of REQUIRED_RELEASE_PAYLOAD) {
+    const info = await stat(join(root, relative)).catch(() => null);
+    if (info === null || !info.isFile()) missing.push(relative);
+  }
+  return missing;
+}
+
+/**
  * Copy the artifact files into `out` and stamp the release version.
  *
  * @param options - repository root, output directory and release version.
@@ -129,6 +159,14 @@ if (entry !== undefined && resolve(entry) === resolve(fileURLToPath(import.meta.
   const options = parseArgs(process.argv.slice(2));
   if (options.version === undefined) throw new Error("--version is required");
   const out = resolve(options.out ?? ".release");
-  const count = await assembleReleaseArtifacts({ root: process.cwd(), out, version: options.version });
+  const root = process.cwd();
+  const missing = await missingReleasePayload(root);
+  if (missing.length > 0) {
+    throw new Error(
+      `Refusing to assemble ${root}: it is missing ${missing.join(", ")}. ` +
+        "Build the release with `pnpm run build:closed-pilot`, which also produces the native addons and the recording helper.",
+    );
+  }
+  const count = await assembleReleaseArtifacts({ root, out, version: options.version });
   console.log(`Assembled ${count} files for ${options.version} in ${out}`);
 }

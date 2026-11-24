@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   assembleReleaseArtifacts,
+  missingReleasePayload,
   releaseArtifactFiles,
 } from "../../scripts/assemble-release-artifacts.mjs";
 
@@ -57,6 +58,34 @@ describe("releaseArtifactFiles", () => {
     expect(files).not.toContain("locale/notes.txt");
     expect(files).not.toContain("docs/two.md");
     expect(files).toEqual([...files].sort());
+  });
+});
+
+describe("missingReleasePayload", () => {
+  it("names every runtime file a JavaScript-only build lacks", async () => {
+    const root = await fixture({ withEntry: true });
+
+    expect(await missingReleasePayload(root)).toEqual([
+      "dist/recording-helper/DSHASRRecordingHelper.app/Contents/MacOS/DSHASRRecordingHelper",
+      "dist/recording-helper/manifest.json",
+      "dist/native/darwin-arm64/fbank.node",
+      "dist/native/darwin-arm64/hcluster.node",
+    ]);
+  });
+
+  it("accepts a tree built by the closed-pilot release build", async () => {
+    const root = await fixture({ withEntry: true });
+    for (const relative of [
+      "dist/recording-helper/DSHASRRecordingHelper.app/Contents/MacOS/DSHASRRecordingHelper",
+      "dist/recording-helper/manifest.json",
+      "dist/native/darwin-arm64/fbank.node",
+      "dist/native/darwin-arm64/hcluster.node",
+    ]) {
+      await mkdir(join(root, relative, ".."), { recursive: true });
+      await writeFile(join(root, relative), "binary");
+    }
+
+    expect(await missingReleasePayload(root)).toEqual([]);
   });
 });
 

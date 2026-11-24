@@ -46,8 +46,8 @@ jobs:
         run: npm install --global "$(node -p "require('./package.json').packageManager")"
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
-      - name: Build the plugin
-        run: pnpm run build
+      - name: Build the plugin with its native payload
+        run: pnpm run build:closed-pilot
       - name: Derive the release version
         env:
           REQUESTED_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
