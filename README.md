@@ -63,7 +63,8 @@ Desktop and Web profiles share the default meeting store. Run one plugin host
 per data directory. Preserve meeting and model data when replacing a package.
 
 For package verification, local archive installation and release channels, see
-[distribution](docs/distribution.md). Source downloads require the complete
+[distribution](docs/distribution.md), which also explains installing a fork's
+prebuilt `release/desktop` branch. Source downloads require the complete
 [source build](docs/development.md) before recording. Report installation problems
 through [GitHub Issues](https://github.com/huliux/dsh-asr-plugin/issues), including
 the plugin, DSH, Node.js and macOS versions without meeting data or credentials.
