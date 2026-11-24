@@ -1,4 +1,5 @@
 import type { TranscriptExportFormat } from "../transcript-projection/transcript-projection.js";
+import type { SpeakerNameMap } from "./speaker-attribution.js";
 
 export const TRANSCRIPT_EXPORT_FORMATS = ["md", "txt", "srt", "vtt"] as const satisfies readonly TranscriptExportFormat[];
 
@@ -12,6 +13,8 @@ export interface TranscriptExportRequest {
   readonly includeSpeakers: boolean;
   readonly includeTimestamps: boolean;
   readonly meetingId: string;
+  /** Optional speaker-label to display-name map; empty means keep the labels. */
+  readonly speakerNames?: SpeakerNameMap;
 }
 
 export interface TranscriptExportOutcome {

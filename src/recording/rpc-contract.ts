@@ -18,6 +18,8 @@ export const RECORDING_RPC_ENDPOINTS = [
   "devices/list",
   "transcripts/export",
   "transcripts/choose-directory",
+  "transcripts/speaker-names",
+  "transcripts/save-speaker-names",
   "okf/choose-directory",
 ] as const;
 
@@ -82,6 +84,7 @@ export interface TranscriptExportRpcPayload {
   readonly include_speakers: boolean;
   readonly include_timestamps: boolean;
   readonly meeting_id: string;
+  readonly speaker_names?: Readonly<Record<string, string>>;
 }
 
 export interface TranscriptExportRpcValue {

@@ -9,6 +9,7 @@
     "src/client/**/*.ts",
     "src/client/**/*.tsx",
     "src/recording/rpc-contract.ts",
+    "src/transcripts/speaker-attribution.ts",
     "tests/client/**/*.ts",
     "tests/client/**/*.tsx"
   ],
