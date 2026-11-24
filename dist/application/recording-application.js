@@ -4,7 +4,7 @@ import { MeetingRepositoryError, } from "../storage/meeting-repository.js";
 const JOB_OUTPUT_LIMIT_BYTES = 4_096;
 function title(value, startedAtMs) {
     if (value === undefined)
-        return `录音会议 ${new Date(startedAtMs).toISOString()}`;
+        return `Recording ${new Date(startedAtMs).toISOString()}`;
     const result = value.trim();
     if (result.length < 1 || result.length > 200) {
         throw new RecordingSessionError("INVALID_INPUT");
@@ -129,7 +129,7 @@ export class RecordingApplication {
         });
         const jobId = this.dependencies.jobs.start({
             kind: "meeting",
-            label: `录音：${session.identity.title}`,
+            label: `Recording: ${session.identity.title}`,
             outputLimitBytes: JOB_OUTPUT_LIMIT_BYTES,
             ...(input.owner === undefined ? {} : { owner: input.owner }),
             output: [session.output],

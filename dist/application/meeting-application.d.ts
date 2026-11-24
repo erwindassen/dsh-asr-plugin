@@ -109,6 +109,10 @@ export declare class MeetingApplication {
     getMeetingPage(input: GetMeetingPageInput): MeetingPage;
     getMeetingAgentProjection(input: GetAgentTranscriptProjectionInput): AgentTranscriptProjection;
     exportTranscript(input: ExportCommittedTranscriptInput): Promise<TranscriptExportReceipt>;
+    /** Meeting metadata for host-side export naming and existence checks. */
+    getMeetingRecord(meetingId: string): MeetingRecord;
+    /** Distinct speaker labels of the committed transcript, for export validation. */
+    getCommittedSpeakerLabels(meetingId: string): readonly string[];
     getMeetingReferenceCandidates(input: GetMeetingReferenceCandidatesInput): readonly MeetingReferenceCandidate[];
     resolveMeetingReference(input: ResolveMeetingReferenceInput): MeetingReferenceCandidate;
     attachRecordingDraft(source: RecordingDraftSource): () => void;

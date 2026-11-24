@@ -1,3 +1,4 @@
+import { normalizeSpeakerName } from "../transcripts/speaker-attribution.js";
 import { RECORDING_RPC_CHANNEL, } from "./rpc-contract.js";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 function record(value) {
@@ -36,6 +37,62 @@ function control(payload, signal) {
         typeof value.meeting_id !== "string" || value.title !== undefined)
         inputError();
     return { action, meetingId: value.meeting_id, signal };
+}
+const MAX_SPEAKER_ENTRIES = 64;
+const MAX_SPEAKER_LABEL_LENGTH = 120;
+const MAX_SPEAKER_NAME_INPUT_LENGTH = 200;
+/** Wire shape of a label-to-name map; canonicality is judged by the export control. */
+function speakerNameMap(value) {
+    const map = record(value);
+    if (map === null || Object.keys(map).length > MAX_SPEAKER_ENTRIES)
+        inputError();
+    for (const [label, name] of Object.entries(map)) {
+        if (label === "" || label.length > MAX_SPEAKER_LABEL_LENGTH)
+            inputError();
+        if (typeof name !== "string" || name.length > MAX_SPEAKER_NAME_INPUT_LENGTH)
+            inputError();
+    }
+    return map;
+}
+function speakerNamesPayload(payload) {
+    const value = record(payload);
+    if (value === null || !exact(value, ["meeting_id"])
+        || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id))
+        inputError();
+    return { meeting_id: value.meeting_id };
+}
+function saveSpeakerNamesPayload(payload) {
+    const value = record(payload);
+    if (value === null || !exact(value, ["meeting_id", "speaker_names"])
+        || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)
+        || !Object.hasOwn(value, "speaker_names"))
+        inputError();
+    return { meeting_id: value.meeting_id, speaker_names: speakerNameMap(value.speaker_names) };
+}
+/** Stored rows as a wire map, dropping names that are not canonical any more. */
+function speakerNamesValue(store, meetingId) {
+    const names = {};
+    for (const entry of store.list(meetingId)) {
+        const name = normalizeSpeakerName(entry.name);
+        if (name !== "")
+            names[entry.label] = name;
+    }
+    return names;
+}
+function transcriptExportPayload(payload) {
+    const value = record(payload);
+    if (value === null || !exact(value, ["destination", "directory", "format", "include_speakers", "include_timestamps", "meeting_id", "speaker_names"])
+        || (value.directory !== undefined && (typeof value.directory !== "string"
+            || !value.directory.startsWith("/") || value.directory.length > 4_096))
+        || (value.destination !== "default" && value.destination !== "choose")
+        || !["md", "txt", "srt", "vtt"].includes(value.format)
+        || typeof value.include_speakers !== "boolean" || typeof value.include_timestamps !== "boolean"
+        || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id))
+        inputError();
+    if (Object.hasOwn(value, "speaker_names") && value.speaker_names !== undefined) {
+        speakerNameMap(value.speaker_names);
+    }
+    return value;
 }
 function failure(error) {
     const code = typeof error === "object" && error !== null && "code" in error &&
@@ -76,9 +133,13 @@ function referenceValue(candidate) {
         duration_ms: candidate.durationMs,
     };
 }
-export function registerRecordingHostRpc(connection, application, modelStatus, downloads, permissions, prepareModels) {
+export function registerRecordingHostRpc(connection, application, modelStatus, downloads, permissions, prepareModels, transcripts, devices, chooseOkfDirectory, speakerNames) {
     return connection.rpc.handle(RECORDING_RPC_CHANNEL, async (endpoint, payload, signal) => {
         try {
+            if (endpoint === "okf/choose-directory" && chooseOkfDirectory !== undefined) {
+                emptyPayload(payload);
+                return { ok: true, value: await chooseOkfDirectory(signal) };
+            }
             if (endpoint === "models/prepare" && prepareModels !== undefined) {
                 emptyPayload(payload);
                 await prepareModels(signal);
@@ -123,6 +184,25 @@ export function registerRecordingHostRpc(connection, application, modelStatus, d
                 emptyPayload(payload);
                 return { ok: true, value: await modelStatus(signal) };
             }
+            if (endpoint === "devices/list" && devices !== undefined) {
+                emptyPayload(payload);
+                const inventory = await devices.list(signal);
+                return {
+                    ok: true,
+                    value: {
+                        default_input_uid: inventory.defaultInputUID,
+                        default_output_uid: inventory.defaultOutputUID,
+                        devices: inventory.devices.map((device) => ({
+                            uid: device.uid,
+                            name: device.name,
+                            input_channels: device.inputChannels,
+                            output_channels: device.outputChannels,
+                            default_input: device.defaultInput,
+                            default_output: device.defaultOutput,
+                        })),
+                    },
+                };
+            }
             if (endpoint === "state") {
                 emptyPayload(payload);
                 return {
@@ -136,6 +216,46 @@ export function registerRecordingHostRpc(connection, application, modelStatus, d
             }
             if (endpoint === "control") {
                 return { ok: true, value: await application.controlRecording(control(payload, signal)) };
+            }
+            if (speakerNames !== undefined && (endpoint === "transcripts/speaker-names"
+                || endpoint === "transcripts/save-speaker-names")) {
+                if (endpoint === "transcripts/speaker-names") {
+                    const request = speakerNamesPayload(payload);
+                    return { ok: true, value: { speaker_names: speakerNamesValue(speakerNames, request.meeting_id) } };
+                }
+                const request = saveSpeakerNamesPayload(payload);
+                speakerNames.replace(request.meeting_id, Object.entries(request.speaker_names)
+                    .map(([label, name]) => ({ meetingId: request.meeting_id, label, name })));
+                return { ok: true, value: { speaker_names: speakerNamesValue(speakerNames, request.meeting_id) } };
+            }
+            if (endpoint.startsWith("transcripts/") && transcripts !== undefined) {
+                if (endpoint === "transcripts/choose-directory") {
+                    emptyPayload(payload);
+                    return { ok: true, value: await transcripts.chooseDirectory(signal) };
+                }
+                if (endpoint === "transcripts/export") {
+                    const request = transcriptExportPayload(payload);
+                    const outcome = await transcripts.exportTranscript({
+                        ...(request.directory === undefined ? {} : { directory: request.directory }),
+                        destination: request.destination,
+                        format: request.format,
+                        includeSpeakers: request.include_speakers,
+                        includeTimestamps: request.include_timestamps,
+                        meetingId: request.meeting_id,
+                        ...(request.speaker_names === undefined ? {} : { speakerNames: request.speaker_names }),
+                    }, signal);
+                    return {
+                        ok: true,
+                        value: {
+                            bytes: outcome.bytes,
+                            format: outcome.format,
+                            meeting_id: outcome.meetingId,
+                            output_path: outcome.outputPath,
+                            segment_count: outcome.segmentCount,
+                            transcript_version: outcome.transcriptVersion,
+                        },
+                    };
+                }
             }
             if (endpoint === "references/candidates") {
                 const request = referenceCandidatesPayload(payload);

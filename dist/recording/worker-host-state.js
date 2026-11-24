@@ -11,7 +11,7 @@ function draftSegment(segment) {
         seq: segment.seq,
         startMs: segment.start_ms,
         endMs: segment.end_ms,
-        speakerLabel: null,
+        speakerLabel: segment.speaker_label,
         text: segment.text,
     };
 }

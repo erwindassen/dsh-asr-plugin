@@ -7,6 +7,7 @@ export declare class RecordingDraftResourceError extends Error {
 export interface RecordingDraftUnit {
     readonly breakAfter: boolean;
     readonly endMs: number;
+    readonly speakerLabel: string | null;
     readonly startMs: number;
     readonly text: string;
 }

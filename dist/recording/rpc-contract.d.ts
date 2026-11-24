@@ -2,7 +2,7 @@ import type { RecordingPermissions } from "./permission-contract.js";
 import type { ModelDownloadStatus } from "../assets/model-download-contract.js";
 import type { ModelSettingsStatus } from "../assets/model-settings-contract.js";
 export declare const RECORDING_RPC_CHANNEL = "/dsh-asr-recording";
-export declare const RECORDING_RPC_ENDPOINTS: readonly ["state", "control", "references/candidates", "references/resolve", "models/status", "models/prepare", "models/download/status", "models/download/start", "models/download/cancel", "permissions/status", "permissions/test", "permissions/open-settings"];
+export declare const RECORDING_RPC_ENDPOINTS: readonly ["state", "control", "references/candidates", "references/resolve", "models/status", "models/prepare", "models/download/status", "models/download/start", "models/download/cancel", "permissions/status", "permissions/test", "permissions/open-settings", "devices/list", "transcripts/export", "transcripts/choose-directory", "transcripts/speaker-names", "transcripts/save-speaker-names", "okf/choose-directory"];
 export type RecordingRpcEndpoint = (typeof RECORDING_RPC_ENDPOINTS)[number];
 export type RecordingRpcPhase = "starting" | "recording" | "finalizing" | "completed" | "empty" | "partial" | "failed" | "cancelled";
 export type MeetingReferenceRpcPhase = RecordingRpcPhase | "processing";
@@ -42,6 +42,33 @@ export interface RecordingRpcStateValue {
     readonly preview: readonly RecordingRpcSegment[];
     readonly recording: RecordingRpcView | null;
 }
+export interface TranscriptExportRpcPayload {
+    readonly destination: "default" | "choose";
+    readonly directory?: string;
+    readonly format: "md" | "txt" | "srt" | "vtt";
+    readonly include_speakers: boolean;
+    readonly include_timestamps: boolean;
+    readonly meeting_id: string;
+    readonly speaker_names?: Readonly<Record<string, string>>;
+}
+export interface SpeakerNamesRpcPayload {
+    readonly meeting_id: string;
+}
+export interface SpeakerNamesRpcValue {
+    readonly speaker_names: Readonly<Record<string, string>>;
+}
+export interface SaveSpeakerNamesRpcPayload {
+    readonly meeting_id: string;
+    readonly speaker_names: Readonly<Record<string, string>>;
+}
+export interface TranscriptExportRpcValue {
+    readonly bytes: number;
+    readonly format: "md" | "txt" | "srt" | "vtt";
+    readonly meeting_id: string;
+    readonly output_path: string;
+    readonly segment_count: number;
+    readonly transcript_version: number;
+}
 export interface RecordingRpcControlPayload {
     readonly action: "start" | "stop" | "mic_on" | "mic_off" | "system_on" | "system_off";
     readonly meeting_id?: string;
@@ -66,7 +93,20 @@ export interface MeetingReferenceRpcResolvePayload {
     readonly locale: string;
     readonly meeting_id: string;
 }
-export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
+export interface AudioDeviceRpcEntry {
+    readonly uid: string;
+    readonly name: string;
+    readonly input_channels: number;
+    readonly output_channels: number;
+    readonly default_input: boolean;
+    readonly default_output: boolean;
+}
+export interface AudioDeviceInventoryRpc {
+    readonly default_input_uid: string | null;
+    readonly default_output_uid: string | null;
+    readonly devices: readonly AudioDeviceRpcEntry[];
+}
+export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 export type RecordingRpcResult<T = RecordingRpcValue> = {
     readonly ok: true;
     readonly value: T;

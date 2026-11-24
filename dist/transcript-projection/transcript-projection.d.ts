@@ -1,4 +1,5 @@
 import { type AnchoredTranscriptSegment, type CommittedStatus, type MeetingRecord, type MeetingRepository } from "../storage/meeting-repository.js";
+import type { SpeakerNameMap } from "../transcripts/speaker-attribution.js";
 export interface AgentTranscriptCoverage {
     readonly returnedFromSeq: number | null;
     readonly returnedThroughSeq: number | null;
@@ -35,6 +36,8 @@ export interface ExportCommittedTranscriptInput {
     readonly meetingId: string;
     readonly outputPath: string;
     readonly overwrite?: boolean;
+    /** Optional label-to-name map for the exported speaker label surface. */
+    readonly speakerNames?: SpeakerNameMap;
     readonly signal?: AbortSignal;
 }
 export interface TranscriptExportReceipt {

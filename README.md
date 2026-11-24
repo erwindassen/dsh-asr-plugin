@@ -115,6 +115,32 @@ Audio inference runs locally after model preparation. Reading a transcript with
 an LLM can send its content to the provider configured in DSH; host configuration
 and provider terms govern that operation.
 
+## Speaker attribution (optional)
+
+Detected voices are labelled `Speaker A`, `Speaker B`, … Exports can carry the
+real names instead: open **Speaker attribution** in the recording panel's save
+area and type a name next to a label. Only the label surface of the export
+changes — the `speaker:` line in Markdown, the `[label]` token in plain text and
+the cue line in SRT/VTT — never the transcript text or the timings. Names are
+stored per meeting, so they also appear in the bundle's copy of the transcript.
+Leaving a field empty keeps the label.
+
+See [docs/speaker-attribution.md](docs/speaker-attribution.md) for the stored
+schema, the validation rules and the failure behaviour.
+
+## Open knowledge base (optional)
+
+Set a **Bundle folder** under **Open knowledge base** in plugin settings to have
+each committed transcript summarised into an OKF bundle: a meeting page with
+extracted entities, concepts, action items and deadlines, linked to a copy of the
+transcript, plus generated indexes for upcoming deadlines and pending actions.
+The folder becomes a Git repository and one ingestion is one commit, so every
+change is inspectable and reversible. Automatic ingestion is on by default and can
+be switched off; `/asr-ingest <meeting-id> [--force]` re-runs it manually.
+
+See [docs/okf.md](docs/okf.md) for the layout, the transaction and rollback rules,
+and the failure and privacy guarantees.
+
 ## Limitations
 
 - Speaker labels distinguish voices within a meeting; they do not establish

@@ -1,0 +1,57 @@
+/**
+ * In-process serialisation for one OKF bundle directory.
+ *
+ * Two ingestions of the same bundle must never interleave: the git transaction
+ * records a baseline and a journal in the shared `.git` directory, so a second
+ * begin would roll back the first attempt's worktree. The lock is keyed by the
+ * real path of the bundle root (symlink aliases share one queue) and is a FIFO
+ * chain of promises, so waiting tasks run in arrival order. Different bundles
+ * keep separate chains and run concurrently.
+ *
+ * The lock lives in one process only; it is not an inter-process mutex. The git
+ * journal plus the `index.lock` retry path cover concurrent host processes.
+ */
+import { realpathSync } from "node:fs";
+import { resolve } from "node:path";
+/**
+ * Queue position must follow call order, so the key is resolved synchronously:
+ * an awaited `realpath` would let a later caller join the queue first. Symlinked
+ * aliases of one bundle therefore share a single FIFO chain.
+ */
+function lockKey(root) {
+    const absolute = resolve(root);
+    try {
+        return realpathSync(absolute);
+    }
+    catch {
+        // The bundle may not exist yet (initialise runs before the first ingestion);
+        // the resolved absolute path is still a stable key then.
+        return absolute;
+    }
+}
+export function createOkfBundleLock() {
+    const tails = new Map();
+    return {
+        async runExclusive(root, task) {
+            const key = lockKey(root);
+            const previous = tails.get(key) ?? Promise.resolve();
+            let release = () => undefined;
+            const held = new Promise((resolveHeld) => {
+                release = resolveHeld;
+            });
+            // `previous` never rejects: every tail resolves when its holder releases.
+            const tail = previous.then(() => held);
+            tails.set(key, tail);
+            try {
+                await previous;
+                return await task();
+            }
+            finally {
+                release();
+                if (tails.get(key) === tail)
+                    tails.delete(key);
+            }
+        },
+    };
+}
+//# sourceMappingURL=bundle-lock.js.map

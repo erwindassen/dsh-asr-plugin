@@ -16,6 +16,7 @@ import { loadWorkerAssets, requiredAsset } from "../worker/worker-assets.js";
 import { RecordingAuthoritativeEngine } from "./authoritative-engine.js";
 import { RecordingDraftEngine, RecordingDraftResourceError, } from "./draft-engine.js";
 import { createRecordingDraftRecognizer } from "./draft-recognizer.js";
+import { createOnlineSpeakerLabeler } from "../diarization/online-labeler.js";
 import { openRecordingFinalCache } from "./final-cache.js";
 import { RecordingWorkerSchemaError } from "./worker-messages.js";
 const CADENCE_MS = 5_000;
@@ -278,7 +279,7 @@ async function openRecordingRuntime(config, assets, components) {
         recognize: createRecordingDraftRecognizer(components.vad, {
             recognizer: components.recognizer, mode: components.mode,
             ...(components.punctuator === undefined ? {} : { punctuator: components.punctuator }),
-        }),
+        }, createOnlineSpeakerLabeler({ embedding: components.embeddingModel })),
     });
     const authoritative = createAuthoritativeEngine(components, chunks, await openRecordingFinalCache(join(workRecording, "authoritative-cache"), assets.engineFingerprint), assets.engineFingerprint);
     const paths = { meetingDirectory: meeting, recordingDirectory: recording, workRecordingDirectory: workRecording };

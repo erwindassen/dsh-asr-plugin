@@ -14,7 +14,10 @@ export function parseProcessingLaunch(input) {
             throw new TypeError();
         const identity = parseProcessingIdentity(fields.identity);
         const root = fields.punctuationRoot;
-        if (identity.mode === "base" ? root !== null
+        // The identity records whether the run loads the punctuation pack at all:
+        // base mode and self-punctuating engines carry no punctuation fingerprint
+        // and therefore no punctuation root.
+        if (identity.punctuationModelFingerprint === null ? root !== null
             : typeof root !== "string" || root.length > 4_096 || !isAbsolute(root))
             throw new TypeError();
         return Object.freeze({ identity, punctuationRoot: root });

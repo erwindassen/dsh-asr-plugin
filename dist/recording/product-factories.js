@@ -3,6 +3,7 @@ import { packagedRecordingHelperLayout, verifyRecordingHelperAssets, } from "../
 import { createDshWorkerSpawner } from "../worker/dsh-spawner.js";
 import { WORKER_READY_TIMEOUT_MS, WORKER_TERMINATION_GRACE_MS, WORKER_TERMINATION_TIMEOUT_MS, } from "../worker/timeouts.js";
 import { RecordingHelperClient } from "./helper-client.js";
+import { createAudioDeviceService } from "./audio-devices.js";
 import { createPackagedRecordingWorkerLaunch } from "./launch.js";
 import { RecordingWorkerClient } from "./worker-client.js";
 import { RecordingPermissionsService } from "./permissions.js";
@@ -25,6 +26,7 @@ function createHelperFactory(options) {
                 readyTimeoutMs: HELPER_READY_TIMEOUT_MS,
                 subprocess: options.subprocess,
                 terminationTimeoutMs: WORKER_TERMINATION_TIMEOUT_MS,
+                ...(options.devices === undefined ? {} : { devices: options.devices }),
             });
         })().catch((error) => {
             pending = undefined;
@@ -73,14 +75,15 @@ function createWorkerFactory(options) {
     };
 }
 export function createProductRecordingFactories(options) {
-    const permissions = new RecordingPermissionsService({ subprocess: options.subprocess,
-        resolveApp: async () => (await verifyRecordingHelperAssets({
-            ...packagedRecordingHelperLayout(options.packageRoot), inspectSignature: options.inspectHelperSignature,
-        })).appRoot });
+    const resolveApp = async () => (await verifyRecordingHelperAssets({
+        ...packagedRecordingHelperLayout(options.packageRoot), inspectSignature: options.inspectHelperSignature,
+    })).appRoot;
+    const permissions = new RecordingPermissionsService({ subprocess: options.subprocess, resolveApp });
     return {
         helper: createHelperFactory(options),
         worker: createWorkerFactory(options),
         permissions,
+        devices: createAudioDeviceService({ resolveApp, subprocess: options.subprocess }),
         checkPermissions: signal => permissions.require(signal),
     };
 }

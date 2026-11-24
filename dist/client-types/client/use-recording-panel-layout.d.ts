@@ -1,5 +1,9 @@
 import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
-export declare function useRecordingPanelLayout(compactWidth: number): {
+/**
+ * `minimumWidth` is the intrinsic width of the header: the panel never shrinks below it,
+ * so the controls keep their size instead of being squeezed when the window opens.
+ */
+export declare function useRecordingPanelLayout(compactWidth: number, minimumWidth?: number): {
     expanded: boolean;
     style: CSSProperties;
     move: {

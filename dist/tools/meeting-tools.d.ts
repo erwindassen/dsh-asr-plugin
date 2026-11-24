@@ -20,5 +20,16 @@ export interface MeetingToolApplication {
     startImport(input: ImportMeetingInput): Promise<ImportMeetingStarted>;
     startRetranscription(input: RetranscribeMeetingInput): Promise<RetranscribeMeetingStarted>;
 }
-export declare function createMeetingTools(application: MeetingToolApplication): readonly ToolDefinition[];
-export declare function registerMeetingTools(context: Context, application: MeetingToolApplication): void;
+/** Latest Open knowledge base attempt, surfaced by `meeting_get` when configured. */
+export interface OkfIngestionSummary {
+    readonly state: "running" | "succeeded" | "failed";
+    readonly transcriptVersion: number;
+    readonly attempt: number;
+    readonly finishedAt: string | null;
+    readonly errorCode: string | null;
+}
+export interface MeetingToolOptions {
+    readonly okfIngestionFor?: (meetingId: string) => OkfIngestionSummary | null;
+}
+export declare function createMeetingTools(application: MeetingToolApplication, options?: MeetingToolOptions): readonly ToolDefinition[];
+export declare function registerMeetingTools(context: Context, application: MeetingToolApplication, options?: MeetingToolOptions): void;

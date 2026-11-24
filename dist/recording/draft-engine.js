@@ -36,7 +36,8 @@ function assertUnits(units, durationMs) {
             unit.endMs > durationMs ||
             unit.text.length < 1 ||
             unit.text.length > MAX_TEXT_LENGTH ||
-            unit.text.trim().length === 0)
+            unit.text.trim().length === 0 ||
+            (unit.speakerLabel !== null && !SPEAKER_LABEL_PATTERN.test(unit.speakerLabel)))
             throw new TypeError("Recording draft unit is invalid");
         priorEnd = unit.endMs;
     }
@@ -48,11 +49,31 @@ function appendToken(current, token) {
         ? `${current} ${token}`
         : `${current}${token}`;
 }
+const SPEAKER_LABEL_PATTERN = /^(?:UNKNOWN|Speaker [A-Z]+)$/u;
+function unitSpeakerLabel(units) {
+    // A segment can straddle a speaker change; report the dominant label so the
+    // preview never shows a label that covers less than half of the segment.
+    const counts = new Map();
+    for (const unit of units) {
+        if (unit.speakerLabel === null)
+            continue;
+        counts.set(unit.speakerLabel, (counts.get(unit.speakerLabel) ?? 0) + 1);
+    }
+    let best = null;
+    let bestCount = 0;
+    for (const [label, count] of counts) {
+        if (count > bestCount) {
+            best = label;
+            bestCount = count;
+        }
+    }
+    return best;
+}
 function segmentFrom(units, text) {
     return {
         start_ms: units[0].startMs,
         end_ms: units.at(-1).endMs,
-        speaker_label: null,
+        speaker_label: unitSpeakerLabel(units),
         text: text.trim(),
     };
 }

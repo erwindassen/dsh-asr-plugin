@@ -10,6 +10,11 @@ export interface Config {
     readonly hf_download_route?: "default" | "direct" | "proxy";
     readonly hf_proxy_url?: string;
     readonly hf_proxy_kind?: "mirror" | "http";
+    readonly transcript_directory?: string;
+    readonly okf_directory?: string;
+    readonly okf_ingest?: boolean;
+    readonly mic_device_uid?: string;
+    readonly system_device_uid?: string;
 }
 export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     asr_engine: z<"parakeet" | "paraformer", "parakeet" | "paraformer", "volatile-defined">;
@@ -18,6 +23,11 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     hf_proxy_url: z<string, string, "volatile-defined">;
     hf_proxy_kind: z<"mirror" | "http", "mirror" | "http", "volatile">;
     data_dir: z<string, string, "defined">;
+    transcript_directory: z<string, string, "volatile-defined">;
+    okf_directory: z<string, string, "volatile-defined">;
+    okf_ingest: z<boolean, boolean, "volatile-defined">;
+    mic_device_uid: z<string, string, "volatile-defined">;
+    system_device_uid: z<string, string, "volatile-defined">;
 }>>, Schemastery.ObjectT<NoInfer<{
     asr_engine: z<"parakeet" | "paraformer", "parakeet" | "paraformer", "volatile-defined">;
     punctuation_enabled: z<boolean, boolean, "volatile">;
@@ -25,6 +35,11 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     hf_proxy_url: z<string, string, "volatile-defined">;
     hf_proxy_kind: z<"mirror" | "http", "mirror" | "http", "volatile">;
     data_dir: z<string, string, "defined">;
+    transcript_directory: z<string, string, "volatile-defined">;
+    okf_directory: z<string, string, "volatile-defined">;
+    okf_ingest: z<boolean, boolean, "volatile-defined">;
+    mic_device_uid: z<string, string, "volatile-defined">;
+    system_device_uid: z<string, string, "volatile-defined">;
 }>>, "plain">;
 type ParsedConfig = ReturnType<typeof Config>;
 export declare function apply(context: Context, config: ParsedConfig): Promise<void>;

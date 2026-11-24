@@ -29,6 +29,10 @@ export declare const zh: {
     readonly "panel.recognizer": "识别语言";
     readonly "panel.recognizerHint": "下一次录音使用的识别引擎。中文用 Paraformer，英语等欧洲语言用 Parakeet。";
     readonly "panel.recognizerParaformer": "中文";
+    readonly "panel.micDevice": "选择麦克风设备";
+    readonly "panel.systemDevice": "选择录音输出设备";
+    readonly "panel.deviceDefault": "跟随系统默认";
+    readonly "panel.devicesUnavailable": "未能读取可用设备";
     readonly "panel.recognizerParakeet": "英语 / 欧洲";
     readonly "panel.previewHint": "本次录音草稿 · 正式原稿请通过 @ 引用会议";
     readonly "panel.activity": "录音状态指示（不是声音音量）";
@@ -54,7 +58,21 @@ export declare const zh: {
     readonly "panel.error.state": "录音状态已变化。请刷新页面后重试。";
     readonly "panel.error.generic": "操作未完成。请重试；若再次失败，请查看技术详情。";
     readonly "panel.error.details": "技术详情";
+    readonly "panel.export": "导出转写";
+    readonly "panel.exportHint": "导出 Markdown 到默认文件夹；按住 ⌥ 选择保存位置。";
+    readonly "panel.exporting": "正在导出转写";
+    readonly "panel.exportSaved": "已保存到 {path}";
+    readonly "panel.error.export": "无法导出转写。请检查保存位置、文件夹权限后重试。";
+    readonly "panel.error.exportDirectory": "尚未设置转写保存位置。请在插件设置中选择文件夹，或按住 ⌥ 导出以选择位置。";
     readonly "panel.noSession": "请先创建或选择一个工作区";
+    readonly "panel.attribution": "说话人名称";
+    readonly "panel.attributionHint": "这些名称只写入导出文件，已保存的转写仍保留原来的说话人标签。";
+    readonly "panel.attributionDuplicate": "同一个名称分配给了多位说话人：{names}。请为每位说话人使用不同的名称。";
+    readonly "panel.attributionSaving": "正在保存名称…";
+    readonly "panel.attributionSaveFailed": "说话人名称未能保存。请检查名称后重试；导出仍会使用当前输入的名称。";
+    readonly "panel.attributionLoadFailed": "未能读取已保存的说话人名称。";
+    readonly "panel.error.exportSpeaker": "转写已保存，但说话人名称没有写入。请检查名称后重新导出。";
+    readonly "panel.error.exportSpeakerDuplicate": "有两位说话人使用了同一个名称，转写未导出。请改用不同的名称后重试。";
     readonly "auto.current": string;
     readonly "section.meetings": string;
     readonly "phase.starting": string;
@@ -113,6 +131,10 @@ export declare const en: {
     "panel.recognizer": string;
     "panel.recognizerHint": string;
     "panel.recognizerParaformer": string;
+    "panel.micDevice": string;
+    "panel.systemDevice": string;
+    "panel.deviceDefault": string;
+    "panel.devicesUnavailable": string;
     "panel.recognizerParakeet": string;
     "panel.previewHint": string;
     "panel.activity": string;
@@ -139,6 +161,20 @@ export declare const en: {
     "panel.error.generic": string;
     "panel.error.details": string;
     "panel.noSession": string;
+    "panel.export": string;
+    "panel.exportHint": string;
+    "panel.exporting": string;
+    "panel.exportSaved": string;
+    "panel.error.export": string;
+    "panel.error.exportDirectory": string;
+    "panel.attribution": string;
+    "panel.attributionHint": string;
+    "panel.attributionDuplicate": string;
+    "panel.attributionSaving": string;
+    "panel.attributionSaveFailed": string;
+    "panel.attributionLoadFailed": string;
+    "panel.error.exportSpeaker": string;
+    "panel.error.exportSpeakerDuplicate": string;
 };
 declare module "@deepseek-ai/dsh-client-ui-slots" {
     interface LocaleNamespaceMap {

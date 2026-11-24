@@ -135,6 +135,17 @@ const MEETING_PAGE_SCHEMA = {
                 },
             },
         },
+        okf: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+                state: { type: "string", enum: ["running", "succeeded", "failed"], required: true },
+                transcript_version: { type: "integer", required: true },
+                attempt: { type: "integer", required: true },
+                finished_at: { ...NULLABLE_STRING_SCHEMA, required: true },
+                error_code: { ...NULLABLE_STRING_SCHEMA, required: true },
+            },
+        },
     },
 };
 const SEARCH_HIT_SCHEMA = {
@@ -341,9 +352,17 @@ function meetingValue(application, meeting) {
         error_code: meeting.errorCode,
     };
 }
-function pageValue(application, page) {
+function pageValue(application, options, page) {
     const first = page.transcript.segments[0];
     const last = page.transcript.segments.at(-1);
+    const record = options.okfIngestionFor?.(page.meeting.meetingId) ?? null;
+    const okf = record === null ? null : {
+        state: record.state,
+        transcript_version: record.transcriptVersion,
+        attempt: record.attempt,
+        finished_at: record.finishedAt,
+        error_code: record.errorCode,
+    };
     const remainingSegments = page.transcript.available && last !== undefined
         ? page.transcript.totalSegments - last.seq - 1
         : 0;
@@ -375,6 +394,7 @@ function pageValue(application, page) {
                 rendered_bytes: null,
             } : null,
         },
+        ...(okf === null ? {} : { okf }),
     };
 }
 function searchValue(page) {
@@ -495,7 +515,7 @@ function importTool(application) {
         }),
     }));
 }
-function getTool(application) {
+function getTool(application, options) {
     return strictTool(defineTool({
         name: "meeting_get",
         description: "读取会议状态或已提交转写。分析正文优先 projection=agent，按返回的 next_cursor 续读；" +
@@ -519,7 +539,7 @@ function getTool(application) {
                     ...(args.cursor === undefined ? {} : { cursor: args.cursor }),
                 }));
             }
-            return pageValue(application, application.getMeetingPage({
+            return pageValue(application, options, application.getMeetingPage({
                 meetingId: args.meeting_id,
                 ...(args.cursor === undefined ? {} : { cursor: args.cursor }),
                 ...(args.limit === undefined ? {} : { limit: args.limit }),
@@ -705,10 +725,10 @@ function transcriptExportTool(application) {
         }),
     }));
 }
-export function createMeetingTools(application) {
+export function createMeetingTools(application, options = {}) {
     return [
         importTool(application),
-        getTool(application),
+        getTool(application, options),
         searchTool(application),
         retranscribeTool(application),
         deleteTool(application),
@@ -767,8 +787,8 @@ async function approvalDecision(execution, next) {
                 : "打开采集会新增敏感音频来源",
     };
 }
-export function registerMeetingTools(context, application) {
-    for (const tool of createMeetingTools(application))
+export function registerMeetingTools(context, application, options = {}) {
+    for (const tool of createMeetingTools(application, options))
         context.tools.register(tool);
     context.on("tools/pre-execute", approvalDecision);
 }

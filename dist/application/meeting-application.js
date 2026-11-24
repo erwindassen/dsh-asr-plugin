@@ -252,6 +252,20 @@ export class MeetingApplication {
         this.assertAccepting();
         return this.transcriptProjection.exportCommittedTranscript(input);
     }
+    /** Meeting metadata for host-side export naming and existence checks. */
+    getMeetingRecord(meetingId) {
+        this.assertAccepting();
+        return this.requiredMeeting(meetingId);
+    }
+    /** Distinct speaker labels of the committed transcript, for export validation. */
+    getCommittedSpeakerLabels(meetingId) {
+        this.assertAccepting();
+        const labels = new Set();
+        for (const segment of this.dependencies.repository.getCommittedTranscriptSnapshot(meetingId).segments) {
+            labels.add(segment.speakerLabel);
+        }
+        return [...labels];
+    }
     getMeetingReferenceCandidates(input) {
         this.assertAccepting();
         const online = this.recording?.state() ?? null;

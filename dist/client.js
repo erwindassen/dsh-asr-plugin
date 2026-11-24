@@ -124,35 +124,35 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/ModelSettingsPage.module.css
 		var ModelSettingsPage_module_default = {
-			"card": "_2-6Zyq_card",
-			"command": "_2-6Zyq_command",
-			"connectionSummary": "_2-6Zyq_connectionSummary",
-			"description": "_2-6Zyq_description",
-			"diagnosticGroup": "_2-6Zyq_diagnosticGroup",
-			"diagnosticGroups": "_2-6Zyq_diagnosticGroups",
-			"diagnostics": "_2-6Zyq_diagnostics",
-			"downloadActions": "_2-6Zyq_downloadActions",
-			"downloadProgress": "_2-6Zyq_downloadProgress",
-			"downloadRouting": "_2-6Zyq_downloadRouting",
-			"error": "_2-6Zyq_error",
-			"heading": "_2-6Zyq_heading",
-			"helpHeading": "_2-6Zyq_helpHeading",
-			"instructions": "_2-6Zyq_instructions",
-			"label": "_2-6Zyq_label",
-			"loading": "_2-6Zyq_loading",
-			"modelBlock": "_2-6Zyq_modelBlock",
-			"modelCopy": "_2-6Zyq_modelCopy",
-			"modelRow": "_2-6Zyq_modelRow",
-			"modelTitle": "_2-6Zyq_modelTitle",
-			"notice": "_2-6Zyq_notice",
-			"page": "_2-6Zyq_page",
-			"preparationSteps": "_2-6Zyq_preparationSteps",
-			"progressBytes": "_2-6Zyq_progressBytes",
-			"progressHeading": "_2-6Zyq_progressHeading",
-			"proxyOptions": "_2-6Zyq_proxyOptions",
-			"runtimeRow": "_2-6Zyq_runtimeRow",
-			"saveRow": "_2-6Zyq_saveRow",
-			"title": "_2-6Zyq_title"
+			"card": "f4q_AW_card",
+			"command": "f4q_AW_command",
+			"connectionSummary": "f4q_AW_connectionSummary",
+			"description": "f4q_AW_description",
+			"diagnosticGroup": "f4q_AW_diagnosticGroup",
+			"diagnosticGroups": "f4q_AW_diagnosticGroups",
+			"diagnostics": "f4q_AW_diagnostics",
+			"downloadActions": "f4q_AW_downloadActions",
+			"downloadProgress": "f4q_AW_downloadProgress",
+			"downloadRouting": "f4q_AW_downloadRouting",
+			"error": "f4q_AW_error",
+			"heading": "f4q_AW_heading",
+			"helpHeading": "f4q_AW_helpHeading",
+			"instructions": "f4q_AW_instructions",
+			"label": "f4q_AW_label",
+			"loading": "f4q_AW_loading",
+			"modelBlock": "f4q_AW_modelBlock",
+			"modelCopy": "f4q_AW_modelCopy",
+			"modelRow": "f4q_AW_modelRow",
+			"modelTitle": "f4q_AW_modelTitle",
+			"notice": "f4q_AW_notice",
+			"page": "f4q_AW_page",
+			"preparationSteps": "f4q_AW_preparationSteps",
+			"progressBytes": "f4q_AW_progressBytes",
+			"progressHeading": "f4q_AW_progressHeading",
+			"proxyOptions": "f4q_AW_proxyOptions",
+			"runtimeRow": "f4q_AW_runtimeRow",
+			"saveRow": "f4q_AW_saveRow",
+			"title": "f4q_AW_title"
 		};
 		//#endregion
 		//#region src/client/ModelDownloadSettings.tsx
@@ -635,6 +635,270 @@ window.__ModuleLoader__.load({
 			});
 		}
 		//#endregion
+		//#region src/client/TranscriptSettings.tsx
+		function transcriptDirectory(value) {
+			if (typeof value !== "object" || value === null) return "";
+			const field = value.transcript_directory;
+			return typeof field === "string" ? field : "";
+		}
+		function okfAccepted(value) {
+			if (typeof value !== "object" || value === null) return {
+				directory: "",
+				autoIngest: true
+			};
+			const fields = value;
+			const directory = fields.okf_directory;
+			const autoIngest = fields.okf_ingest;
+			return {
+				directory: typeof directory === "string" ? directory : "",
+				autoIngest: typeof autoIngest === "boolean" ? autoIngest : true
+			};
+		}
+		function OkfSettingsSection({ binding, t }) {
+			const accepted = {
+				directory: binding.directory,
+				autoIngest: binding.autoIngest
+			};
+			const [draft, setDraft] = (0, react.useState)(null);
+			const [picking, setPicking] = (0, react.useState)(false);
+			const [failure, setFailure] = (0, react.useState)(null);
+			const value = draft ?? accepted;
+			const writable = binding.writable;
+			const unchanged = value.directory.trim() === accepted.directory.trim() && value.autoIngest === accepted.autoIngest;
+			const choose = async () => {
+				setPicking(true);
+				setFailure(null);
+				try {
+					const chosen = await binding.chooseDirectory();
+					if (chosen !== null) setDraft({
+						directory: chosen,
+						autoIngest: value.autoIngest
+					});
+				} catch {
+					setFailure("save");
+				} finally {
+					setPicking(false);
+				}
+			};
+			const save = async () => {
+				const next = value.directory.trim();
+				if (next !== "" && !next.startsWith("/")) {
+					setFailure("invalid");
+					return;
+				}
+				setFailure(null);
+				try {
+					if (await binding.save({
+						directory: next,
+						autoIngest: value.autoIngest
+					})) setDraft(null);
+					else setFailure("save");
+				} catch {
+					setFailure("save");
+				}
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
+				className: ModelSettingsPage_module_default.card,
+				"aria-label": t("okf"),
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						className: ModelSettingsPage_module_default.heading,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h4", {
+							className: ModelSettingsPage_module_default.title,
+							children: t("okf")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+							className: ModelSettingsPage_module_default.description,
+							children: t("okfConsent")
+						})] })
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: ModelSettingsPage_module_default.downloadRouting,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: ModelSettingsPage_module_default.label,
+							children: t("okfFolder")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+							value: value.directory,
+							placeholder: t("transcriptFolderUnset"),
+							autoComplete: "off",
+							spellCheck: false,
+							disabled: !writable || picking,
+							onChange: (event) => setDraft({
+								directory: event.target.value,
+								autoIngest: value.autoIngest
+							})
+						})] }), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+							className: ModelSettingsPage_module_default.runtimeRow,
+							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: ModelSettingsPage_module_default.label,
+								children: t("okfAutoIngest")
+							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
+								checked: value.autoIngest,
+								label: t("okfAutoIngest"),
+								disabled: !writable || picking,
+								onChange: (next) => setDraft({
+									directory: value.directory,
+									autoIngest: next
+								})
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: ModelSettingsPage_module_default.downloadActions,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+							size: "sm",
+							variant: "outline",
+							disabled: !writable || picking,
+							onClick: () => {
+								choose();
+							},
+							children: t("chooseFolder")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+							size: "sm",
+							disabled: !writable || picking || unchanged,
+							onClick: () => {
+								save();
+							},
+							children: t("save")
+						})]
+					}),
+					failure === null ? null : /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: ModelSettingsPage_module_default.error,
+						role: "status",
+						children: t(failure === "invalid" ? "transcriptFolderInvalid" : "okfSaveFailed")
+					})
+				]
+			});
+		}
+		/**
+		* Default folder for exported transcripts and the Open knowledge base section.
+		* The macOS chooser runs on the host, so the same dialog is available from the
+		* recording panel when no folder is configured yet.
+		*/
+		function TranscriptSettings({ form, rpc, t, okf }) {
+			const accepted = transcriptDirectory(form?.state.value);
+			const [draft, setDraft] = (0, react.useState)(null);
+			const [picking, setPicking] = (0, react.useState)(false);
+			const [failed, setFailed] = (0, react.useState)(false);
+			const writable = form?.state.writable === true && form.state.status === "ready";
+			const value = draft ?? accepted;
+			const choose = async () => {
+				setPicking(true);
+				setFailed(false);
+				try {
+					const result = await callRecordingRpc(rpc, "okf/choose-directory", {});
+					if (result.ok && typeof result.value === "string") setDraft(result.value);
+					else if (!result.ok && result.error.message !== "CANCELLED_BY_USER") setFailed(true);
+				} catch {
+					setFailed(true);
+				} finally {
+					setPicking(false);
+				}
+			};
+			const save = async () => {
+				if (form?.state.revision === void 0) return;
+				const next = value.trim();
+				if (next !== "" && !next.startsWith("/")) {
+					setFailed(true);
+					return;
+				}
+				setFailed(false);
+				try {
+					if (await form.mutate([{
+						op: "set",
+						path: ["transcript_directory"],
+						value: next
+					}], form.state.revision)) setDraft(null);
+					else setFailed(true);
+				} catch {
+					setFailed(true);
+				}
+			};
+			const chooseOkf = async () => {
+				const result = await callRecordingRpc(rpc, "okf/choose-directory", {});
+				if (result.ok && typeof result.value === "string") return result.value;
+				if (!result.ok && result.error.message === "CANCELLED_BY_USER") return null;
+				throw new Error("OKF_DIRECTORY_PICK_FAILED");
+			};
+			const saveOkf = async (next) => {
+				if (form?.state.revision === void 0) return false;
+				try {
+					return await form.mutate([{
+						op: "set",
+						path: ["okf_directory"],
+						value: next.directory
+					}, {
+						op: "set",
+						path: ["okf_ingest"],
+						value: next.autoIngest
+					}], form.state.revision);
+				} catch {
+					return false;
+				}
+			};
+			const okfBinding = okf ?? {
+				...okfAccepted(form?.state.value),
+				writable,
+				chooseDirectory: chooseOkf,
+				save: saveOkf
+			};
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
+				className: ModelSettingsPage_module_default.card,
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						className: ModelSettingsPage_module_default.heading,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("h4", {
+							className: ModelSettingsPage_module_default.title,
+							children: t("transcripts")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+							className: ModelSettingsPage_module_default.description,
+							children: t("transcriptFolderHint")
+						})] })
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						className: ModelSettingsPage_module_default.downloadRouting,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: ModelSettingsPage_module_default.label,
+							children: t("transcriptFolder")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+							value,
+							placeholder: t("transcriptFolderUnset"),
+							autoComplete: "off",
+							spellCheck: false,
+							disabled: !writable || picking,
+							onChange: (event) => setDraft(event.target.value)
+						})] })
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: ModelSettingsPage_module_default.downloadActions,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+							size: "sm",
+							variant: "outline",
+							disabled: !writable || picking,
+							onClick: () => {
+								choose();
+							},
+							children: t("chooseFolder")
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+							size: "sm",
+							disabled: !writable || picking || value.trim() === accepted.trim(),
+							onClick: () => {
+								save();
+							},
+							children: t("save")
+						})]
+					}),
+					failed ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: ModelSettingsPage_module_default.error,
+						role: "status",
+						children: t("transcriptFolderInvalid")
+					}) : null
+				]
+			}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(OkfSettingsSection, {
+				binding: okfBinding,
+				t
+			})] });
+		}
+		//#endregion
 		//#region src/client/model-settings-client.ts
 		function record$1(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("INVALID_RESPONSE");
@@ -880,6 +1144,11 @@ window.__ModuleLoader__.load({
 						rpc,
 						t
 					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TranscriptSettings, {
+						form,
+						rpc,
+						t
+					}),
 					error ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("p", {
 						className: ModelSettingsPage_module_default.error,
 						role: "status",
@@ -973,6 +1242,17 @@ window.__ModuleLoader__.load({
 			command: "命令",
 			wrap: "自动换行",
 			unwrap: "取消换行",
+			transcripts: "转写导出",
+			transcriptFolder: "默认保存位置",
+			transcriptFolderHint: "导出 Markdown 转写时使用的文件夹。留空则在导出时询问。",
+			transcriptFolderUnset: "尚未设置",
+			chooseFolder: "选择文件夹…",
+			transcriptFolderInvalid: "请输入绝对路径，或选择一个文件夹。",
+			okf: "开放知识库",
+			okfFolder: "知识库文件夹",
+			okfAutoIngest: "自动收录新的转写",
+			okfConsent: "开启后，该文件夹会成为 Git 仓库，每次收录的会议都会生成一个提交。",
+			okfSaveFailed: "无法保存开放知识库设置。",
 			summary: "离线录音与转写 · 仅限 Apple Silicon Mac",
 			title: "模型设置",
 			base: "基础模型（必需）",
@@ -1076,6 +1356,17 @@ window.__ModuleLoader__.load({
 			command: "Command",
 			wrap: "Wrap lines",
 			unwrap: "Unwrap lines",
+			transcripts: "Transcript export",
+			transcriptFolder: "Default save location",
+			transcriptFolderHint: "Folder used when exporting Markdown transcripts. Leave empty to ask on export.",
+			transcriptFolderUnset: "Not set",
+			chooseFolder: "Choose folder…",
+			transcriptFolderInvalid: "Enter an absolute path or choose a folder.",
+			okf: "Open knowledge base",
+			okfFolder: "Bundle folder",
+			okfAutoIngest: "Ingest new transcripts automatically",
+			okfConsent: "Turning this on makes the folder a Git repository, and every ingested meeting becomes one commit.",
+			okfSaveFailed: "Could not save Open knowledge base settings.",
 			summary: "Offline recording and transcription · Apple Silicon Mac only",
 			title: "Models and transcription mode",
 			base: "Base models (required)",
@@ -1120,6 +1411,41 @@ window.__ModuleLoader__.load({
 		//#region src/client/current-session.ts
 		function currentSessionId(ctx) {
 			return Object.values(ctx.sessions.list.getSnapshot().byId).find((session) => (session.retainedBy.mainView ?? 0) > 0)?.id;
+		}
+		const CONTROL_CHARACTERS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f\u2028\u2029]/gu;
+		const WHITESPACE = /\s+/gu;
+		/**
+		* Canonical form of a typed name: control characters and line breaks become
+		* spaces, whitespace runs collapse, the result is trimmed and capped. Applying
+		* this twice changes nothing, which is what lets the host reject any value that
+		* is not already canonical.
+		*/
+		function normalizeSpeakerName(raw) {
+			const collapsed = raw.replace(CONTROL_CHARACTERS, " ").replace(WHITESPACE, " ").trim();
+			return Array.from(collapsed).slice(0, 60).join("").trim();
+		}
+		/** The name to print for a label: the assigned name, or the label itself. */
+		function speakerNameFor(label, names) {
+			const name = normalizeSpeakerName(names[label] ?? "");
+			return name === "" ? label : name;
+		}
+		/** Only the assignments that actually rename something. */
+		function assignedSpeakerNames(labels, names) {
+			const assigned = {};
+			for (const label of labels) {
+				const name = speakerNameFor(label, names);
+				if (name !== label) assigned[label] = name;
+			}
+			return assigned;
+		}
+		/** Names that more than one label resolves to, in first-seen order. */
+		function duplicateSpeakerNames(labels, names) {
+			const counts = /* @__PURE__ */ new Map();
+			for (const label of labels) {
+				const name = speakerNameFor(label, names);
+				counts.set(name, (counts.get(name) ?? 0) + 1);
+			}
+			return [...counts].filter(([, count]) => count > 1).map(([name]) => name);
 		}
 		//#endregion
 		//#region src/client/recording-error-copy.ts
@@ -1202,7 +1528,19 @@ window.__ModuleLoader__.load({
 				"MEETING_NOT_FOUND",
 				"TRANSCRIPT_VERSION_CONFLICT",
 				"RUN_STATE_CONFLICT"
-			]]
+			]],
+			["panel.error.exportDirectory", ["EXPORT_DIRECTORY_REQUIRED", "EXPORT_DIRECTORY_INVALID"]],
+			["panel.error.export", [
+				"EXPORT_PATH_INVALID",
+				"EXPORT_TARGET_EXISTS",
+				"EXPORT_PERMISSION_DENIED",
+				"EXPORT_WRITE_FAILED",
+				"EXPORT_PICKER_FAILED",
+				"TRANSCRIPT_NOT_COMMITTED",
+				"TRANSCRIPT_EMPTY"
+			]],
+			["panel.error.exportSpeaker", ["EXPORT_SPEAKER_UNKNOWN", "EXPORT_SPEAKER_INVALID"]],
+			["panel.error.exportSpeakerDuplicate", ["EXPORT_SPEAKER_DUPLICATE"]]
 		];
 		function recordingErrorCopy(code, translate) {
 			return translate(groups.find(([, codes]) => codes.includes(code))?.[0] ?? "panel.error.generic");
@@ -1373,6 +1711,7 @@ window.__ModuleLoader__.load({
 			"mention": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJFZGl0IC8gTWVudGlvbiI+CjxwYXRoIGlkPSJWZWN0b3IiIGQ9Ik0xMi41IDEwLjAwMlYxMC44MzMzQzEyLjUgMTEuNzUzOCAxMy4yNDYyIDEyLjUgMTQuMTY2NyAxMi41QzE1LjA4NzEgMTIuNSAxNS44MzMzIDExLjc1MzggMTUuODMzMyAxMC44MzMzVjkuOTk5OTlDMTUuODMzMyA4Ljc1MTc5IDE1LjQzMzEgNy41MzY1NyAxNC42OTEyIDYuNTMyNzlDMTMuOTQ5MiA1LjUyOTAxIDEyLjkwNDcgNC43ODk2NCAxMS43MTE0IDQuNDIzNDFDMTAuNTE4MiA0LjA1NzE5IDkuMjM4OCA0LjA4MzM0IDguMDYxNTIgNC40OTgwOUM2Ljg4NDI0IDQuOTEyODUgNS44NzExMiA1LjY5NDY2IDUuMTcwOSA2LjcyNzk2QzQuNDcwNjggNy43NjEyNiA0LjEyMDQ3IDguOTkxNTYgNC4xNzE1NiAxMC4yMzg3QzQuMjIyNjQgMTEuNDg1OSA0LjY3MjQgMTIuNjgzOSA1LjQ1NDc4IDEzLjY1NjVDNi4yMzcxNSAxNC42MjkxIDcuMzExMTMgMTUuMzI0OSA4LjUxODM5IDE1LjY0MkM5LjcyNTY0IDE1Ljk1OTEgMTEuMDAyMyAxNS44ODA1IDEyLjE2MTYgMTUuNDE3OU0xMi41IDEwLjAwMkMxMi40OTg5IDExLjM4MTggMTEuMzggMTIuNSAxMCAxMi41QzguNjE5MjkgMTIuNSA3LjUgMTEuMzgwNyA3LjUgOS45OTk5OUM3LjUgOC42MTkyOCA4LjYxOTI5IDcuNDk5OTkgMTAgNy40OTk5OUMxMS4zOCA3LjQ5OTk5IDEyLjQ5ODkgOC42MTgxOSAxMi41IDkuOTk3OThNMTIuNSAxMC4wMDJWOS45OTc5OE0xMi41IDkuOTk3OThWNy40OTk5OSIgc3Ryb2tlPSIjMEYxMTE1IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
 			"collapse": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJDb2xsYXBzZSI+CjxwYXRoIGlkPSJWZWN0b3IiIGQ9Ik00LjUgMTAuNUw5IDZMMTMuNSAxMC41IiBzdHJva2U9IiM2MTY2NkIiIHN0cm9rZS13aWR0aD0iMS4zNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjwvZz4KPC9zdmc+Cg==",
 			"check": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiB2aWV3Qm94PSIwIDAgMTYgMTYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJjaGVjayI+CjxwYXRoIGlkPSJWZWN0b3IiIGQ9Ik0zLjMzMzMzIDhMNiAxMC42NjY3TDEyLjY2NjcgNCIgc3Ryb2tlPSIjMjM4MDQ3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
+			"export": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJFeHBvcnQiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNOSAyLjI1VjEwLjEyNU05IDEwLjEyNUw1LjYyNSA2Ljc1TTkgMTAuMTI1TDEyLjM3NSA2Ljc1IiBzdHJva2U9IiM2MTY2NkIiIHN0cm9rZS13aWR0aD0iMS4zNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTIuNjI1IDExLjYyNVYxNC4yNUMyLjYyNSAxNC42NjQyIDIuOTYwNzkgMTUgMy4zNzUgMTVIMTQuNjI1QzE1LjAzOTIgMTUgMTUuMzc1IDE0LjY2NDIgMTUuMzc1IDE0LjI1VjExLjYyNSIgc3Ryb2tlPSIjNjE2NjZCIiBzdHJva2Utd2lkdGg9IjEuMzUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
 			"resize": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJyZXNpemUiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNOS43NSAxNUwxNSA5Ljc1TTEyLjc1IDE1TDE1IDEyLjc1IiBzdHJva2U9IiM4MTg1OEMiIHN0cm9rZS13aWR0aD0iMS4xMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
 			"micOff": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJpY29uIC8gbWljLW9mZiI+CjxwYXRoIGlkPSJ2ZWN0b3IiIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTAgMy43NUM5LjI5Mjc1IDMuNzUgOC42Njc1IDQuMTAxNjUgOC4yODk2MSA0LjY0MzQxQzguMDI2MzEgNS4wMjA4OSA3LjUwNjg1IDUuMTEzNDYgNy4xMjkzNyA0Ljg1MDE1QzYuNzUxODkgNC41ODY4NSA2LjY1OTMzIDQuMDY3NCA2LjkyMjY0IDMuNjg5OTJDNy41OTg4NiAyLjcyMDQ1IDguNzI0OTcgMi4wODMzMyAxMCAyLjA4MzMzQzEyLjA3MTEgMi4wODMzMyAxMy43NSAzLjc2MjI3IDEzLjc1IDUuODMzMzNWOC43NUMxMy43NSA4LjkzMTA3IDEzLjczNzEgOS4xMDk2MiAxMy43MTIxIDkuMjg0NjZDMTMuNjQ2OSA5Ljc0MDI2IDEzLjIyNDcgMTAuMDU2OCAxMi43NjkxIDkuOTkxNkMxMi4zMTM1IDkuOTI2NDMgMTEuOTk3IDkuNTA0MjcgMTIuMDYyMiA5LjA0ODY3QzEyLjA3NjEgOC45NTE1NSAxMi4wODMzIDguODUxODYgMTIuMDgzMyA4Ljc1VjUuODMzMzNDMTIuMDgzMyA0LjY4Mjc0IDExLjE1MDYgMy43NSAxMCAzLjc1Wk0yLjcyNTM5IDMuNTk2NzJDMy4wNDAxNiAzLjI2MDk2IDMuNTY3NTMgMy4yNDM5NCAzLjkwMzI5IDMuNTU4NzJMMTMuODQ5MiAxMi44ODMxQzEzLjg4NTggMTIuOTExOSAxMy45MjAzIDEyLjk0NDEgMTMuOTUyMyAxMi45Nzk3TDE3LjIzNjYgMTYuMDU4N0MxNy41NzI0IDE2LjM3MzUgMTcuNTg5NCAxNi45MDA5IDE3LjI3NDYgMTcuMjM2NkMxNi45NTk4IDE3LjU3MjQgMTYuNDMyNSAxNy41ODk0IDE2LjA5NjcgMTcuMjc0NkwxMy4yMjc0IDE0LjU4NDZDMTIuNTAxNCAxNC45ODY5IDExLjY5MjQgMTUuMjU3OCAxMC44MzMzIDE1LjM2NVYxNi4yNUgxMi4wODMzQzEyLjU0MzYgMTYuMjUgMTIuOTE2NyAxNi42MjMxIDEyLjkxNjcgMTcuMDgzM0MxMi45MTY3IDE3LjU0MzYgMTIuNTQzNiAxNy45MTY3IDEyLjA4MzMgMTcuOTE2N0g3LjkxNjY3QzcuNDU2NDMgMTcuOTE2NyA3LjA4MzM0IDE3LjU0MzYgNy4wODMzNCAxNy4wODMzQzcuMDgzMzQgMTYuNjIzMSA3LjQ1NjQzIDE2LjI1IDcuOTE2NjcgMTYuMjVIOS4xNjY2N1YxNS4zNjUxQzYuNTE3NDYgMTUuMDM0OCA0LjM1MjM3IDEzLjE1MDQgMy42MDk1MiAxMC42NTQ0QzMuNDc4MjQgMTAuMjEzMyAzLjcyOTQxIDkuNzQ5MjQgNC4xNzA1MyA5LjYxNzk2QzQuNjExNjQgOS40ODY2NyA1LjA3NTY2IDkuNzM3ODQgNS4yMDY5NSAxMC4xNzlDNS44MjE4IDEyLjI0NDkgNy43MzYyMiAxMy43NSAxMCAxMy43NUMxMC42ODM2IDEzLjc1IDExLjMzNDMgMTMuNjEzMiAxMS45MjY5IDEzLjM2NTRMMi43NjMzOSA0Ljc3NDYxQzIuNDI3NjIgNC40NTk4NCAyLjQxMDYxIDMuOTMyNDggMi43MjUzOSAzLjU5NjcyWk0xNS44Mjk1IDkuNjE3OTZDMTYuMjcwNiA5Ljc0OTI0IDE2LjUyMTggMTAuMjEzMyAxNi4zOTA1IDEwLjY1NDRDMTYuMjc3NyAxMS4wMzM0IDE2LjEzMjEgMTEuMzk4MiAxNS45NTcyIDExLjc0NTVDMTUuNzUwMSAxMi4xNTY2IDE1LjI0OTEgMTIuMzIxOSAxNC44MzgxIDEyLjExNDlDMTQuNDI3IDExLjkwNzkgMTQuMjYxNiAxMS40MDY4IDE0LjQ2ODcgMTAuOTk1OEMxNC41OTk3IDEwLjczNTYgMTQuNzA4NyAxMC40NjI1IDE0Ljc5MzEgMTAuMTc5QzE0LjkyNDMgOS43Mzc4NCAxNS4zODg0IDkuNDg2NjcgMTUuODI5NSA5LjYxNzk2WiIgZmlsbD0iIzgxODU4QyIvPgo8L2c+Cjwvc3ZnPgo=",
 			"systemOff": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJpY29uIC8gc291bmQtb2ZmLCBzcGVha2VyIj4KPHBhdGggaWQ9InZlY3RvciIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik05LjU4MzMzIDQuMDkxNTdDOS41ODMzMyAzLjcyOTAyIDkuMTUyMzYgMy41Mzk0NCA4Ljg4NTExIDMuNzg0NDJMNy41MTU3MyA1LjAzOTY4QzcuMTc2NDcgNS4zNTA2OCA2LjY0OTMzIDUuMzI3NzYgNi4zMzgzMyA0Ljk4ODQ5QzYuMDI3MzQgNC42NDkyMiA2LjA1MDI2IDQuMTIyMDkgNi4zODk1MiAzLjgxMTA5TDcuNzU4OSAyLjU1NTgzQzkuMDk1MTUgMS4zMzA5MyAxMS4yNSAyLjI3ODg0IDExLjI1IDQuMDkxNTdMMTEuMjUgNy42NjY2N0MxMS4yNSA4LjEyNjkgMTAuODc2OSA4LjUgMTAuNDE2NyA4LjVDOS45NTY0MyA4LjUgOS41ODMzMyA4LjEyNjkgOS41ODMzMyA3LjY2NjY3TDkuNTgzMzMgNC4wOTE1N1pNMS4wNjA4MiAyLjc2MTE1QzEuMzc2ODMgMi40MjY1NSAxLjkwNDI1IDIuNDExNDggMi4yMzg4NSAyLjcyNzQ5TDE3LjIzODkgMTYuODk0MkMxNy41NzM1IDE3LjIxMDIgMTcuNTg4NSAxNy43Mzc2IDE3LjI3MjUgMTguMDcyMkMxNi45NTY1IDE4LjQwNjggMTYuNDI5MSAxOC40MjE5IDE2LjA5NDUgMTguMTA1OEwxMS4yNSAxMy41MzA1TDExLjI1IDE1LjkwODVDMTEuMjUgMTcuNzIxMiA5LjA5NTE2IDE4LjY2OTEgNy43NTg5IDE3LjQ0NDJMNS41NDE2OSAxNS40MTE4QzUuMjUyNzggMTUuMTQ2OSA0Ljg3NTA5IDE1IDQuNDgzMTcgMTVDMi42OTc1NCAxNSAxLjI1IDEzLjU1MjUgMS4yNSAxMS43NjY5VjguMjMzMTlDMS4yNSA3LjA4NDc3IDEuODQ4MzkgNi4wNzY3NiAyLjc1MDUgNS41MDMxOUwxLjA5NDQ4IDMuOTM5MThDMC43NTk4ODIgMy42MjMxNyAwLjc0NDgxMyAzLjA5NTc1IDEuMDYwODIgMi43NjExNVpNNC4wNDcyOCA2LjcyNzkzQzMuMzk0NDMgNi45MTY1MSAyLjkxNjY3IDcuNTE5NiAyLjkxNjY3IDguMjMzMTlWMTEuNzY2OUMyLjkxNjY3IDEyLjYzMiAzLjYxODAxIDEzLjMzMzQgNC40ODMxNyAxMy4zMzM0QzUuMjkyMDggMTMuMzMzNCA2LjA3MTYgMTMuNjM2NiA2LjY2NzkgMTQuMTgzMkw4Ljg4NTExIDE2LjIxNTZDOS4xNTIzNiAxNi40NjA2IDkuNTgzMzMgMTYuMjcxIDkuNTgzMzMgMTUuOTA4NUw5LjU4MzMzIDExLjk1NjRMNC4wNDcyOCA2LjcyNzkzWk0xNi41MTA3IDUuMjk3MTZDMTYuOTE1MiA1LjA3NzU2IDE3LjQyMTEgNS4yMjc0MiAxNy42NDA3IDUuNjMxODlDMTguMzQ2MiA2LjkzMTI4IDE4Ljc0NjYgOC40MjAxMyAxOC43NDY2IDEwQzE4Ljc0NjYgMTEuNTE2IDE4LjM3NzkgMTIuOTQ4MyAxNy43MjQ2IDE0LjIwOTlDMTcuNTEzIDE0LjYxODYgMTcuMDEwMSAxNC43NzgzIDE2LjYwMTQgMTQuNTY2N0MxNi4xOTI3IDE0LjM1NSAxNi4wMzMgMTMuODUyMiAxNi4yNDQ2IDEzLjQ0MzVDMTYuNzc4MSAxMi40MTMyIDE3LjA3OTkgMTEuMjQzMSAxNy4wNzk5IDEwQzE3LjA3OTkgOC43MDQ3NSAxNi43NTIyIDcuNDg4NTEgMTYuMTc2IDYuNDI3MTNDMTUuOTU2NCA2LjAyMjY3IDE2LjEwNjIgNS41MTY3NiAxNi41MTA3IDUuMjk3MTZaTTEzLjE2NjUgNi41ODM2NkMxMy41MzQ1IDYuMzA3MjUgMTQuMDU2OSA2LjM4MTQ5IDE0LjMzMzMgNi43NDk0OEMxNS4wMTM0IDcuNjU0ODYgMTUuNDE2NyA4Ljc4MTUyIDE1LjQxNjcgOS45OTk5N0MxNS40MTY3IDEwLjU0MzEgMTUuMzM2NSAxMS4wNjkgMTUuMTg2NyAxMS41NjU3QzE1LjA1MzggMTIuMDA2NCAxNC41ODg5IDEyLjI1NTkgMTQuMTQ4MyAxMi4xMjNDMTMuNzA3NiAxMS45OTAxIDEzLjQ1ODEgMTEuNTI1MiAxMy41OTEgMTEuMDg0NkMxMy42OTQyIDEwLjc0MjIgMTMuNzUgMTAuMzc4NCAxMy43NSA5Ljk5OTk3QzEzLjc1IDkuMTU0OCAxMy40NzE0IDguMzc3MTEgMTMuMDAwNyA3Ljc1MDQ0QzEyLjcyNDMgNy4zODI0NSAxMi43OTg1IDYuODYwMDcgMTMuMTY2NSA2LjU4MzY2WiIgZmlsbD0iIzgxODU4QyIvPgo8L2c+Cjwvc3ZnPgo="
@@ -1386,48 +1725,64 @@ window.__ModuleLoader__.load({
 		//#endregion
 		//#region src/client/RecordingPanel.module.css
 		var RecordingPanel_module_default = {
-			"actionIcon": "Expx1a_actionIcon",
-			"body": "Expx1a_body",
-			"check": "Expx1a_check",
-			"chip": "Expx1a_chip",
-			"collapse": "Expx1a_collapse",
-			"control": "Expx1a_control",
-			"error": "Expx1a_error",
-			"errorControl": "Expx1a_errorControl",
-			"expand": "Expx1a_expand",
-			"footer": "Expx1a_footer",
-			"grip": "Expx1a_grip",
-			"header": "Expx1a_header",
-			"hint": "Expx1a_hint",
-			"icon": "Expx1a_icon",
-			"mainControl": "Expx1a_mainControl",
-			"move": "Expx1a_move",
-			"noSignal": "Expx1a_noSignal",
-			"off": "Expx1a_off",
-			"panel": "Expx1a_panel",
-			"phase": "Expx1a_phase",
-			"play": "Expx1a_play",
-			"preview": "Expx1a_preview",
-			"previewHeading": "Expx1a_previewHeading",
-			"previewTitle": "Expx1a_previewTitle",
-			"recognizer": "Expx1a_recognizer",
-			"recognizerLabel": "Expx1a_recognizerLabel",
-			"recognizerSelect": "Expx1a_recognizerSelect",
-			"recordingSpin": "Expx1a_recordingSpin",
-			"recordingWave": "Expx1a_recordingWave",
-			"resize": "Expx1a_resize",
-			"segment": "Expx1a_segment",
-			"segmentMeta": "Expx1a_segmentMeta",
-			"segments": "Expx1a_segments",
-			"spacer": "Expx1a_spacer",
-			"spinner": "Expx1a_spinner",
-			"status": "Expx1a_status",
-			"text": "Expx1a_text",
-			"toggle": "Expx1a_toggle",
-			"tracks": "Expx1a_tracks",
-			"utility": "Expx1a_utility",
-			"warning": "Expx1a_warning",
-			"wave": "Expx1a_wave"
+			"actionIcon": "gXqskW_actionIcon",
+			"attribution": "gXqskW_attribution",
+			"attributionError": "gXqskW_attributionError",
+			"attributionField": "gXqskW_attributionField",
+			"attributionFields": "gXqskW_attributionFields",
+			"attributionInput": "gXqskW_attributionInput",
+			"attributionLabel": "gXqskW_attributionLabel",
+			"attributionSummary": "gXqskW_attributionSummary",
+			"body": "gXqskW_body",
+			"caret": "gXqskW_caret",
+			"caretIcon": "gXqskW_caretIcon",
+			"caretOpen": "gXqskW_caretOpen",
+			"check": "gXqskW_check",
+			"chip": "gXqskW_chip",
+			"collapse": "gXqskW_collapse",
+			"control": "gXqskW_control",
+			"error": "gXqskW_error",
+			"errorControl": "gXqskW_errorControl",
+			"expand": "gXqskW_expand",
+			"footer": "gXqskW_footer",
+			"grip": "gXqskW_grip",
+			"header": "gXqskW_header",
+			"hint": "gXqskW_hint",
+			"icon": "gXqskW_icon",
+			"mainControl": "gXqskW_mainControl",
+			"menu": "gXqskW_menu",
+			"menuCheck": "gXqskW_menuCheck",
+			"menuEmpty": "gXqskW_menuEmpty",
+			"menuItem": "gXqskW_menuItem",
+			"move": "gXqskW_move",
+			"noSignal": "gXqskW_noSignal",
+			"off": "gXqskW_off",
+			"panel": "gXqskW_panel",
+			"phase": "gXqskW_phase",
+			"play": "gXqskW_play",
+			"preview": "gXqskW_preview",
+			"previewHeading": "gXqskW_previewHeading",
+			"previewTitle": "gXqskW_previewTitle",
+			"recognizer": "gXqskW_recognizer",
+			"recognizerLabel": "gXqskW_recognizerLabel",
+			"recognizerSelect": "gXqskW_recognizerSelect",
+			"recordingSpin": "gXqskW_recordingSpin",
+			"recordingWave": "gXqskW_recordingWave",
+			"resize": "gXqskW_resize",
+			"segment": "gXqskW_segment",
+			"segmentMeta": "gXqskW_segmentMeta",
+			"segments": "gXqskW_segments",
+			"spacer": "gXqskW_spacer",
+			"spinner": "gXqskW_spinner",
+			"split": "gXqskW_split",
+			"splitMain": "gXqskW_splitMain",
+			"status": "gXqskW_status",
+			"text": "gXqskW_text",
+			"toggle": "gXqskW_toggle",
+			"tracks": "gXqskW_tracks",
+			"utility": "gXqskW_utility",
+			"warning": "gXqskW_warning",
+			"wave": "gXqskW_wave"
 		};
 		//#endregion
 		//#region src/client/RecordingPanelControls.tsx
@@ -1485,27 +1840,137 @@ window.__ModuleLoader__.load({
 				})
 			});
 		}
-		function TrackButton({ pending, pendingAction, run, track, translate, view }) {
+		function Chevron() {
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("svg", {
+				"aria-hidden": "true",
+				viewBox: "0 0 12 12",
+				width: "12",
+				height: "12",
+				className: RecordingPanel_module_default.caretIcon,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("path", {
+					d: "M3 4.5 6 7.5 9 4.5",
+					fill: "none",
+					stroke: "currentColor",
+					strokeWidth: "1.5",
+					strokeLinecap: "round",
+					strokeLinejoin: "round"
+				})
+			});
+		}
+		/** The menu needs roughly this much room above the header before it flips below the control. */
+		const MENU_CLEARANCE = 260;
+		function opensBelow(anchorTop, clearance = MENU_CLEARANCE) {
+			return anchorTop < clearance;
+		}
+		function DeviceMenu({ anchor, devices, menuRef, onChoose, onClose, selectedUID, track, translate }) {
+			const options = devices?.filter((device) => track === "mic" ? device.input_channels > 0 : device.output_channels > 0);
+			const [below, setBelow] = (0, react.useState)(false);
+			(0, react.useLayoutEffect)(() => {
+				if (anchor === null) return;
+				setBelow(opensBelow(anchor.getBoundingClientRect().top));
+			}, [anchor]);
+			const item = (uid, name) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
+				type: "button",
+				role: "menuitemradio",
+				"aria-checked": selectedUID === uid,
+				className: RecordingPanel_module_default.menuItem,
+				onClick: () => {
+					onChoose(uid);
+					onClose();
+				},
+				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: RecordingPanel_module_default.menuCheck,
+					children: selectedUID === uid ? "✓" : ""
+				}), name]
+			}, uid);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				ref: menuRef,
+				className: RecordingPanel_module_default.menu,
+				"data-below": below ? "true" : void 0,
+				role: "menu",
+				"aria-label": translate(track === "mic" ? "panel.micDevice" : "panel.systemDevice"),
+				children: [item("", translate("panel.deviceDefault")), options === void 0 ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: RecordingPanel_module_default.menuEmpty,
+					role: "menuitem",
+					"aria-disabled": "true",
+					children: translate("panel.devicesUnavailable")
+				}) : options.map((device) => item(device.uid, device.name))]
+			});
+		}
+		function TrackButton({ devices, pending, pendingAction, refreshDevices, run, selectDevice, selectedDevices, track, translate, view }) {
 			const state = view?.[track];
 			const available = view?.phase === "recording" && pendingAction !== "stop";
 			const requested = available && (state?.requested ?? false);
 			const action = track === "mic" ? requested ? "mic_off" : "mic_on" : requested ? "system_off" : "system_on";
 			const label = translate(track === "mic" ? requested ? "panel.micOn" : "panel.micOff" : requested ? "panel.systemOn" : "panel.systemOff");
 			const icon = track === "mic" ? requested ? "mic" : "micOff" : requested ? "system" : "systemOff";
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
-				label,
-				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-					variant: "ghost",
-					className: `${RecordingPanel_module_default.control} ${!requested ? RecordingPanel_module_default.off : ""} ${available && state?.errorCode != null ? RecordingPanel_module_default.warning : ""}`,
-					"aria-label": label,
-					"aria-pressed": requested,
-					disabled: pending || !available,
-					onClick: () => view && void run({
-						action,
-						meeting_id: view.meetingId
+			const selectedUID = track === "mic" ? selectedDevices.mic : selectedDevices.system;
+			const [open, setOpen] = (0, react.useState)(false);
+			const group = (0, react.useRef)(null);
+			const menu = (0, react.useRef)(null);
+			const toggleMenu = (0, react.useCallback)(() => {
+				setOpen((current) => !current);
+				refreshDevices();
+			}, [refreshDevices]);
+			(0, react.useEffect)(() => {
+				if (!open) return void 0;
+				const dismiss = (event) => {
+					if (event instanceof KeyboardEvent && event.key !== "Escape") return;
+					const target = event.target;
+					if (event instanceof MouseEvent && (group.current?.contains(target) === true || menu.current?.contains(target) === true)) return;
+					setOpen(false);
+				};
+				document.addEventListener("pointerdown", dismiss);
+				document.addEventListener("keydown", dismiss);
+				return () => {
+					document.removeEventListener("pointerdown", dismiss);
+					document.removeEventListener("keydown", dismiss);
+				};
+			}, [open]);
+			const chooseDevice = (uid) => {
+				selectDevice(track, uid);
+			};
+			const selectedName = devices?.devices.find((device) => device.uid === selectedUID)?.name;
+			const caretLabel = translate(track === "mic" ? "panel.micDevice" : "panel.systemDevice");
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+				className: RecordingPanel_module_default.split,
+				ref: group,
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+						label: selectedName === void 0 ? label : `${label} · ${selectedName}`,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+							variant: "ghost",
+							className: `${RecordingPanel_module_default.control} ${RecordingPanel_module_default.splitMain} ${!requested ? RecordingPanel_module_default.off : ""} ${available && state?.errorCode != null ? RecordingPanel_module_default.warning : ""}`,
+							"aria-label": label,
+							"aria-pressed": requested,
+							disabled: pending || !available,
+							onClick: () => view && void run({
+								action,
+								meeting_id: view.meetingId
+							}),
+							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingIcon, { name: icon })
+						})
 					}),
-					children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingIcon, { name: icon })
-				})
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+						variant: "ghost",
+						className: `${RecordingPanel_module_default.caret} ${open ? RecordingPanel_module_default.caretOpen : ""}`,
+						"aria-label": caretLabel,
+						"aria-haspopup": "menu",
+						"aria-expanded": open,
+						onClick: toggleMenu,
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(Chevron, {})
+					}),
+					open && /* @__PURE__ */ (0, react_jsx_runtime.jsx)(DeviceMenu, {
+						anchor: group.current,
+						devices: devices?.devices ?? null,
+						menuRef: menu,
+						selectedUID,
+						track,
+						translate,
+						onChoose: chooseDevice,
+						onClose: () => setOpen(false)
+					})
+				]
 			});
 		}
 		function RecordingControls(props) {
@@ -1592,11 +2057,11 @@ window.__ModuleLoader__.load({
 				height: window.innerHeight
 			};
 		}
-		function fit(layout, compactWidth) {
+		function fit(layout, compactWidth, minimumWidth) {
 			const bounds = viewport();
 			const availableWidth = Math.max(1, bounds.width - MARGIN * 2);
 			const availableHeight = Math.max(1, bounds.height - MARGIN * 2);
-			const width = Math.min(availableWidth, Math.max(300, layout.width));
+			const width = Math.min(availableWidth, Math.max(minimumWidth, layout.width));
 			const height = Math.min(availableHeight, Math.max(260, layout.height));
 			const visibleWidth = layout.expanded ? width : Math.min(compactWidth, availableWidth);
 			const visibleHeight = layout.expanded ? height : Math.min(COMPACT_HEIGHT, availableHeight);
@@ -1608,17 +2073,17 @@ window.__ModuleLoader__.load({
 				y: Math.max(MARGIN, Math.min(layout.y, bounds.height - visibleHeight - MARGIN))
 			};
 		}
-		function initialLayout(compactWidth) {
+		function initialLayout(compactWidth, minimumWidth) {
 			const bounds = viewport();
 			return fit({
 				expanded: false,
-				width: 384,
+				width: Math.max(384, minimumWidth),
 				height: 480,
 				x: bounds.width - compactWidth - MARGIN,
 				y: bounds.height - COMPACT_HEIGHT - MARGIN
-			}, compactWidth);
+			}, compactWidth, minimumWidth);
 		}
-		function update(layout, kind, x, y, compactWidth) {
+		function update(layout, kind, x, y, compactWidth, minimumWidth) {
 			return fit(kind === "move" ? {
 				...layout,
 				x: layout.x + x,
@@ -1627,7 +2092,7 @@ window.__ModuleLoader__.load({
 				...layout,
 				width: layout.width + x,
 				height: layout.height + y
-			}, compactWidth);
+			}, compactWidth, minimumWidth);
 		}
 		function keyboardDelta(event) {
 			const step = event.shiftKey ? 40 : 10;
@@ -1651,7 +2116,7 @@ window.__ModuleLoader__.load({
 				default: return null;
 			}
 		}
-		function gestureHandlers(kind, layout, compactWidth, gesture, setLayout) {
+		function gestureHandlers(kind, layout, compactWidth, minimumWidth, gesture, setLayout) {
 			return {
 				onPointerDown(event) {
 					if (event.button !== 0 || gesture.current !== null) return;
@@ -1669,7 +2134,7 @@ window.__ModuleLoader__.load({
 				onPointerMove(event) {
 					const active = gesture.current;
 					if (active?.pointerId !== event.pointerId) return;
-					setLayout(update(active.layout, active.kind, event.clientX - active.x, event.clientY - active.y, compactWidth));
+					setLayout(update(active.layout, active.kind, event.clientX - active.x, event.clientY - active.y, compactWidth, minimumWidth));
 				},
 				onPointerUp(event) {
 					if (gesture.current?.pointerId !== event.pointerId) return;
@@ -1686,19 +2151,23 @@ window.__ModuleLoader__.load({
 					const delta = keyboardDelta(event);
 					if (delta === null) return;
 					event.preventDefault();
-					setLayout((previous) => update(previous, kind, delta.x, delta.y, compactWidth));
+					setLayout((previous) => update(previous, kind, delta.x, delta.y, compactWidth, minimumWidth));
 				}
 			};
 		}
-		function useRecordingPanelLayout(compactWidth) {
-			const [layout, setLayout] = (0, react.useState)(() => initialLayout(compactWidth));
+		/**
+		* `minimumWidth` is the intrinsic width of the header: the panel never shrinks below it,
+		* so the controls keep their size instead of being squeezed when the window opens.
+		*/
+		function useRecordingPanelLayout(compactWidth, minimumWidth = 300) {
+			const [layout, setLayout] = (0, react.useState)(() => initialLayout(compactWidth, minimumWidth));
 			const gesture = (0, react.useRef)(null);
 			(0, react.useEffect)(() => {
-				const resize = () => setLayout((previous) => fit(previous, compactWidth));
+				const resize = () => setLayout((previous) => fit(previous, compactWidth, minimumWidth));
 				resize();
 				window.addEventListener("resize", resize);
 				return () => window.removeEventListener("resize", resize);
-			}, [compactWidth]);
+			}, [compactWidth, minimumWidth]);
 			const style = {
 				left: layout.x,
 				top: layout.y,
@@ -1708,17 +2177,17 @@ window.__ModuleLoader__.load({
 			return {
 				expanded: layout.expanded,
 				style,
-				move: gestureHandlers("move", layout, compactWidth, gesture, setLayout),
-				resize: gestureHandlers("resize", layout, compactWidth, gesture, setLayout),
+				move: gestureHandlers("move", layout, compactWidth, minimumWidth, gesture, setLayout),
+				resize: gestureHandlers("resize", layout, compactWidth, minimumWidth, gesture, setLayout),
 				toggle: () => setLayout((previous) => fit({
 					...previous,
 					expanded: !previous.expanded
-				}, compactWidth)),
+				}, compactWidth, minimumWidth)),
 				reset: () => setLayout((previous) => fit({
 					...previous,
 					x: viewport().width - previous.width - MARGIN,
 					y: viewport().height - previous.height - MARGIN
-				}, compactWidth))
+				}, compactWidth, minimumWidth))
 			};
 		}
 		//#endregion
@@ -1769,7 +2238,8 @@ window.__ModuleLoader__.load({
 				}, track))
 			})] });
 		}
-		function Preview({ preview, translate, view }) {
+		function Preview({ attribution, preview, translate, view }) {
+			const names = attribution?.names ?? {};
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: RecordingPanel_module_default.preview,
 				"aria-label": translate("panel.previewAria"),
@@ -1791,7 +2261,7 @@ window.__ModuleLoader__.load({
 						className: RecordingPanel_module_default.segment,
 						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
 							className: RecordingPanel_module_default.segmentMeta,
-							children: [durationClock(segment.startMs), segment.speakerLabel !== null && ` · ${segment.speakerLabel}`]
+							children: [durationClock(segment.startMs), segment.speakerLabel !== null && ` · ${speakerNameFor(segment.speakerLabel, names)}`]
 						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 							className: RecordingPanel_module_default.text,
 							children: segment.text
@@ -1799,6 +2269,61 @@ window.__ModuleLoader__.load({
 					}, segment.seq))]
 				})]
 			});
+		}
+		/**
+		* Optional renaming of the detected speaker labels for the exported file. The
+		* stored transcript keeps its labels; only the export applies the names.
+		*/
+		function SpeakerAttributionSection({ attribution, translate }) {
+			if (attribution === void 0 || attribution.labels.length === 0) return null;
+			const { failure, labels, names, saving, update } = attribution;
+			const duplicates = duplicateSpeakerNames(labels, names);
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("details", {
+				className: RecordingPanel_module_default.attribution,
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("summary", {
+						className: RecordingPanel_module_default.attributionSummary,
+						children: translate("panel.attribution")
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						children: translate("panel.attributionHint")
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						className: RecordingPanel_module_default.attributionFields,
+						children: labels.map((label) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", {
+							className: RecordingPanel_module_default.attributionField,
+							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: RecordingPanel_module_default.attributionLabel,
+								children: label
+							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+								className: RecordingPanel_module_default.attributionInput,
+								type: "text",
+								value: names[label] ?? "",
+								"aria-label": label,
+								placeholder: label,
+								maxLength: 60,
+								spellCheck: false,
+								onChange: (event) => update(label, event.target.value)
+							})]
+						}, label))
+					}),
+					duplicates.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: `${RecordingPanel_module_default.hint} ${RecordingPanel_module_default.warning}`,
+						role: "status",
+						children: translate("panel.attributionDuplicate", { names: duplicates.join(" · ") })
+					}),
+					saving && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						role: "status",
+						children: translate("panel.attributionSaving")
+					})
+				]
+			}), failure !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+				className: RecordingPanel_module_default.attributionError,
+				role: "alert",
+				children: translate(failure.action === "load" ? "panel.attributionLoadFailed" : "panel.attributionSaveFailed")
+			})] });
 		}
 		function FooterStatus({ translate, view }) {
 			const text = isActive(view) ? view?.draftStale ? translate("panel.draftStale") : freshness(view, translate) : view?.finalizationMs === null || view?.finalizationMs === void 0 ? translate("panel.previewHint") : translate("panel.finalization", { seconds: String(Math.round(view.finalizationMs / 100) / 10) });
@@ -1816,13 +2341,32 @@ window.__ModuleLoader__.load({
 			].filter((code) => code != null))];
 			const noSignal = codes.length === 1 && codes[0] === "SYSTEM_AUDIO_NO_SIGNAL";
 			const failure = codes.length === 0 ? null : [...new Set(codes.map((code) => recordingErrorCopy(code, translate)))].join("\n");
-			const layout = useRecordingPanelLayout(260 + (failure === null ? 0 : 32));
+			const headerRef = (0, react.useRef)(null);
+			const [headerWidth, setHeaderWidth] = (0, react.useState)(0);
+			const compactWidth = Math.max(260, headerWidth);
+			const layout = useRecordingPanelLayout(compactWidth, Math.max(300, compactWidth));
 			(0, react.useEffect)(() => {
 				if (!layout.expanded || props.prepare === void 0) return;
 				const controller = new AbortController();
 				props.prepare(controller.signal).catch(() => void 0);
 				return () => controller.abort();
 			}, [layout.expanded, props.prepare]);
+			(0, react.useEffect)(() => {
+				const header = headerRef.current;
+				if (header === null) return void 0;
+				const measure = () => {
+					const children = Array.from(header.children);
+					setHeaderWidth(Math.ceil(children.reduce((total, child) => total + child.offsetWidth, 0) + Math.max(0, children.length - 1) * 4 + 10));
+				};
+				measure();
+				const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+				observer?.observe(header);
+				window.addEventListener("resize", measure);
+				return () => {
+					observer?.disconnect();
+					window.removeEventListener("resize", measure);
+				};
+			}, [failure, layout.expanded]);
 			const toggleLabel = translate(layout.expanded ? "panel.collapse" : "panel.expand");
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
 				className: RecordingPanel_module_default.panel,
@@ -1831,6 +2375,7 @@ window.__ModuleLoader__.load({
 				"aria-label": translate("panel.aria"),
 				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("header", {
 					className: RecordingPanel_module_default.header,
+					ref: headerRef,
 					children: [
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
 							className: RecordingPanel_module_default.move,
@@ -1873,12 +2418,32 @@ window.__ModuleLoader__.load({
 							children: failure
 						}),
 						codes.some((code) => /^[A-Z][A-Z0-9_]{0,99}$/.test(code)) && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("details", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("summary", { children: translate("panel.error.details") }), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("code", { children: codes.filter((code) => /^[A-Z][A-Z0-9_]{0,99}$/.test(code)).join(" · ") })] }),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(Preview, { ...props })
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(Preview, { ...props }),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(SpeakerAttributionSection, {
+							attribution: props.attribution,
+							translate
+						})
 					]
 				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("footer", {
 					className: RecordingPanel_module_default.footer,
 					children: [
+						props.exportNotice != null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: RecordingPanel_module_default.hint,
+							children: props.exportNotice
+						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(FooterStatus, { ...props }),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+							label: translate("panel.exportHint"),
+							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+								size: "sm",
+								className: RecordingPanel_module_default.utility,
+								"aria-label": props.pendingAction === "export" ? translate("panel.exporting") : translate("panel.export"),
+								icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingIcon, { name: "export" }),
+								"aria-busy": props.pendingAction === "export",
+								disabled: props.exportTranscript === void 0 || props.pending || props.view?.transcriptVersion == null,
+								onClick: (event) => void props.exportTranscript?.(event.altKey)
+							})
+						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
 							label: translate("panel.reset"),
 							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
@@ -1901,6 +2466,14 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/recording-rpc-client.ts
+		function speakerNameMap(value) {
+			const names = {};
+			for (const [label, name] of Object.entries(record(value))) {
+				if (label === "" || typeof name !== "string" || name === "") throw new Error("INVALID_RESPONSE");
+				names[label] = name;
+			}
+			return names;
+		}
 		const UUID_PATTERN$1 = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 		function record(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("INVALID_RESPONSE");
@@ -2072,6 +2645,60 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(value) || value.length > 20) throw new Error("INVALID_RESPONSE");
 			return value.map(referenceCandidate);
 		}
+		function transcriptExportValue(value) {
+			const item = record(value);
+			exact(item, [
+				"bytes",
+				"format",
+				"meeting_id",
+				"output_path",
+				"segment_count",
+				"transcript_version"
+			]);
+			if (typeof item.meeting_id !== "string" || !UUID_PATTERN$1.test(item.meeting_id) || typeof item.output_path !== "string" || !item.output_path.startsWith("/") || item.format !== "md" && item.format !== "txt" && item.format !== "srt" && item.format !== "vtt") throw new Error("INVALID_RESPONSE");
+			return {
+				bytes: nonnegativeInteger(item.bytes),
+				format: item.format,
+				meeting_id: item.meeting_id,
+				output_path: item.output_path,
+				segment_count: nonnegativeInteger(item.segment_count),
+				transcript_version: nonnegativeInteger(item.transcript_version)
+			};
+		}
+		function audioDevice(value) {
+			const item = record(value);
+			exact(item, [
+				"uid",
+				"name",
+				"input_channels",
+				"output_channels",
+				"default_input",
+				"default_output"
+			]);
+			if (typeof item.uid !== "string" || item.uid.length === 0 || typeof item.name !== "string" || item.name.length === 0 || typeof item.default_input !== "boolean" || typeof item.default_output !== "boolean") throw new Error("INVALID_RESPONSE");
+			return {
+				uid: item.uid,
+				name: item.name,
+				input_channels: nonnegativeInteger(item.input_channels),
+				output_channels: nonnegativeInteger(item.output_channels),
+				default_input: item.default_input,
+				default_output: item.default_output
+			};
+		}
+		function audioDeviceInventory(value) {
+			const item = record(value);
+			exact(item, [
+				"default_input_uid",
+				"default_output_uid",
+				"devices"
+			]);
+			if (!Array.isArray(item.devices)) throw new Error("INVALID_RESPONSE");
+			return {
+				default_input_uid: nullableString(item.default_input_uid),
+				default_output_uid: nullableString(item.default_output_uid),
+				devices: item.devices.map(audioDevice)
+			};
+		}
 		async function call(rpc, endpoint, payload, signal) {
 			const result = await callRecordingRpc(rpc, endpoint, payload, signal);
 			if (!result.ok) throw new Error(result.error.message);
@@ -2096,10 +2723,47 @@ window.__ModuleLoader__.load({
 			async control(payload, signal) {
 				return parseRecordingRpcView(await call(this.rpc, "control", payload, signal));
 			}
+			async exportTranscript(payload, signal) {
+				return transcriptExportValue(await call(this.rpc, "transcripts/export", payload, signal));
+			}
+			/** Speaker label to display name for one meeting; unnamed labels are absent. */
+			async speakerNames(payload, signal) {
+				const value = record(await call(this.rpc, "transcripts/speaker-names", payload, signal));
+				exact(value, ["speaker_names"]);
+				return { speaker_names: speakerNameMap(value.speaker_names) };
+			}
+			/** Replaces the stored attribution for one meeting; an empty map clears it. */
+			async saveSpeakerNames(payload, signal) {
+				const value = record(await call(this.rpc, "transcripts/save-speaker-names", payload, signal));
+				exact(value, ["speaker_names"]);
+				return { speaker_names: speakerNameMap(value.speaker_names) };
+			}
+			/** Lists CoreAudio devices through the signed helper. */
+			async listDevices(signal) {
+				return audioDeviceInventory(await call(this.rpc, "devices/list", {}, signal));
+			}
+			/** Resolves the folder the user picked, or null when the dialog was cancelled. */
+			async chooseTranscriptDirectory(signal) {
+				const value = await call(this.rpc, "transcripts/choose-directory", {}, signal);
+				if (value === null) return null;
+				if (typeof value !== "string" || !value.startsWith("/")) throw new Error("INVALID_RESPONSE");
+				return value;
+			}
+			/** Resolves the Open knowledge base folder the user picked, or null when cancelled. */
+			async chooseOkfDirectory(signal) {
+				const value = await call(this.rpc, "okf/choose-directory", {}, signal);
+				if (value === null) return null;
+				if (typeof value !== "string" || !value.startsWith("/")) throw new Error("INVALID_RESPONSE");
+				return value;
+			}
 		};
 		//#endregion
 		//#region src/client/RecordingPanel.tsx
+		function recordOrEmpty(value) {
+			return typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
+		}
 		const POLL_MS = 2e3;
+		const SPEAKER_SAVE_DELAY_MS = 400;
 		function trackError(view) {
 			if (view?.mic.errorCode !== null && view?.mic.errorCode !== void 0) return view.mic.errorCode;
 			if (view?.system.errorCode !== null && view?.system.errorCode !== void 0) return view.system.errorCode;
@@ -2189,6 +2853,194 @@ window.__ModuleLoader__.load({
 				}
 			}, [options]);
 		}
+		function errorCode(cause) {
+			return cause instanceof Error ? cause.message : "ENGINE_FAILURE";
+		}
+		function sameSpeakerNames(left, right) {
+			const keys = Object.keys(left);
+			return keys.length === Object.keys(right).length && keys.every((key) => left[key] === right[key]);
+		}
+		/** Distinct speaker labels of the visible draft, in first-appearance order. */
+		function speakerLabels(preview) {
+			const seen = /* @__PURE__ */ new Set();
+			const labels = [];
+			for (const segment of preview) {
+				const label = segment.speakerLabel;
+				if (label === null || label === "" || seen.has(label)) continue;
+				seen.add(label);
+				labels.push(label);
+			}
+			return labels;
+		}
+		/**
+		* A stored name wins over the local text unless the local text is an unsaved
+		* edit, so a reload triggered by new segments cannot discard typing.
+		*/
+		function mergeStoredSpeakerNames(stored, local, saved, labels) {
+			const merged = {};
+			for (const label of labels) {
+				const current = local[label] ?? "";
+				const value = current !== "" && normalizeSpeakerName(current) !== (saved[label] ?? "") ? current : stored[label] ?? "";
+				if (value !== "") merged[label] = value;
+			}
+			return merged;
+		}
+		/**
+		* Keeps the names typed for the current draft in sync with the stored
+		* attribution: loads on a new meeting or new labels and saves edits after a
+		* short pause, so typing does not produce one request per keystroke.
+		*/
+		function useSpeakerAttribution(options) {
+			const { client, labels, meetingId, mounted } = options;
+			const labelsKey = labels.join("\0");
+			const loadKey = meetingId === null ? null : `${meetingId}\u0000${labelsKey}`;
+			const [names, setNames] = (0, react.useState)({});
+			const [saving, setSaving] = (0, react.useState)(false);
+			const [failure, setFailure] = (0, react.useState)(null);
+			const [readyKey, setReadyKey] = (0, react.useState)(null);
+			const lastSaved = (0, react.useRef)({});
+			const lastMeetingId = (0, react.useRef)(null);
+			(0, react.useEffect)(() => {
+				if (meetingId === null || loadKey === null) {
+					lastMeetingId.current = null;
+					lastSaved.current = {};
+					setNames({});
+					setSaving(false);
+					setFailure(null);
+					setReadyKey(null);
+					return;
+				}
+				const controller = new AbortController();
+				if (lastMeetingId.current !== meetingId) {
+					lastMeetingId.current = meetingId;
+					lastSaved.current = {};
+					setNames({});
+				}
+				setReadyKey(null);
+				client.speakerNames({ meeting_id: meetingId }, controller.signal).then((result) => {
+					if (!mounted.current || controller.signal.aborted) return;
+					const previous = lastSaved.current;
+					lastSaved.current = assignedSpeakerNames(labels, result.speaker_names);
+					setNames((current) => mergeStoredSpeakerNames(result.speaker_names, current, previous, labels));
+					setFailure(null);
+					setReadyKey(loadKey);
+				}).catch((cause) => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setFailure({
+						action: "load",
+						code: errorCode(cause)
+					});
+					setReadyKey(loadKey);
+				});
+				return () => controller.abort();
+			}, [
+				client,
+				labelsKey,
+				loadKey,
+				meetingId,
+				mounted
+			]);
+			const assigned = (0, react.useMemo)(() => assignedSpeakerNames(labels, names), [labelsKey, names]);
+			(0, react.useEffect)(() => {
+				if (meetingId === null || loadKey === null || readyKey !== loadKey) return void 0;
+				if (sameSpeakerNames(assigned, lastSaved.current)) return void 0;
+				const controller = new AbortController();
+				setFailure((current) => current?.action === "save" ? null : current);
+				const timer = setTimeout(() => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setSaving(true);
+					client.saveSpeakerNames({
+						meeting_id: meetingId,
+						speaker_names: assigned
+					}, controller.signal).then((result) => {
+						if (!mounted.current || controller.signal.aborted) return;
+						lastSaved.current = assignedSpeakerNames(labels, result.speaker_names);
+						setSaving(false);
+						setFailure(null);
+					}).catch((cause) => {
+						if (!mounted.current || controller.signal.aborted) return;
+						setSaving(false);
+						setFailure({
+							action: "save",
+							code: errorCode(cause)
+						});
+					});
+				}, SPEAKER_SAVE_DELAY_MS);
+				return () => {
+					clearTimeout(timer);
+					controller.abort();
+					if (mounted.current) setSaving(false);
+				};
+			}, [
+				assigned,
+				client,
+				loadKey,
+				meetingId,
+				mounted,
+				readyKey
+			]);
+			const pendingSave = (0, react.useRef)(null);
+			pendingSave.current = meetingId === null || readyKey !== loadKey ? null : {
+				meetingId,
+				names: assigned
+			};
+			(0, react.useEffect)(() => () => {
+				const pending = pendingSave.current;
+				if (pending === null || sameSpeakerNames(pending.names, lastSaved.current)) return;
+				client.saveSpeakerNames({
+					meeting_id: pending.meetingId,
+					speaker_names: pending.names
+				}).catch(() => void 0);
+			}, [client]);
+			return {
+				labels,
+				names,
+				saving,
+				failure,
+				update: (0, react.useCallback)((label, name) => {
+					setNames((current) => {
+						const next = { ...current };
+						if (name === "") delete next[label];
+						else next[label] = name;
+						return next;
+					});
+				}, [])
+			};
+		}
+		/**
+		* Exports the committed Markdown transcript. The configured folder is used by
+		* default; modifier-click asks for a folder and remembers it, so the first
+		* export also configures the plugin setting. Renamed speakers are sent along,
+		* and an untouched map leaves the payload exactly as before.
+		*/
+		function useTranscriptExport(options) {
+			return (0, react.useCallback)(async (choose) => {
+				const view = options.view;
+				if (view === null) return;
+				const speakerNames = assignedSpeakerNames(options.labels, options.speakerNames);
+				options.setPending("export");
+				options.setError(null);
+				options.setNotice(null);
+				try {
+					const result = await options.client.exportTranscript({
+						destination: choose ? "choose" : "default",
+						format: "md",
+						include_speakers: true,
+						include_timestamps: true,
+						meeting_id: view.meetingId,
+						...Object.keys(speakerNames).length === 0 ? {} : { speaker_names: speakerNames }
+					});
+					if (!options.mounted.current) return;
+					options.setNotice(options.translate("panel.exportSaved", { path: result.output_path }));
+				} catch (cause) {
+					if (!options.mounted.current) return;
+					const code = cause instanceof Error ? cause.message : "ENGINE_FAILURE";
+					options.setError(code);
+				} finally {
+					if (options.mounted.current) options.setPending(null);
+				}
+			}, [options]);
+		}
 		function RecordingPanel(props) {
 			const { currentSessionId, locale, references, rpc, settings, translate } = props;
 			(0, react.useSyncExternalStore)((listener) => locale.subscribe(listener), () => locale.getSnapshot());
@@ -2196,6 +3048,7 @@ window.__ModuleLoader__.load({
 			const snapshot = useRecordingSnapshot(client, references);
 			const prepare = (0, react.useCallback)((signal) => client.prepareModels(signal), [client]);
 			const [pendingAction, setPending] = (0, react.useState)(null);
+			const [exportNotice, setExportNotice] = (0, react.useState)(null);
 			(0, react.useEffect)(() => {
 				if (pendingAction !== "stop") return;
 				const controller = new AbortController();
@@ -2224,11 +3077,61 @@ window.__ModuleLoader__.load({
 				view: snapshot.view?.recordingStartedAtMs === null ? null : snapshot.view
 			});
 			const settingsSnapshot = (0, react.useSyncExternalStore)((0, react.useCallback)((listener) => settings?.subscribe(listener) ?? (() => void 0), [settings]), (0, react.useCallback)(() => settings?.getSnapshot() ?? null, [settings]));
+			const [devices, setDevices] = (0, react.useState)(null);
+			const refreshDevices = (0, react.useCallback)(async () => {
+				try {
+					setDevices(await client.listDevices());
+				} catch {
+					setDevices(null);
+				}
+			}, [client]);
+			(0, react.useEffect)(() => {
+				refreshDevices();
+			}, [refreshDevices]);
+			const selectDevice = (0, react.useCallback)(async (track, uid) => {
+				const current = settings?.getSnapshot();
+				if (settings === void 0 || current === null || current === void 0) return;
+				await settings.mutate([{
+					op: "set",
+					path: [track === "mic" ? "mic_device_uid" : "system_device_uid"],
+					value: uid
+				}], current.revision);
+			}, [settings]);
+			const configValues = recordOrEmpty(settingsSnapshot?.value);
+			const selectedDevices = (0, react.useMemo)(() => ({
+				mic: typeof configValues.mic_device_uid === "string" ? configValues.mic_device_uid : "",
+				system: typeof configValues.system_device_uid === "string" ? configValues.system_device_uid : ""
+			}), [configValues]);
+			const labels = (0, react.useMemo)(() => speakerLabels(snapshot.preview), [snapshot.preview]);
+			const attribution = useSpeakerAttribution({
+				client,
+				labels,
+				meetingId: snapshot.view?.meetingId ?? null,
+				mounted: snapshot.mounted
+			});
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingPanelView, {
+				devices,
+				exportNotice,
+				exportTranscript: useTranscriptExport({
+					client,
+					labels,
+					mounted: snapshot.mounted,
+					setError: snapshot.setError,
+					setNotice: setExportNotice,
+					setPending,
+					settings,
+					speakerNames: attribution.names,
+					translate,
+					view: snapshot.view
+				}),
+				refreshDevices,
+				selectDevice,
+				selectedDevices,
 				failure: snapshot.error ?? trackError(snapshot.view),
 				join,
 				pending: pendingAction !== null,
 				pendingAction,
+				attribution,
 				hasRecordingHistory: snapshot.hasRecordingHistory,
 				prepare,
 				preview: snapshot.preview,
@@ -2678,6 +3581,10 @@ window.__ModuleLoader__.load({
 			"panel.recognizer": "识别语言",
 			"panel.recognizerHint": "下一次录音使用的识别引擎。中文用 Paraformer，英语等欧洲语言用 Parakeet。",
 			"panel.recognizerParaformer": "中文",
+			"panel.micDevice": "选择麦克风设备",
+			"panel.systemDevice": "选择录音输出设备",
+			"panel.deviceDefault": "跟随系统默认",
+			"panel.devicesUnavailable": "未能读取可用设备",
 			"panel.recognizerParakeet": "英语 / 欧洲",
 			"panel.previewHint": "本次录音草稿 · 正式原稿请通过 @ 引用会议",
 			"panel.activity": "录音状态指示（不是声音音量）",
@@ -2703,7 +3610,21 @@ window.__ModuleLoader__.load({
 			"panel.error.state": "录音状态已变化。请刷新页面后重试。",
 			"panel.error.generic": "操作未完成。请重试；若再次失败，请查看技术详情。",
 			"panel.error.details": "技术详情",
-			"panel.noSession": "请先创建或选择一个工作区"
+			"panel.export": "导出转写",
+			"panel.exportHint": "导出 Markdown 到默认文件夹；按住 ⌥ 选择保存位置。",
+			"panel.exporting": "正在导出转写",
+			"panel.exportSaved": "已保存到 {path}",
+			"panel.error.export": "无法导出转写。请检查保存位置、文件夹权限后重试。",
+			"panel.error.exportDirectory": "尚未设置转写保存位置。请在插件设置中选择文件夹，或按住 ⌥ 导出以选择位置。",
+			"panel.noSession": "请先创建或选择一个工作区",
+			"panel.attribution": "说话人名称",
+			"panel.attributionHint": "这些名称只写入导出文件，已保存的转写仍保留原来的说话人标签。",
+			"panel.attributionDuplicate": "同一个名称分配给了多位说话人：{names}。请为每位说话人使用不同的名称。",
+			"panel.attributionSaving": "正在保存名称…",
+			"panel.attributionSaveFailed": "说话人名称未能保存。请检查名称后重试；导出仍会使用当前输入的名称。",
+			"panel.attributionLoadFailed": "未能读取已保存的说话人名称。",
+			"panel.error.exportSpeaker": "转写已保存，但说话人名称没有写入。请检查名称后重新导出。",
+			"panel.error.exportSpeakerDuplicate": "有两位说话人使用了同一个名称，转写未导出。请改用不同的名称后重试。"
 		};
 		const en = {
 			"auto.current": "Current recording",
@@ -2748,6 +3669,10 @@ window.__ModuleLoader__.load({
 			"panel.recognizer": "Recognizer",
 			"panel.recognizerHint": "Engine for the next recording. Paraformer covers Chinese; Parakeet covers English and 24 other European languages.",
 			"panel.recognizerParaformer": "Chinese",
+			"panel.micDevice": "Microphone device",
+			"panel.systemDevice": "System audio device",
+			"panel.deviceDefault": "Follow system default",
+			"panel.devicesUnavailable": "Devices are unavailable",
 			"panel.recognizerParakeet": "English / European",
 			"panel.previewHint": "Current recording draft · use @ for the committed transcript",
 			"panel.activity": "Recording status indicator (not audio level)",
@@ -2773,7 +3698,21 @@ window.__ModuleLoader__.load({
 			"panel.error.state": "The recording state changed. Refresh the page and retry.",
 			"panel.error.generic": "The operation did not finish. Retry; if it fails again, check the technical details.",
 			"panel.error.details": "Technical details",
-			"panel.noSession": "Create or select a workspace first"
+			"panel.noSession": "Create or select a workspace first",
+			"panel.export": "Export transcript",
+			"panel.exportHint": "Exports Markdown to the default folder; hold ⌥ to choose a location.",
+			"panel.exporting": "Exporting transcript",
+			"panel.exportSaved": "Saved to {path}",
+			"panel.error.export": "The transcript could not be exported. Check the folder and its permissions, then retry.",
+			"panel.error.exportDirectory": "No transcript folder is configured yet. Choose one in the plugin settings, or hold ⌥ while exporting to pick a location.",
+			"panel.attribution": "Speaker names",
+			"panel.attributionHint": "These names only change the speaker labels in the exported file; the saved transcript keeps its own labels.",
+			"panel.attributionDuplicate": "One name is assigned to more than one speaker: {names}. Use a different name for each speaker.",
+			"panel.attributionSaving": "Saving names…",
+			"panel.attributionSaveFailed": "The speaker names were not saved. Check them and retry; an export still uses the names you entered.",
+			"panel.attributionLoadFailed": "The saved speaker names could not be read.",
+			"panel.error.exportSpeaker": "The transcript was saved without the speaker names. Check the names and export again.",
+			"panel.error.exportSpeakerDuplicate": "Two speakers share one name, so the transcript was not exported. Use a different name for each and retry."
 		};
 		//#endregion
 		//#region src/client/index.tsx
@@ -2862,6 +3801,6 @@ if (typeof document !== "undefined" && !document.querySelector("style[data-plugi
         const style = document.createElement("style");
         style.dataset.plugin = "@huliux/dsh-asr-plugin";
         style.dataset.pluginCss = "@huliux/dsh-asr-plugin/client";
-        style.textContent = "._2-6Zyq_page{width:100%;min-width:0;max-width:640px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);gap:12px;font-size:13px;line-height:20px;display:grid}._2-6Zyq_card{border:.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);background:var(--dsw-alias-settings-card-fill);min-width:0;padding:20px}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_modelTitle,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading,._2-6Zyq_saveRow{align-items:center;gap:12px;display:flex}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading{justify-content:space-between}._2-6Zyq_heading{align-items:flex-start;padding:4px 0 8px}._2-6Zyq_heading>div,._2-6Zyq_modelCopy{min-width:0}._2-6Zyq_heading>button,._2-6Zyq_modelRow>button{flex-shrink:0}._2-6Zyq_title{margin:0 0 4px;font-size:14px;font-weight:600;line-height:22px}._2-6Zyq_label{font-weight:500}._2-6Zyq_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:12px;line-height:18px}._2-6Zyq_modelBlock{padding:2px 0 18px}._2-6Zyq_modelBlock+._2-6Zyq_modelBlock{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:18px}._2-6Zyq_modelTitle{flex-wrap:wrap;gap:8px;margin-bottom:4px}._2-6Zyq_runtimeRow{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:12px}._2-6Zyq_loading,._2-6Zyq_notice,._2-6Zyq_error{color:var(--dsw-alias-label-secondary);align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;line-height:18px;display:flex}._2-6Zyq_loading>*,._2-6Zyq_notice>*,._2-6Zyq_error>*{flex-shrink:0;align-self:center}._2-6Zyq_error{color:var(--dsw-alias-label-error)}._2-6Zyq_instructions{gap:12px;min-width:0;padding-top:16px;display:grid}._2-6Zyq_command{gap:6px;min-width:0;display:grid}._2-6Zyq_diagnostics{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary);margin:0;padding-left:18px;font-size:12px;line-height:18px}._2-6Zyq_diagnostics:empty{display:none}._2-6Zyq_diagnosticGroups{gap:14px;margin:16px 0;display:grid}._2-6Zyq_diagnosticGroup+._2-6Zyq_diagnosticGroup{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:14px}._2-6Zyq_helpHeading{width:fit-content;max-width:100%}._2-6Zyq_connectionSummary{color:var(--dsw-alias-label-secondary);margin-left:12px;font-size:12px}._2-6Zyq_downloadRouting{gap:8px;min-width:0;margin-top:16px;display:grid}._2-6Zyq_downloadRouting label{margin-top:4px}._2-6Zyq_downloadActions{flex-wrap:wrap;gap:8px;display:flex}._2-6Zyq_saveRow{flex-wrap:wrap;margin-top:12px}._2-6Zyq_downloadProgress{gap:8px;min-width:0;margin-top:12px;display:grid}._2-6Zyq_progressHeading>span{align-items:center;gap:8px;display:flex}._2-6Zyq_progressBytes{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:12px}._2-6Zyq_downloadProgress progress{width:100%;height:4px;accent-color:var(--dsw-alias-label-primary)}@media (width<=600px){._2-6Zyq_card{padding:16px}._2-6Zyq_heading,._2-6Zyq_modelRow{gap:8px}._2-6Zyq_modelTitle{gap:4px}}@media (width<=980px){._2-6Zyq_page{padding-bottom:180px}}._2-6Zyq_proxyOptions{gap:8px;margin-top:4px;display:grid}._2-6Zyq_proxyOptions a{width:fit-content}._2-6Zyq_preparationSteps{color:var(--dsw-alias-label-secondary);gap:8px;margin:4px 0 0;padding:0;font-size:12px;list-style:none;display:grid}._2-6Zyq_preparationSteps li{align-items:center;gap:8px;display:flex}.Expx1a_panel{z-index:1200;box-sizing:border-box;pointer-events:auto;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;font-size:12px;line-height:18px;display:flex;position:fixed;overflow:hidden;box-shadow:0 1px 3px #00000008,0 6px 20px -4px #00000012}.Expx1a_panel[data-expanded=true]{border-radius:16px}.Expx1a_header{box-sizing:border-box;flex-shrink:0;align-items:center;gap:4px;height:46px;padding:5px;display:flex}.Expx1a_panel button{border-radius:8px;padding:0}.Expx1a_panel button:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.Expx1a_control{flex-shrink:1;width:36px;min-width:24px;height:36px}.Expx1a_mainControl{flex-shrink:0;gap:6px;width:60px;min-width:48px;height:36px}.Expx1a_move{cursor:grab;touch-action:none;width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary)}.Expx1a_move:active{cursor:grabbing}.Expx1a_toggle{width:28px;min-width:24px;height:36px;color:var(--dsw-alias-label-secondary)}.Expx1a_spacer{flex:1;min-width:0}.Expx1a_icon{background:currentColor;flex-shrink:0;width:20px;height:20px;display:block;mask-position:50%;mask-size:contain;mask-repeat:no-repeat}.Expx1a_play,.Expx1a_actionIcon{width:24px;height:24px}.Expx1a_grip{width:5.4px;height:8.4px}.Expx1a_expand,.Expx1a_collapse,.Expx1a_resize .Expx1a_icon{width:18px;height:18px}.Expx1a_check{width:16px;height:16px;color:var(--dsw-alias-state-success-primary)}.Expx1a_off{color:var(--dsw-alias-label-tertiary)}.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_error,.Expx1a_errorControl{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}.Expx1a_errorControl{width:28px;min-width:28px}.Expx1a_error.Expx1a_noSignal,.Expx1a_errorControl.Expx1a_noSignal{color:var(--dsw-alias-state-warn-label)}.Expx1a_body{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.Expx1a_status{flex-shrink:0;justify-content:space-between;align-items:center;gap:8px;padding:16px;display:flex}.Expx1a_phase{align-items:center;gap:8px;font-weight:500;display:inline-flex}.Expx1a_tracks{flex-wrap:wrap;flex-shrink:0;gap:8px;padding:0 16px;display:flex}.Expx1a_chip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;align-items:center;padding:4px 8px;font-size:11px;line-height:17px;display:inline-flex}.Expx1a_chip.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_body>.Expx1a_error{margin:8px 16px 0}.Expx1a_recognizer{align-items:center;gap:4px;min-width:0;display:inline-flex}.Expx1a_recognizerLabel{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:11px;line-height:17px}.Expx1a_recognizerSelect{border:1px solid var(--dsw-alias-interactive-border);height:22px;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;padding:0 4px;font-family:inherit;font-size:11px}.Expx1a_recognizerSelect:disabled{opacity:.5}.Expx1a_hint,.Expx1a_segmentMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px;line-height:17px}.Expx1a_hint.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_preview{flex-direction:column;flex:1;min-height:80px;padding:16px;display:flex}.Expx1a_previewHeading{justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;display:flex}.Expx1a_previewTitle{font-weight:500}.Expx1a_segments{overscroll-behavior:contain;flex:1;min-height:0;overflow:auto}.Expx1a_segment{color:var(--dsw-alias-label-secondary);gap:4px;margin-bottom:12px;display:grid}.Expx1a_segment:last-child{color:var(--dsw-alias-label-primary);margin-bottom:0}.Expx1a_text{overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-size:14px;line-height:23px}.Expx1a_footer{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;align-items:center;gap:4px;padding:10px 8px 10px 12px;display:flex}.Expx1a_footer>.Expx1a_hint{overflow-wrap:anywhere;flex:1;min-width:0}.Expx1a_utility{width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_resize{cursor:nwse-resize;touch-action:none;width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_wave{flex-shrink:0}.Expx1a_wave path{transform-box:fill-box;transform-origin:50%}.Expx1a_wave[data-recording-wave=moving] path{animation:.9s ease-in-out infinite Expx1a_recordingWave}.Expx1a_wave path:nth-child(2){animation-delay:-.45s}.Expx1a_wave path:nth-child(3){animation-delay:-.225s}.Expx1a_wave path:nth-child(4){animation-delay:-.675s}.Expx1a_wave[data-recording-wave=still]{color:var(--dsw-alias-label-tertiary)}.Expx1a_spinner{box-sizing:border-box;border:2px solid var(--dsw-alias-border-l3);border-top-color:var(--dsw-alias-label-primary);border-radius:50%;width:18px;height:18px;animation:1s linear infinite Expx1a_recordingSpin}@keyframes Expx1a_recordingWave{0%,to{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes Expx1a_recordingSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.Expx1a_wave[data-recording-wave=moving] path,.Expx1a_spinner{animation:none}}.Expx1a_error{white-space:pre-line}\n";
+        style.textContent = ".f4q_AW_page{width:100%;min-width:0;max-width:640px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);gap:12px;font-size:13px;line-height:20px;display:grid}.f4q_AW_card{border:.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);background:var(--dsw-alias-settings-card-fill);min-width:0;padding:20px}.f4q_AW_heading,.f4q_AW_modelRow,.f4q_AW_modelTitle,.f4q_AW_runtimeRow,.f4q_AW_progressHeading,.f4q_AW_saveRow{align-items:center;gap:12px;display:flex}.f4q_AW_heading,.f4q_AW_modelRow,.f4q_AW_runtimeRow,.f4q_AW_progressHeading{justify-content:space-between}.f4q_AW_heading{align-items:flex-start;padding:4px 0 8px}.f4q_AW_heading>div,.f4q_AW_modelCopy{min-width:0}.f4q_AW_heading>button,.f4q_AW_modelRow>button{flex-shrink:0}.f4q_AW_title{margin:0 0 4px;font-size:14px;font-weight:600;line-height:22px}.f4q_AW_label{font-weight:500}.f4q_AW_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:12px;line-height:18px}.f4q_AW_modelBlock{padding:2px 0 18px}.f4q_AW_modelBlock+.f4q_AW_modelBlock{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:18px}.f4q_AW_modelTitle{flex-wrap:wrap;gap:8px;margin-bottom:4px}.f4q_AW_runtimeRow{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:12px}.f4q_AW_loading,.f4q_AW_notice,.f4q_AW_error{color:var(--dsw-alias-label-secondary);align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;line-height:18px;display:flex}.f4q_AW_loading>*,.f4q_AW_notice>*,.f4q_AW_error>*{flex-shrink:0;align-self:center}.f4q_AW_error{color:var(--dsw-alias-label-error)}.f4q_AW_instructions{gap:12px;min-width:0;padding-top:16px;display:grid}.f4q_AW_command{gap:6px;min-width:0;display:grid}.f4q_AW_diagnostics{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary);margin:0;padding-left:18px;font-size:12px;line-height:18px}.f4q_AW_diagnostics:empty{display:none}.f4q_AW_diagnosticGroups{gap:14px;margin:16px 0;display:grid}.f4q_AW_diagnosticGroup+.f4q_AW_diagnosticGroup{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:14px}.f4q_AW_helpHeading{width:fit-content;max-width:100%}.f4q_AW_connectionSummary{color:var(--dsw-alias-label-secondary);margin-left:12px;font-size:12px}.f4q_AW_downloadRouting{gap:8px;min-width:0;margin-top:16px;display:grid}.f4q_AW_downloadRouting label{margin-top:4px}.f4q_AW_downloadActions{flex-wrap:wrap;gap:8px;display:flex}.f4q_AW_saveRow{flex-wrap:wrap;margin-top:12px}.f4q_AW_downloadProgress{gap:8px;min-width:0;margin-top:12px;display:grid}.f4q_AW_progressHeading>span{align-items:center;gap:8px;display:flex}.f4q_AW_progressBytes{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:12px}.f4q_AW_downloadProgress progress{width:100%;height:4px;accent-color:var(--dsw-alias-label-primary)}@media (width<=600px){.f4q_AW_card{padding:16px}.f4q_AW_heading,.f4q_AW_modelRow{gap:8px}.f4q_AW_modelTitle{gap:4px}}@media (width<=980px){.f4q_AW_page{padding-bottom:180px}}.f4q_AW_proxyOptions{gap:8px;margin-top:4px;display:grid}.f4q_AW_proxyOptions a{width:fit-content}.f4q_AW_preparationSteps{color:var(--dsw-alias-label-secondary);gap:8px;margin:4px 0 0;padding:0;font-size:12px;list-style:none;display:grid}.f4q_AW_preparationSteps li{align-items:center;gap:8px;display:flex}.gXqskW_panel{z-index:1200;box-sizing:border-box;pointer-events:auto;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;font-size:12px;line-height:18px;display:flex;position:fixed;box-shadow:0 1px 3px #00000008,0 6px 20px -4px #00000012}.gXqskW_panel[data-expanded=true]{border-radius:16px}.gXqskW_header{box-sizing:border-box;flex-shrink:0;align-items:center;gap:4px;height:46px;padding:5px;display:flex}.gXqskW_header>*{flex-shrink:0}.gXqskW_header>.gXqskW_spacer{flex:auto;min-width:0}.gXqskW_panel button{border-radius:8px;padding:0}.gXqskW_panel button:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.gXqskW_control{flex-shrink:0;width:36px;min-width:24px;height:36px}.gXqskW_split{flex-shrink:0;align-items:center;display:inline-flex;position:relative}.gXqskW_splitMain{border-top-right-radius:0;border-bottom-right-radius:0;width:32px;min-width:22px}.gXqskW_caret{width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary);border-top-left-radius:0;border-bottom-left-radius:0}.gXqskW_caret:hover,.gXqskW_caretOpen{color:var(--dsw-alias-label-primary)}.gXqskW_caretIcon{display:block}.gXqskW_menu{z-index:10;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);border-radius:10px;flex-direction:column;width:max-content;min-width:180px;max-width:320px;max-height:240px;padding:4px;display:flex;position:absolute;bottom:calc(100% + 6px);left:0;overflow:auto;box-shadow:0 6px 20px -4px #0000001f}.gXqskW_menuItem{width:100%;color:var(--dsw-alias-label-primary);text-align:left;overflow-wrap:anywhere;background:0 0;border-radius:6px;align-items:center;gap:6px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.gXqskW_menuItem:hover{background:var(--dsw-alias-interactive-bg-hover)}.gXqskW_menu[data-below=true]{top:calc(100% + 6px);bottom:auto}.gXqskW_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:6px 8px;font-size:12px;line-height:18px;display:block}.gXqskW_menuCheck{width:10px;color:var(--dsw-alias-label-primary);display:inline-block}.gXqskW_mainControl{flex-shrink:0;gap:6px;width:60px;min-width:48px;height:36px}.gXqskW_move{cursor:grab;touch-action:none;width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary)}.gXqskW_move:active{cursor:grabbing}.gXqskW_toggle{width:28px;min-width:24px;height:36px;color:var(--dsw-alias-label-secondary)}.gXqskW_spacer{flex:1;min-width:0}.gXqskW_icon{background:currentColor;flex-shrink:0;width:20px;height:20px;display:block;mask-position:50%;mask-size:contain;mask-repeat:no-repeat}.gXqskW_play,.gXqskW_actionIcon{width:24px;height:24px}.gXqskW_grip{width:5.4px;height:8.4px}.gXqskW_expand,.gXqskW_collapse,.gXqskW_resize .gXqskW_icon{width:18px;height:18px}.gXqskW_check{width:16px;height:16px;color:var(--dsw-alias-state-success-primary)}.gXqskW_off{color:var(--dsw-alias-label-tertiary)}.gXqskW_warning{color:var(--dsw-alias-state-warn-label)}.gXqskW_error,.gXqskW_errorControl{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}.gXqskW_errorControl{width:28px;min-width:28px}.gXqskW_error.gXqskW_noSignal,.gXqskW_errorControl.gXqskW_noSignal{color:var(--dsw-alias-state-warn-label)}.gXqskW_body{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.gXqskW_status{flex-shrink:0;justify-content:space-between;align-items:center;gap:8px;padding:16px;display:flex}.gXqskW_phase{align-items:center;gap:8px;font-weight:500;display:inline-flex}.gXqskW_tracks{flex-wrap:wrap;flex-shrink:0;gap:8px;padding:0 16px;display:flex}.gXqskW_chip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;align-items:center;padding:4px 8px;font-size:11px;line-height:17px;display:inline-flex}.gXqskW_chip.gXqskW_warning{color:var(--dsw-alias-state-warn-label)}.gXqskW_body>.gXqskW_error{margin:8px 16px 0}.gXqskW_recognizer{align-items:center;gap:4px;min-width:0;display:inline-flex}.gXqskW_recognizerLabel{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:11px;line-height:17px}.gXqskW_recognizerSelect{border:1px solid var(--dsw-alias-interactive-border);height:22px;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;padding:0 4px;font-family:inherit;font-size:11px}.gXqskW_recognizerSelect:disabled{opacity:.5}.gXqskW_hint,.gXqskW_segmentMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px;line-height:17px}.gXqskW_hint.gXqskW_warning{color:var(--dsw-alias-state-warn-label)}.gXqskW_preview{flex-direction:column;flex:1;min-height:80px;padding:16px;display:flex}.gXqskW_previewHeading{justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;display:flex}.gXqskW_previewTitle{font-weight:500}.gXqskW_segments{overscroll-behavior:contain;flex:1;min-height:0;overflow:auto}.gXqskW_segment{color:var(--dsw-alias-label-secondary);gap:4px;margin-bottom:12px;display:grid}.gXqskW_segment:last-child{color:var(--dsw-alias-label-primary);margin-bottom:0}.gXqskW_text{overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-size:14px;line-height:23px}.gXqskW_footer{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;align-items:center;gap:4px;padding:10px 8px 10px 12px;display:flex}.gXqskW_footer>.gXqskW_hint{overflow-wrap:anywhere;flex:1;min-width:0}.gXqskW_utility{width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.gXqskW_resize{cursor:nwse-resize;touch-action:none;width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.gXqskW_wave{flex-shrink:0}.gXqskW_wave path{transform-box:fill-box;transform-origin:50%}.gXqskW_wave[data-recording-wave=moving] path{animation:.9s ease-in-out infinite gXqskW_recordingWave}.gXqskW_wave path:nth-child(2){animation-delay:-.45s}.gXqskW_wave path:nth-child(3){animation-delay:-.225s}.gXqskW_wave path:nth-child(4){animation-delay:-.675s}.gXqskW_wave[data-recording-wave=still]{color:var(--dsw-alias-label-tertiary)}.gXqskW_spinner{box-sizing:border-box;border:2px solid var(--dsw-alias-border-l3);border-top-color:var(--dsw-alias-label-primary);border-radius:50%;width:18px;height:18px;animation:1s linear infinite gXqskW_recordingSpin}@keyframes gXqskW_recordingWave{0%,to{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes gXqskW_recordingSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.gXqskW_wave[data-recording-wave=moving] path,.gXqskW_spinner{animation:none}}.gXqskW_error{white-space:pre-line}.gXqskW_attribution{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;padding:12px 16px}.gXqskW_attribution p{margin:8px 0 0}.gXqskW_attributionSummary{color:var(--dsw-alias-label-primary);font-weight:500}.gXqskW_attributionSummary:focus-visible,.gXqskW_attributionInput:focus-visible{outline:2px solid var(--dsw-alias-interactive-border);outline-offset:1px;border-radius:4px}.gXqskW_attributionFields{flex-direction:column;gap:8px;margin-top:8px;display:flex}.gXqskW_attributionField{grid-template-columns:minmax(64px,.4fr) 1fr;align-items:center;gap:8px;display:grid}.gXqskW_attributionLabel{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}.gXqskW_attributionInput{border:1px solid var(--dsw-alias-interactive-border);min-width:0;height:24px;color:var(--dsw-alias-label-primary);font:inherit;background:0 0;border-radius:6px;padding:0 6px}.gXqskW_attributionError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;margin:6px 16px 0;font-size:11px;line-height:17px}\n";
         document.head.appendChild(style);
       }

@@ -69,4 +69,28 @@ export function parseSegmentRow(value) {
         text: requireString(row.text, "text"),
     };
 }
+export function okfIngestionRecordFromRow(value) {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        throw new Error("Invalid OKF ingestion row");
+    }
+    const row = value;
+    const state = enumValue(row.state, ["running", "succeeded", "failed"], "state");
+    return {
+        meetingId: requireString(row.meeting_id, "meeting_id"),
+        transcriptVersion: requireInteger(row.transcript_version, "transcript_version"),
+        directory: requireString(row.directory, "directory"),
+        state,
+        attempt: requireInteger(row.attempt, "attempt"),
+        startedAtMs: requireInteger(row.started_at_ms, "started_at_ms"),
+        ...(row.finished_at_ms === null
+            ? {}
+            : { finishedAtMs: requireInteger(row.finished_at_ms, "finished_at_ms") }),
+        ...(row.error_code === null
+            ? {}
+            : { errorCode: requireString(row.error_code, "error_code") }),
+        ...(row.error_message === null
+            ? {}
+            : { errorMessage: requireString(row.error_message, "error_message") }),
+    };
+}
 //# sourceMappingURL=row-mappers.js.map

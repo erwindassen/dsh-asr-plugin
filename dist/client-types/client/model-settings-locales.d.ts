@@ -62,6 +62,17 @@ export declare const modelZh: {
     readonly command: "命令";
     readonly wrap: "自动换行";
     readonly unwrap: "取消换行";
+    readonly transcripts: "转写导出";
+    readonly transcriptFolder: "默认保存位置";
+    readonly transcriptFolderHint: "导出 Markdown 转写时使用的文件夹。留空则在导出时询问。";
+    readonly transcriptFolderUnset: "尚未设置";
+    readonly chooseFolder: "选择文件夹…";
+    readonly transcriptFolderInvalid: "请输入绝对路径，或选择一个文件夹。";
+    readonly okf: "开放知识库";
+    readonly okfFolder: "知识库文件夹";
+    readonly okfAutoIngest: "自动收录新的转写";
+    readonly okfConsent: "开启后，该文件夹会成为 Git 仓库，每次收录的会议都会生成一个提交。";
+    readonly okfSaveFailed: "无法保存开放知识库设置。";
     readonly summary: "离线录音与转写 · 仅限 Apple Silicon Mac";
     readonly title: "模型设置";
     readonly base: "基础模型（必需）";

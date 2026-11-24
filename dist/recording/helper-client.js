@@ -334,6 +334,22 @@ class ActiveRecordingHelperSession {
         return next;
     }
 }
+const DEFAULT_DEVICE_MARKER = "-";
+/**
+ * The helper accepts an optional mic/system device pair after the Host pid.
+ * Both uids are always sent together so the helper never has to guess which
+ * positional argument a lone uid belongs to.
+ */
+function captureDeviceArguments(devices) {
+    if (devices === undefined)
+        return [];
+    const mic = devices.mic.trim();
+    const system = devices.system.trim();
+    if (mic.length === 0 && system.length === 0)
+        return [];
+    return [mic.length === 0 ? DEFAULT_DEVICE_MARKER : mic,
+        system.length === 0 ? DEFAULT_DEVICE_MARKER : system];
+}
 export class RecordingHelperClient {
     options;
     constructor(options) {
@@ -348,6 +364,7 @@ export class RecordingHelperClient {
             argv: [
                 "/usr/bin/open", "-n", "-W", this.options.appRoot, "--args",
                 sessionRoot, input.meetingId, String(this.options.hostProcessId),
+                ...captureDeviceArguments(this.options.devices?.()),
             ],
             cwd: dirname(this.options.appRoot),
             stdio: {

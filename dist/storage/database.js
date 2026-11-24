@@ -1,7 +1,7 @@
 import { chmodSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { MeetingRepositoryError } from "./errors.js";
-import { MIGRATE_SCHEMA_V1_TO_V2_SQL, MIGRATE_SCHEMA_V2_TO_V3_SQL, MIGRATE_SCHEMA_V3_TO_V4_SQL, SCHEMA_V4_SQL, SCHEMA_VERSION, } from "./schema.js";
+import { MIGRATE_SCHEMA_V1_TO_V2_SQL, MIGRATE_SCHEMA_V2_TO_V3_SQL, MIGRATE_SCHEMA_V3_TO_V4_SQL, MIGRATE_SCHEMA_V4_TO_V5_SQL, MIGRATE_SCHEMA_V5_TO_V6_SQL, SCHEMA_V6_SQL, SCHEMA_VERSION, } from "./schema.js";
 function configureDatabase(database) {
     database.exec(`
     PRAGMA foreign_keys = ON;
@@ -53,7 +53,7 @@ function migrateV2ToV3(database) {
 function initializeSchema(database) {
     let version = userVersion(database);
     if (version === 0) {
-        executeSchemaTransaction(database, SCHEMA_V4_SQL);
+        executeSchemaTransaction(database, SCHEMA_V6_SQL);
         return;
     }
     if (version === 1) {
@@ -67,6 +67,14 @@ function initializeSchema(database) {
     }
     if (version === 3) {
         executeSchemaTransaction(database, MIGRATE_SCHEMA_V3_TO_V4_SQL);
+        version = userVersion(database);
+    }
+    if (version === 4) {
+        executeSchemaTransaction(database, MIGRATE_SCHEMA_V4_TO_V5_SQL);
+        version = userVersion(database);
+    }
+    if (version === 5) {
+        executeSchemaTransaction(database, MIGRATE_SCHEMA_V5_TO_V6_SQL);
         version = userVersion(database);
     }
     if (version === SCHEMA_VERSION)

@@ -256,6 +256,7 @@ class DefaultTranscriptProjection {
             exportedAtMs: this.options.now(),
             includeTimestamps: options.includeTimestamps,
             includeSpeakers: options.includeSpeakers,
+            ...(input.speakerNames === undefined ? {} : { speakerNames: input.speakerNames }),
         }), "utf8");
         const published = await publishTranscriptExport({
             content,

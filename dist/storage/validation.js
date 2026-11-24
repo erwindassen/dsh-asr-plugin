@@ -1,3 +1,4 @@
+import { isAbsolute } from "node:path";
 import { MeetingRepositoryError } from "./errors.js";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const MAX_SOURCE_BYTES = 500 * 1024 * 1024;
@@ -5,6 +6,11 @@ const MAX_AUDIO_DURATION_MS = 14_400_000;
 const MAX_SEGMENTS = 20_000;
 const MAX_TEXT_LENGTH = 20_000;
 const MAX_TOTAL_TEXT_WIRE_BYTES = 24 * 1024 * 1024;
+const MAX_OKF_DIRECTORY_LENGTH = 1024;
+const MAX_OKF_ERROR_CODE_LENGTH = 100;
+const MAX_OKF_ERROR_MESSAGE_LENGTH = 500;
+const OKF_ERROR_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
 function invalidInput(message) {
     throw new MeetingRepositoryError("INVALID_INPUT", message);
 }
@@ -196,5 +202,56 @@ export function validateRecordDeletionFailure(input) {
 }
 export function validateCompleteDeletion(input) {
     validateMeetingVersion(input.meetingId, input.expectedVersion);
+}
+function validateOkfDirectory(directory) {
+    if (directory.length < 1 || directory.length > MAX_OKF_DIRECTORY_LENGTH) {
+        invalidInput("OKF bundle directory is invalid");
+    }
+    if (!isAbsolute(directory) || CONTROL_CHARACTER_PATTERN.test(directory)) {
+        invalidInput("OKF bundle directory is not an absolute path");
+    }
+}
+function validateOkfErrorCode(errorCode) {
+    if (errorCode.length < 1 || errorCode.length > MAX_OKF_ERROR_CODE_LENGTH
+        || !OKF_ERROR_CODE_PATTERN.test(errorCode)) {
+        invalidInput("OKF ingestion error code is invalid");
+    }
+}
+function validateOkfErrorMessage(errorMessage) {
+    if (errorMessage.length < 1 || errorMessage.length > MAX_OKF_ERROR_MESSAGE_LENGTH
+        || CONTROL_CHARACTER_PATTERN.test(errorMessage)) {
+        invalidInput("OKF ingestion error message is invalid");
+    }
+}
+export function validateOkfIngestionMeeting(meetingId) {
+    if (!UUID_PATTERN.test(meetingId))
+        invalidInput("Meeting id is invalid");
+}
+export function validateOkfIngestionKey(meetingId, transcriptVersion, directory) {
+    validateOkfIngestionMeeting(meetingId);
+    if (!Number.isSafeInteger(transcriptVersion) || transcriptVersion < 0) {
+        invalidInput("Transcript version is invalid");
+    }
+    validateOkfDirectory(directory);
+}
+export function validateBeginOkfIngestion(input) {
+    validateOkfIngestionKey(input.meetingId, input.transcriptVersion, input.directory);
+    validateNow(input.startedAtMs);
+}
+export function validateFinishOkfIngestion(input) {
+    validateOkfIngestionKey(input.meetingId, input.transcriptVersion, input.directory);
+    validateNow(input.finishedAtMs);
+    if (input.state === "failed") {
+        if (input.errorCode === undefined) {
+            invalidInput("Failed OKF ingestion requires an error code");
+        }
+        validateOkfErrorCode(input.errorCode);
+        if (input.errorMessage !== undefined)
+            validateOkfErrorMessage(input.errorMessage);
+        return;
+    }
+    if (input.errorCode !== undefined || input.errorMessage !== undefined) {
+        invalidInput("Succeeded OKF ingestion cannot carry error details");
+    }
 }
 //# sourceMappingURL=validation.js.map

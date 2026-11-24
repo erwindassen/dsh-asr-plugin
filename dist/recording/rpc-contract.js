@@ -12,5 +12,11 @@ export const RECORDING_RPC_ENDPOINTS = [
     "permissions/status",
     "permissions/test",
     "permissions/open-settings",
+    "devices/list",
+    "transcripts/export",
+    "transcripts/choose-directory",
+    "transcripts/speaker-names",
+    "transcripts/save-speaker-names",
+    "okf/choose-directory",
 ];
 //# sourceMappingURL=rpc-contract.js.map

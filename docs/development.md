@@ -62,6 +62,18 @@ session work root. Workers do not use network or SQLite.
 Product child processes use DSH Subprocess. The signed Helper owns capture,
 macOS permission interaction, chunks and watchdogs.
 
+Open knowledge base ingestion is host code plus one child Agent. `src/okf/contracts.ts`
+holds the shared types and ports; storage keeps attempt state in `okf_ingestion`;
+`src/okf/git-transaction.ts` makes one ingestion one commit; `src/host/okf-host.ts`
+wires the slices into `apply`. Bundle writes use `node:fs` from host code because
+the child Agent's workspace is the bundle itself. See [okf](okf.md).
+
+Speaker attribution is one row per meeting and label in `meeting_speaker_names`;
+`src/transcripts/speaker-attribution.ts` owns normalisation and the problem kinds,
+the export control validates a map against the committed labels before it touches
+a file, and the renderer substitutes only the label surface. See
+[speaker attribution](speaker-attribution.md).
+
 Meeting references contain explicit IDs in individual messages. Transcript
 projections read a fixed version with stable cursors. Exports are deterministic
 derivatives of committed text and require host approval for file writes.
@@ -73,6 +85,13 @@ Processing identity is captured for each attempt. Base mode preserves recognized
 words and timestamps. Verified installed punctuation applies to new attempts;
 damaged installed punctuation blocks preparation until repaired.
 See [model assets](model-assets.md).
+
+The identity also records the recognizer family (`paraformer` or `parakeet`).
+A self-punctuating engine reports per-chunk punctuation in its draft and runs the
+punctuated block path without loading a punctuator, so `enhanced` mode may carry
+a null punctuation fingerprint for it. Identity fields are hashed, so changing
+the configured engine invalidates cached drafts while committed transcripts keep
+the fingerprint they were produced with.
 
 Recorder expansion can prepare models without creating a meeting, job or capture
 session. Each start verifies runtime assets and performs fresh silent permission
