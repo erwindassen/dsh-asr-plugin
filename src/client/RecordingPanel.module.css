@@ -92,3 +92,12 @@
 }
 
 .error { white-space: pre-line; }
+.attribution { flex-shrink: 0; padding: 12px 16px; border-top: 1px solid var(--dsw-alias-border-l2); }
+.attribution p { margin: 8px 0 0; }
+.attributionSummary { color: var(--dsw-alias-label-primary); font-weight: 500; }
+.attributionSummary:focus-visible, .attributionInput:focus-visible { outline: 2px solid var(--dsw-alias-interactive-border); outline-offset: 1px; border-radius: 4px; }
+.attributionFields { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.attributionField { display: grid; grid-template-columns: minmax(64px, 0.4fr) 1fr; align-items: center; gap: 8px; }
+.attributionLabel { color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
+.attributionInput { min-width: 0; height: 24px; padding: 0 6px; border: 1px solid var(--dsw-alias-interactive-border); border-radius: 6px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; }
+.attributionError { margin: 6px 16px 0; color: var(--dsw-alias-state-error-primary); font-size: 11px; line-height: 17px; overflow-wrap: anywhere; }

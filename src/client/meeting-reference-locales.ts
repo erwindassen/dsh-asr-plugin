@@ -87,6 +87,14 @@ export const zh = {
   "panel.error.export": "无法导出转写。请检查保存位置、文件夹权限后重试。",
   "panel.error.exportDirectory": "尚未设置转写保存位置。请在插件设置中选择文件夹，或按住 ⌥ 导出以选择位置。",
   "panel.noSession": "请先创建或选择一个工作区",
+  "panel.attribution": "说话人名称",
+  "panel.attributionHint": "这些名称只写入导出文件，已保存的转写仍保留原来的说话人标签。",
+  "panel.attributionDuplicate": "同一个名称分配给了多位说话人：{names}。请为每位说话人使用不同的名称。",
+  "panel.attributionSaving": "正在保存名称…",
+  "panel.attributionSaveFailed": "说话人名称未能保存。请检查名称后重试；导出仍会使用当前输入的名称。",
+  "panel.attributionLoadFailed": "未能读取已保存的说话人名称。",
+  "panel.error.exportSpeaker": "转写已保存，但说话人名称没有写入。请检查名称后重新导出。",
+  "panel.error.exportSpeakerDuplicate": "有两位说话人使用了同一个名称，转写未导出。请改用不同的名称后重试。",
 } as const;
 
 export type MeetingReferenceLocaleKey = keyof typeof zh;
@@ -170,6 +178,14 @@ export const en = {
   "panel.exportSaved": "Saved to {path}",
   "panel.error.export": "The transcript could not be exported. Check the folder and its permissions, then retry.",
   "panel.error.exportDirectory": "No transcript folder is configured yet. Choose one in the plugin settings, or hold ⌥ while exporting to pick a location.",
+  "panel.attribution": "Speaker names",
+  "panel.attributionHint": "These names only change the speaker labels in the exported file; the saved transcript keeps its own labels.",
+  "panel.attributionDuplicate": "One name is assigned to more than one speaker: {names}. Use a different name for each speaker.",
+  "panel.attributionSaving": "Saving names…",
+  "panel.attributionSaveFailed": "The speaker names were not saved. Check them and retry; an export still uses the names you entered.",
+  "panel.attributionLoadFailed": "The saved speaker names could not be read.",
+  "panel.error.exportSpeaker": "The transcript was saved without the speaker names. Check the names and export again.",
+  "panel.error.exportSpeakerDuplicate": "Two speakers share one name, so the transcript was not exported. Use a different name for each and retry.",
 } satisfies Record<MeetingReferenceLocaleKey, string>;
 
 declare module "@deepseek-ai/dsh-client-ui-slots" {
