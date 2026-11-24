@@ -38,14 +38,17 @@ Tools/Approval, Jobs and Subprocess. The plugin owns managed audio, meeting
 persistence, model delivery, recording protocols and ASR/speaker processing.
 
 `engines.dsh` and the DSH peer ranges admit the previously verified hosts and
-the DSH 0.2.2 series from rc.1 onward. Keep the upper bound below the next
+the DSH 0.2.2 series from rc.1 and the 0.2.3 series from alpha.1 onward. Keep the upper bound below the next
 series, including its prereleases. This lets an update within the admitted
 series load the same package without a compatibility prompt. Admission covers
 the declared range. Release qualification records the exact hosts tested.
 
 Development dependencies target DSH 0.2.2-rc.1 and Cordis 4.1. The host adapter
-handles both Cordis 4.0 and 4.1 configuration hooks. The client coordinator
-normalizes composer send states before applying the meeting reference policy.
+handles both Cordis 4.0 and 4.1 configuration hooks. The recording HTTP adapter
+admits every request through `connection.admit`, the trust gate that each
+admitted series exposes; DSH 0.2.3 removed the `requestRejection` wrapper the
+adapter used before. The client coordinator normalizes composer send states
+before applying the meeting reference policy.
 Check admission and client and host integration before expanding the supported
 series. `probe:p0-07:config` checks the CLI against the development host version.
 

@@ -26,11 +26,15 @@ for the full example and environment details.
 
 | Component | Requirement |
 | --- | --- |
-| Host | DSH 0.2.0-rc.2, 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.5, or the 0.2.2 series from rc.1 |
+| Host | DSH 0.2.0-rc.2, 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.5, the 0.2.2 series from rc.1, or the 0.2.3 series from alpha.1 |
 | Runtime | Node.js 24 |
 | Platform | macOS, Apple Silicon (`darwin` / `arm64`) |
 | Microphone API | macOS 13.5 or later |
 | System audio and dual-track APIs | macOS 14.2 or later |
+
+Admission covers the manifests in this repository, including the DSH 0.2.3
+series from alpha.1. Published 0.1.6 predates that range, so those hosts ask for
+a compatibility exemption.
 
 These macOS versions specify API availability; they are not a tested OS matrix.
 DSH desktop and Web modes both process audio on the Mac running DSH.
@@ -63,7 +67,8 @@ Desktop and Web profiles share the default meeting store. Run one plugin host
 per data directory. Preserve meeting and model data when replacing a package.
 
 For package verification, local archive installation and release channels, see
-[distribution](docs/distribution.md). Source downloads require the complete
+[distribution](docs/distribution.md), which also explains installing a fork's
+prebuilt `release/desktop` branch. Source downloads require the complete
 [source build](docs/development.md) before recording. Report installation problems
 through [GitHub Issues](https://github.com/huliux/dsh-asr-plugin/issues), including
 the plugin, DSH, Node.js and macOS versions without meeting data or credentials.

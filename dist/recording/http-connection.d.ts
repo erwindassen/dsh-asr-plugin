@@ -1,7 +1,7 @@
 import { type HostConnectionHandle } from "@deepseek-ai/dsh-client-connection";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { RecordingRpcConnection } from "./host-rpc.js";
-type Connection = Pick<HostConnectionHandle, "requestRejection">;
+type Connection = Pick<HostConnectionHandle, "admit">;
 export interface RecordingWebServer {
     register(route: {
         kind: "exact";

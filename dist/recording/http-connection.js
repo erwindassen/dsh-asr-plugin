@@ -43,8 +43,11 @@ async function dispatch(request, endpoint, handler, signal) {
     const result = await handler(endpoint, parsed.data.payload, signal);
     return Response.json({ type: "server-response", rpcId: parsed.data.rpcId, result });
 }
+function admissionRejection(admission) {
+    return "rejection" in admission ? admission.rejection : undefined;
+}
 async function serve(request, response, connection, endpoint, handler) {
-    const rejection = isLoopbackPeer(request.socket.remoteAddress) ? connection.requestRejection(request) : 403;
+    const rejection = isLoopbackPeer(request.socket.remoteAddress) ? admissionRejection(connection.admit(request)) : 403;
     if (rejection !== undefined) {
         response.writeHead(rejection, { connection: "close" });
         response.end("request rejected");

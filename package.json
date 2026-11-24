@@ -14,7 +14,7 @@
     "url": "https://github.com/huliux",
     "email": "dasenrising@gmail.com"
   },
-  "version": "0.2.0-fork.2",
+  "version": "0.2.0-fork.4",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
@@ -93,7 +93,7 @@
   "packageManager": "pnpm@10.33.2",
   "engines": {
     "node": ">=24.0.0 <25",
-    "dsh": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0"
+    "dsh": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0"
   },
   "os": [
     "darwin"
@@ -190,22 +190,22 @@
     "sherpa-onnx-node": "1.13.8"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "~4.0.4 || ~4.1.0",
-    "@deepseek-ai/dsh-api-session-controller": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-input-trigger": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-layout": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-plugin-manager": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-renderer": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-client-ui-workspace": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-jobs": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-llm": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-subprocess": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0",
-    "@deepseek-ai/dsh-tools": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.3-0"
+    "@deepseek-ai/cordis": "~4.0.4 || ~4.1.0 || ~4.2.0-alpha.1",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-locale": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-input-trigger": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-client-ui-workspace": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-jobs": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-subprocess": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.5 || >=0.2.2-rc.1 <0.2.4-0"
   },
   "repository": {
     "type": "git",
