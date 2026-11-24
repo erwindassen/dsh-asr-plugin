@@ -1,6 +1,15 @@
 import { clientRequestSchema } from "@deepseek-ai/dsh-client-connection";
 import { isIP } from "node:net";
 import { RECORDING_RPC_ENDPOINTS } from "./rpc-contract.js";
+/**
+ * DSH 0.2.3 verifies credentials through a `connection.authentication` service
+ * that it resolves through the fiber calling `admit`, so the call has to come
+ * from a context that injected it. Older series expose no such service and
+ * `admit` needs nothing, so the fallback stays the plain connection.
+ */
+export function admittingThrough(preferred, fallback) {
+    return { admit: request => (preferred() ?? fallback).admit(request) };
+}
 const MAX_BODY_BYTES = 64 * 1024;
 function isLoopbackPeer(address) {
     if (address === undefined)
@@ -47,7 +56,19 @@ function admissionRejection(admission) {
     return "rejection" in admission ? admission.rejection : undefined;
 }
 async function serve(request, response, connection, endpoint, handler) {
-    const rejection = isLoopbackPeer(request.socket.remoteAddress) ? admissionRejection(connection.admit(request)) : 403;
+    let rejection;
+    try {
+        rejection = isLoopbackPeer(request.socket.remoteAddress) ? admissionRejection(connection.admit(request)) : 403;
+    }
+    catch {
+        // `admit` resolves the credential verifier through the calling fiber; if it
+        // throws the gate is unavailable, which is not the caller's fault.
+        if (!response.destroyed) {
+            response.writeHead(503, { connection: "close" });
+            response.end("authentication unavailable");
+        }
+        return;
+    }
     if (rejection !== undefined) {
         response.writeHead(rejection, { connection: "close" });
         response.end("request rejected");

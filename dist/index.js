@@ -16,7 +16,7 @@ import { registerRecordingHostRpc } from "./recording/host-rpc.js";
 import { createMacDirectoryPicker } from "./transcripts/directory-picker.js";
 import { createTranscriptExportControl } from "./transcripts/transcript-export-control.js";
 import { installOkfHost } from "./host/okf-host.js";
-import { recordingHttpConnection } from "./recording/http-connection.js";
+import { admittingThrough, recordingHttpConnection } from "./recording/http-connection.js";
 import { acquireDataRootLease } from "./storage/data-root-lease.js";
 import { openManagedAudioStore } from "./storage/managed-audio-store.js";
 import { openMeetingRepository, } from "./storage/meeting-repository.js";
@@ -273,8 +273,18 @@ export async function apply(context, config) {
             prompt: "Choose a folder for the Open knowledge base",
             ...(signal === undefined ? {} : { signal }),
         });
+        // DSH 0.2.3 resolves the credential verifier through the fiber that calls
+        // `connection.admit`, so the call has to come from a context that injected
+        // `connection.authentication`. 0.2.2 has no such service, never runs the
+        // nested inject, and keeps admitting through the connection it always used.
+        let authenticated;
+        context.inject(["connection", "connection.authentication"], (authContext) => {
+            authenticated = authContext;
+            return () => { if (authenticated === authContext)
+                authenticated = undefined; };
+        });
         context.inject(["connection", "webServer"], (webContext) => {
-            const connection = recordingHttpConnection(webContext.connection, webContext.get("webServer"));
+            const connection = recordingHttpConnection(admittingThrough(() => authenticated?.connection, webContext.connection), webContext.get("webServer"));
             webContext.jobs.attachController("dsh-asr-recording-web");
             const removeRpc = registerRecordingHostRpc(connection, application, signal => readModelSettings({ dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT, engine: selectedEngine(context), signal }), downloads, recording.permissions, signal => application.prepareRecording(signal), transcripts, recording.devices, chooseOkfDirectory, lifetime.okf?.speakerNames);
             webContext.effect(() => removeRpc, "dsh-asr: recording client RPC");
