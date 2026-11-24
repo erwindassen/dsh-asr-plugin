@@ -87,6 +87,19 @@ export interface TranscriptExportRpcPayload {
   readonly speaker_names?: Readonly<Record<string, string>>;
 }
 
+export interface SpeakerNamesRpcPayload {
+  readonly meeting_id: string;
+}
+
+export interface SpeakerNamesRpcValue {
+  readonly speaker_names: Readonly<Record<string, string>>;
+}
+
+export interface SaveSpeakerNamesRpcPayload {
+  readonly meeting_id: string;
+  readonly speaker_names: Readonly<Record<string, string>>;
+}
+
 export interface TranscriptExportRpcValue {
   readonly bytes: number;
   readonly format: "md" | "txt" | "srt" | "vtt";

@@ -1,6 +1,7 @@
 import type { OkfFile, OkfMeetingView, OkfSegmentView } from "./contracts.js";
 import { renderDocument } from "./frontmatter.js";
 import { transcriptCopyRelativePath } from "./paths.js";
+import { speakerNameFor } from "../transcripts/speaker-attribution.js";
 
 /**
  * Defence in depth for meeting content.
@@ -51,18 +52,23 @@ function isoTimestamp(epochMs: number): string {
   return new Date(epochMs).toISOString();
 }
 
+/** The attributed name for a label, or the label itself when nothing is assigned. */
+function speakerDisplay(meeting: OkfMeetingView, label: string): string {
+  return speakerNameFor(label, meeting.speakerNames);
+}
+
 function renderSummary(meeting: OkfMeetingView): string {
   const participants = meeting.speakers.length === 0
     ? "none identified"
-    : meeting.speakers.map(escapeMarkdownInline).join(", ");
+    : meeting.speakers.map((label) => escapeMarkdownInline(speakerDisplay(meeting, label))).join(", ");
   const duration = formatDuration(dimension(meeting.durationMs));
   const segments = meeting.segments.length;
   return `Participants: ${participants}. Duration: ${duration}. `
     + `Segments: ${segments} (transcript version ${dimension(meeting.transcriptVersion)}).`;
 }
 
-function renderSegmentLine(segment: OkfSegmentView): string {
-  const speaker = escapeMarkdownInline(segment.speaker) || "Unknown speaker";
+function renderSegmentLine(meeting: OkfMeetingView, segment: OkfSegmentView): string {
+  const speaker = escapeMarkdownInline(speakerDisplay(meeting, segment.speaker)) || "Unknown speaker";
   const text = escapeMarkdownInline(segment.text);
   return `[${formatClock(dimension(segment.startMs))}] **${speaker}:** ${text}`;
 }
@@ -82,7 +88,7 @@ export function renderTranscriptCopy(input: { readonly meeting: OkfMeetingView }
     "",
     ...(meeting.segments.length === 0
       ? ["No segments were committed for this transcript version."]
-      : meeting.segments.map(renderSegmentLine)),
+      : meeting.segments.map((segment) => renderSegmentLine(meeting, segment))),
   ].join("\n");
   return {
     relativePath: transcriptCopyRelativePath(meeting.meetingId),
@@ -94,7 +100,7 @@ export function renderTranscriptCopy(input: { readonly meeting: OkfMeetingView }
       started_at: isoTimestamp(meeting.startedAtMs),
       committed_at: isoTimestamp(meeting.committedAtMs),
       duration_ms: dimension(meeting.durationMs),
-      participants: meeting.speakers,
+      participants: meeting.speakers.map((label) => speakerDisplay(meeting, label)),
       status: meeting.partial ? "draft" : "stable",
       sources: [meeting.meetingId],
     }, body),

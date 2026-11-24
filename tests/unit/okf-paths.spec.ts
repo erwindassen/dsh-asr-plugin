@@ -28,6 +28,7 @@ function meeting(overrides: Partial<OkfMeetingView> = {}): OkfMeetingView {
     transcriptVersion: 1,
     committedAtMs: Date.parse("2026-11-20T09:05:00.000Z"),
     partial: false,
+    speakerNames: {},
     segments: [],
     ...overrides,
   };

@@ -14,9 +14,21 @@ import {
   type RecordingRpcStateValue,
   type RecordingRpcTrack,
   type RecordingRpcView,
+  type SaveSpeakerNamesRpcPayload,
+  type SpeakerNamesRpcPayload,
+  type SpeakerNamesRpcValue,
   type TranscriptExportRpcPayload,
   type TranscriptExportRpcValue,
 } from "../recording/rpc-contract.js";
+
+function speakerNameMap(value: unknown): Readonly<Record<string, string>> {
+  const names: Record<string, string> = {};
+  for (const [label, name] of Object.entries(record(value))) {
+    if (label === "" || typeof name !== "string" || name === "") throw new Error("INVALID_RESPONSE");
+    names[label] = name;
+  }
+  return names;
+}
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
@@ -284,6 +296,27 @@ export class RecordingRpcClient {
     signal?: AbortSignal,
   ): Promise<TranscriptExportRpcValue> {
     return transcriptExportValue(await call(this.rpc, "transcripts/export", payload, signal));
+  }
+
+
+  /** Speaker label to display name for one meeting; unnamed labels are absent. */
+  async speakerNames(
+    payload: SpeakerNamesRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<SpeakerNamesRpcValue> {
+    const value = record(await call(this.rpc, "transcripts/speaker-names", payload, signal));
+    exact(value, ["speaker_names"]);
+    return { speaker_names: speakerNameMap(value.speaker_names) };
+  }
+
+  /** Replaces the stored attribution for one meeting; an empty map clears it. */
+  async saveSpeakerNames(
+    payload: SaveSpeakerNamesRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<SpeakerNamesRpcValue> {
+    const value = record(await call(this.rpc, "transcripts/save-speaker-names", payload, signal));
+    exact(value, ["speaker_names"]);
+    return { speaker_names: speakerNameMap(value.speaker_names) };
   }
 
   /** Lists CoreAudio devices through the signed helper. */

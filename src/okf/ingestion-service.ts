@@ -60,6 +60,8 @@ export interface OkfIngestionOutcome {
 
 export interface OkfIngestionDeps {
   readonly repository: Pick<MeetingRepository, "getMeeting" | "getCommittedTranscriptSnapshot">;
+  /** Per-meeting speaker attribution, applied to the transcript copy only. */
+  readonly speakerNames?: { list(meetingId: string): readonly { readonly label: string; readonly name: string }[] };
   /** Persists attempts in `okf_ingestion`. */
   readonly attempts: Pick<
     OkfIngestionRepository,
@@ -73,6 +75,15 @@ export interface OkfIngestionDeps {
   readonly jobs: Pick<JobRegistry, "start">;
   readonly nowMs?: () => number;
   readonly logger?: (line: string) => void;
+}
+
+
+/** Stored names as a label-to-name map; a missing store means no attribution. */
+function attribution(deps: OkfIngestionDeps, meetingId: string): Readonly<Record<string, string>> {
+  const stored = deps.speakerNames?.list(meetingId) ?? [];
+  const names: Record<string, string> = {};
+  for (const entry of stored) names[entry.label] = entry.name;
+  return names;
 }
 
 export interface OkfIngestionService {
@@ -219,7 +230,11 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
         message: "Automatic ingestion is turned off; run /asr-ingest to ingest this meeting",
       };
     }
-    const view: OkfMeetingView = buildOkfMeetingView(deps.repository, request.meetingId);
+    const view: OkfMeetingView = buildOkfMeetingView(
+      deps.repository,
+      request.meetingId,
+      attribution(deps, request.meetingId),
+    );
     const root = await realpath(directory);
     return deps.lock.runExclusive(root, async () => {
       const signal = combined(request);
