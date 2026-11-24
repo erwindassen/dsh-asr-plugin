@@ -9,7 +9,12 @@ import {
   openMeetingRepository,
   type MeetingRepository,
 } from "../../src/storage/meeting-repository.js";
-import { SCHEMA_V2_SQL, SCHEMA_V3_SQL, SCHEMA_V4_SQL } from "../../src/storage/schema.js";
+import {
+  SCHEMA_V2_SQL,
+  SCHEMA_V3_SQL,
+  SCHEMA_V4_SQL,
+  SCHEMA_V5_SQL,
+} from "../../src/storage/schema.js";
 
 const V1_SCHEMA_URL = new URL("../fixtures/storage/schema-v1.sql", import.meta.url);
 const MEETING_ID = "00000000-0000-4000-8000-000000000001";
@@ -158,7 +163,7 @@ it("打开 v2 数据库后无损增加 nullable 录音始止字段", async () =>
   repositories.splice(repositories.indexOf(repository), 1);
   const database = new DatabaseSync(filename);
   const version = database.prepare("PRAGMA user_version").get() as Record<string, unknown>;
-  expect(version.user_version).toBe(5);
+  expect(version.user_version).toBe(6);
   expect(database.prepare("SELECT segment_pk FROM segments").get())
     .toEqual({ segment_pk: 51 });
   expect(() => database.prepare(`
@@ -176,7 +181,7 @@ it("打开 v2 数据库后无损增加 nullable 录音始止字段", async () =>
   database.close();
 });
 
-it("新数据库直接创建 schema v5 与录音时间约束", async () => {
+it("新数据库直接创建 schema v6 与录音时间约束", async () => {
   const root = await mkdtemp(join(tmpdir(), "dsh-asr-schema-v3-"));
   const filename = join(root, "meetings.sqlite3");
   roots.push(root);
@@ -191,7 +196,7 @@ it("新数据库直接创建 schema v5 与录音时间约束", async () => {
   `).get() as Record<string, unknown> | undefined;
   database.close();
 
-  expect(version.user_version).toBe(5);
+  expect(version.user_version).toBe(6);
   expect(columns.map((column) => column.name)).toContain("origin");
   expect(columns.map((column) => column.name)).toContain("recording_started_at_ms");
   expect(columns.map((column) => column.name)).toContain("recording_ended_at_ms");
@@ -223,7 +228,7 @@ it("migrates v3 without guessing the historical processing mode", async () => {
   expect(repository.searchMeetings({ query: "identity preserved" }).items).toHaveLength(1);
 });
 
-it("migrates v4 to v5 without losing meetings and adds the ingestion table", async () => {
+it("migrates v4 through v5 to v6 without losing meetings and adds the ingestion table", async () => {
   const root = await mkdtemp(join(tmpdir(), "dsh-asr-schema-v4-ingestion-"));
   roots.push(root);
   const filename = join(root, "meetings.sqlite3");
@@ -265,7 +270,7 @@ it("migrates v4 to v5 without losing meetings and adds the ingestion table", asy
     SELECT sql FROM sqlite_master
     WHERE type = 'index' AND name = 'idx_okf_ingestion_latest'
   `).get() as Record<string, unknown> | undefined;
-  expect(version.user_version).toBe(5);
+  expect(version.user_version).toBe(6);
   expect(table?.sql).toContain("state IN ('running', 'succeeded', 'failed')");
   expect(table?.sql).toContain("ON DELETE CASCADE");
   expect(columns.map((column) => column.name)).toEqual([
@@ -285,6 +290,50 @@ it("migrates v4 to v5 without losing meetings and adds the ingestion table", asy
     meeting_id, transcript_version, directory, state, attempt, started_at_ms
   ) VALUES (?, 1, '/tmp/bundle', 'running', 1, 3000)`).run(MEETING_ID);
   expect(migrated.prepare("SELECT COUNT(*) AS total FROM okf_ingestion").get())
+    .toEqual({ total: 1 });
+  migrated.close();
+});
+
+it("migrates v5 to v6 without losing meetings and adds the speaker names table", async () => {
+  const root = await mkdtemp(join(tmpdir(), "dsh-asr-schema-v5-speakers-"));
+  roots.push(root);
+  const filename = join(root, "meetings.sqlite3");
+  const database = new DatabaseSync(filename);
+  database.exec(SCHEMA_V5_SQL);
+  database.prepare(`INSERT INTO meetings (
+    meeting_id, origin, title, source_name, source_format, source_size_bytes,
+    duration_ms, status, committed_status, transcript_version, engine_fingerprint,
+    created_at_ms, updated_at_ms)
+    VALUES (?, 'import', 'v5 会议', 'v5.wav', 'wav', 2048, 1000,
+      'completed', 'completed', 1, ?, 1000, 2000)`).run(MEETING_ID, "a".repeat(64));
+  database.close();
+
+  const repository = openMeetingRepository(filename);
+  repositories.push(repository);
+  expect(repository.getMeeting(MEETING_ID)).toMatchObject({
+    meetingId: MEETING_ID,
+    transcriptVersion: 1,
+  });
+
+  repository.close();
+  repositories.splice(repositories.indexOf(repository), 1);
+  const migrated = new DatabaseSync(filename);
+  const version = migrated.prepare("PRAGMA user_version").get() as Record<string, unknown>;
+  const table = migrated.prepare(`
+    SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meeting_speaker_names'
+  `).get() as Record<string, unknown> | undefined;
+  const columns = migrated.prepare("PRAGMA table_info(meeting_speaker_names)")
+    .all() as Record<string, unknown>[];
+  expect(version.user_version).toBe(6);
+  expect(table?.sql).toContain("PRIMARY KEY (meeting_id, label)");
+  expect(table?.sql).toContain("ON DELETE CASCADE");
+  expect(columns.map((column) => column.name)).toEqual(["meeting_id", "label", "name"]);
+  // A migrated database can store a name straight away.
+  migrated.prepare(`
+    INSERT INTO meeting_speaker_names (meeting_id, label, name)
+    VALUES (?, 'Speaker A', 'Ada')
+  `).run(MEETING_ID);
+  expect(migrated.prepare("SELECT COUNT(*) AS total FROM meeting_speaker_names").get())
     .toEqual({ total: 1 });
   migrated.close();
 });
