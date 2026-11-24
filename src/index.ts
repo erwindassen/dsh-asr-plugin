@@ -24,6 +24,7 @@ import { RecordingModelWorker } from "./recording/model-worker.js";
 import { registerRecordingHostRpc } from "./recording/host-rpc.js";
 import { createMacDirectoryPicker } from "./transcripts/directory-picker.js";
 import { createTranscriptExportControl } from "./transcripts/transcript-export-control.js";
+import { installOkfHost, type OkfHost } from "./host/okf-host.js";
 import { recordingHttpConnection, type RecordingWebServer } from "./recording/http-connection.js";
 import { acquireDataRootLease } from "./storage/data-root-lease.js";
 import { openManagedAudioStore } from "./storage/managed-audio-store.js";
@@ -59,6 +60,8 @@ export interface Config {
   readonly hf_proxy_url?: string;
   readonly hf_proxy_kind?: "mirror" | "http";
   readonly transcript_directory?: string;
+  readonly okf_directory?: string;
+  readonly okf_ingest?: boolean;
   readonly mic_device_uid?: string;
   readonly system_device_uid?: string;
 }
@@ -74,6 +77,10 @@ export const Config = z.object({
   data_dir: z.string().default(DEFAULT_DATA_DIRECTORY),
   transcript_directory: z.string().default("").volatile()
     .description("Default folder for exported transcripts; empty asks on export"),
+  okf_directory: z.string().default("").volatile()
+    .description("Folder holding the Open knowledge base bundle; empty disables ingestion"),
+  okf_ingest: z.boolean().default(true).volatile()
+    .description("Summarise each committed transcript into the Open knowledge base automatically"),
   mic_device_uid: z.string().default("").volatile()
     .description("Microphone device UID; empty follows the macOS default input"),
   system_device_uid: z.string().default("").volatile()
@@ -112,6 +119,7 @@ async function prepareDatabaseDirectory(dataRoot: string): Promise<void> {
 
 interface HostLifetime {
   downloads: ModelDownloadController | undefined;
+  okf: OkfHost | undefined;
   models: RecordingModelWorker | undefined;
   application: MeetingApplication | undefined;
   readonly lease: AsyncDisposable;
@@ -121,6 +129,7 @@ interface HostLifetime {
 async function disposeHost(lifetime: HostLifetime): Promise<void> {
   try {
     await lifetime.downloads?.dispose();
+    await lifetime.okf?.dispose();
     if (lifetime.application === undefined) lifetime.repository?.close();
     else await lifetime.application.shutdown();
   } finally {
@@ -230,6 +239,7 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
   const paths = resolveRuntimePaths(config);
   const lifetime: HostLifetime = {
     downloads: undefined,
+    okf: undefined,
     models: undefined,
     application: undefined,
     lease: await acquireDataRootLease(paths.dataRoot),
@@ -243,8 +253,29 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
       dataRoot: paths.dataRoot,
       subprocess: context.subprocess,
     });
-    const repository = openMeetingRepository(paths.databasePath);
-    lifetime.repository = repository;
+    const stored = openMeetingRepository(paths.databasePath);
+    lifetime.repository = stored;
+    const okfSettings = (): { readonly directory: string; readonly ingest: boolean } => {
+      const current = effectiveConfig<ParsedConfig>(context);
+      return {
+        directory: readVolatile<string>(current.okf_directory) ?? "",
+        ingest: readVolatile<boolean>(current.okf_ingest) ?? true,
+      };
+    };
+    const okf = installOkfHost(context, {
+      databasePath: paths.databasePath,
+      repository: stored,
+      settings: okfSettings,
+      meeting: (meetingId) => {
+        const meeting = stored.getMeeting(meetingId);
+        if (meeting === null || meeting === undefined) return null;
+        return { meetingId: meeting.meetingId, title: meeting.title };
+      },
+    });
+    lifetime.okf = okf;
+    // Both import and retranscription commit through this repository, so the
+    // application receives the hooked one and drafts never trigger ingestion.
+    const repository = okf.repository;
     const recording = createProductRecordingFactories({
       expectedFingerprint: fingerprint,
       inspectHelperSignature: createDshRecordingHelperSignatureInspector(context.subprocess),
@@ -278,7 +309,19 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
     context.effect(() => () => disposeHost(lifetime), "dsh-asr: application lifecycle");
     const reconciliation = await application.reconcileStartup();
     logReconciliation(context, reconciliation);
-    registerMeetingTools(context, application);
+    registerMeetingTools(context, application, {
+      okfIngestionFor: (meetingId) => {
+        const record = okf.service.state(meetingId);
+        if (record === undefined) return null;
+        return {
+          state: record.state,
+          transcriptVersion: record.transcriptVersion,
+          attempt: record.attempt,
+          finishedAt: record.finishedAtMs === undefined ? null : new Date(record.finishedAtMs).toISOString(),
+          errorCode: record.errorCode ?? null,
+        };
+      },
+    });
     const downloads = new ModelDownloadController({ dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT,
       jobs: context.jobs, transport: context.subprocess, settings: () => {
         const current = effectiveConfig<ParsedConfig>(context);
@@ -289,11 +332,16 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
             (proxyUrl.trim() ? "http" : "mirror") };
       } });
     lifetime.downloads = downloads;
+    const directoryPicker = createMacDirectoryPicker({ subprocess: context.subprocess });
     const transcripts = createTranscriptExportControl({
       directory: () => readVolatile<string>(effectiveConfig<ParsedConfig>(context).transcript_directory) ?? "",
       meeting: application,
-      picker: createMacDirectoryPicker({ subprocess: context.subprocess }),
+      picker: directoryPicker,
       pickerPrompt: () => "Choose a folder for exported transcripts",
+    });
+    const chooseOkfDirectory = (signal?: AbortSignal): Promise<string | null> => directoryPicker.choose({
+      prompt: "Choose a folder for the Open knowledge base",
+      ...(signal === undefined ? {} : { signal }),
     });
     context.inject(["connection", "webServer"], (webContext) => {
       const connection = recordingHttpConnection(webContext.connection, webContext.get("webServer") as RecordingWebServer);
@@ -301,7 +349,7 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
       const removeRpc = registerRecordingHostRpc(connection, application, signal => readModelSettings(
         { dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT, engine: selectedEngine(context), signal },
       ), downloads, recording.permissions, signal => application.prepareRecording(signal), transcripts,
-      recording.devices);
+      recording.devices, chooseOkfDirectory);
       webContext.effect(() => removeRpc, "dsh-asr: recording client RPC");
     });
   } catch (error) {

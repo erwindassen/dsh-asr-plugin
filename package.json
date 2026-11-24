@@ -60,10 +60,12 @@
     "SUPPORT.md",
     "SECURITY.md",
     "screenshots.json",
+    "assets/prompts",
     "assets/screenshots",
     "CONTEXT.md",
     "docs/model-assets.md",
     "docs/development.md",
+    "docs/okf.md",
     "docs/distribution.md",
     "docs/publishing.md"
   ],
