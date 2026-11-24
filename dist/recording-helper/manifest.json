@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "project": "Bitbook",
+    "historicalRepository": "https://github.com/kunji163/clerki.git",
+    "revision": "44887f62f7b1a69fcc9d23583aa8df8f11898aca",
+    "sourcePath": "audio-native/",
+    "license": "BSD-2-Clause"
+  },
+  "product": {
+    "bundleIdentifier": "com.bitbook.dsh-asr.recording-helper",
+    "architecture": "arm64",
+    "minimumOS": "13.5",
+    "systemAudioMinimumOS": "14.2",
+    "distribution": "public",
+    "signingMode": "ad-hoc",
+    "signingIdentity": null,
+    "teamIdentifier": null,
+    "designatedRequirement": null,
+    "permissionProbeEligible": true,
+    "hardenedRuntime": true,
+    "notarization": "not-verified",
+    "entitlements": {
+      "app": [
+        "com.apple.security.device.audio-input"
+      ],
+      "microphone": [
+        "com.apple.security.device.audio-input"
+      ],
+      "systemAudio": []
+    }
+  },
+  "components": {
+    "helper": {
+      "minimumOS": "13.5",
+      "relativePath": "Contents/MacOS/DSHASRRecordingHelper"
+    },
+    "microphone": {
+      "minimumOS": "13.5",
+      "relativePath": "Contents/Helpers/dsh-asr-capture-mic"
+    },
+    "systemAudio": {
+      "minimumOS": "14.2",
+      "relativePath": "Contents/Helpers/dsh-asr-capture-system"
+    }
+  },
+  "treeSha256": "9d045e4d4cb42788691bf193c11765909efe11b755bab014ff34e96ab95d9267",
+  "files": [
+    {
+      "relativePath": "Contents/Helpers/dsh-asr-capture-mic",
+      "byteLength": 238704,
+      "sha256": "5d94b0573f4ada20ea8168b0105029468a08a1c35900f87f3c33ce6838b9cab4"
+    },
+    {
+      "relativePath": "Contents/Helpers/dsh-asr-capture-system",
+      "byteLength": 393536,
+      "sha256": "d4a41066c7c21721fef4d44b39ec1bb585ef5b7a62194b7d23441218b850e5cd"
+    },
+    {
+      "relativePath": "Contents/Info.plist",
+      "byteLength": 1189,
+      "sha256": "4d4210c66e3bd16b9dadc458c914167af9e4cc36ee793790436d1586ab5cebeb"
+    },
+    {
+      "relativePath": "Contents/MacOS/DSHASRRecordingHelper",
+      "byteLength": 169584,
+      "sha256": "c24b36af0d08b8341bd15da493e255b55b4b0fe9b2044c7e3b13a0a732a26e3e"
+    },
+    {
+      "relativePath": "Contents/Resources/en.lproj/InfoPlist.strings",
+      "byteLength": 345,
+      "sha256": "2bc9e8bf1cf68e9752e924361b5fbb8bd0fa74d762f990747ca7adf8b17b08a8"
+    },
+    {
+      "relativePath": "Contents/Resources/zh-Hans.lproj/InfoPlist.strings",
+      "byteLength": 319,
+      "sha256": "f0f5f07cfa7fa8fcfe287004b4c8c7fe81e9e4b36dfbdeaddac3ed634493df1d"
+    },
+    {
+      "relativePath": "Contents/_CodeSignature/CodeResources",
+      "byteLength": 3425,
+      "sha256": "9b919f86017b97a48fc72bdd3a7a52f2bf7859f8a83b9de747ab188b1e9f7079"
+    }
+  ]
+}
