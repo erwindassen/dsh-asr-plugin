@@ -17,8 +17,13 @@ export interface OkfAgentHandle {
     /** Optional: release the child once the ingestion settles. */
     dispose?(): Promise<void>;
 }
+/** What the host needs to lend the child its one write authority. */
+export interface OkfAgentSeed {
+    readonly meetingId: string;
+    readonly directory: string;
+}
 export interface OkfAgentFactory {
-    create(options: CreateAgentOptions): Promise<OkfAgentHandle>;
+    create(options: CreateAgentOptions, seed: OkfAgentSeed): Promise<OkfAgentHandle>;
 }
 export interface OkfIngestionAgentDeps {
     readonly agents: OkfAgentFactory;

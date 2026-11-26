@@ -181,7 +181,7 @@ export function createOkfIngestionAgent(deps) {
                         sessionId: deps.sessionId(),
                         meta: { cwd: request.directory, origin: "subagent" },
                         signal: controller.signal,
-                    });
+                    }, { meetingId: request.meeting.meetingId, directory: request.directory });
                 }
                 catch (error) {
                     // A typed refusal (no model route, no folder) keeps its code so the

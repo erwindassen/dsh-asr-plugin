@@ -24,6 +24,7 @@ import { acquireDataRootLease } from "./storage/data-root-lease.js";
 import { openManagedAudioStore } from "./storage/managed-audio-store.js";
 import { openMeetingRepository, } from "./storage/meeting-repository.js";
 import { registerMeetingTools } from "./tools/meeting-tools.js";
+import { registerOkfTools } from "./tools/okf-tools.js";
 import { createDshWorkerSpawner } from "./worker/dsh-spawner.js";
 import { createPackagedWorkerLaunch } from "./worker/launch.js";
 import { WORKER_READY_TIMEOUT_MS, WORKER_TERMINATION_GRACE_MS, WORKER_TERMINATION_TIMEOUT_MS, workerRunDeadlineMs, } from "./worker/timeouts.js";
@@ -255,6 +256,7 @@ export async function apply(context, config) {
                 };
             },
         });
+        registerOkfTools(context, { pages: okf.pages });
         const downloads = new ModelDownloadController({ dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT,
             jobs: context.jobs, transport: context.subprocess, settings: () => {
                 const current = effectiveConfig(context);
