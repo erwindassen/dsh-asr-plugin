@@ -151,11 +151,12 @@ function storedDate(entry: { readonly started_at: string | null }): string {
 }
 
 function ingestionFailureKey(failure: IngestionFailure): "panel.ingestNotConfigured" | "panel.ingestBusy"
-  | "panel.ingestTimeout" | "panel.ingestNoModel" | "panel.ingestFailed" {
+  | "panel.ingestTimeout" | "panel.ingestNoModel" | "panel.ingestNoTranscript" | "panel.ingestFailed" {
   if (failure === "notConfigured") return "panel.ingestNotConfigured";
   if (failure === "busy") return "panel.ingestBusy";
   if (failure === "timeout") return "panel.ingestTimeout";
   if (failure === "noModel") return "panel.ingestNoModel";
+  if (failure === "noTranscript") return "panel.ingestNoTranscript";
   return "panel.ingestFailed";
 }
 
@@ -220,6 +221,9 @@ function StoredMeetingsSection({ ingestion, storedMeetings, translate }: Pick<Pa
     {transcriptError !== null && <p className={styles.storedError} role="alert">{translate("panel.storedLoadFailed")}</p>}
     {ingestion?.outcome === "succeeded" && <p className={styles.hint} role="status">{translate("panel.ingested")}</p>}
     {failure !== null && <p className={styles.storedError} role="alert">{translate(ingestionFailureKey(failure))}</p>}
+    {ingestion?.detail != null && ingestion.detail !== "" && (
+      <p className={styles.storedErrorDetail} role="status">{ingestion.detail}</p>
+    )}
   </section>;
 }
 

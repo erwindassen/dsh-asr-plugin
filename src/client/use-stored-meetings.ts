@@ -13,12 +13,24 @@ export const INGEST_POLL_MS = 2_000;
 /** Five minutes: long enough for the agent, short enough to stop a stuck spinner. */
 export const INGEST_POLL_ATTEMPTS = 150;
 
-export type IngestionFailure = "notConfigured" | "busy" | "noModel" | "unavailable" | "timeout";
+export type IngestionFailure =
+  | "notConfigured"
+  | "busy"
+  | "noModel"
+  | "noTranscript"
+  | "unavailable"
+  | "timeout";
 
 export interface MeetingIngestion {
   readonly running: boolean;
   readonly outcome: "succeeded" | "failed" | null;
   readonly failure: IngestionFailure | null;
+  /**
+   * The failing step in the host's own words. The category above is all the UI
+   * needs to offer advice; this is what makes a novel failure debuggable instead
+   * of a shrug ("The meeting could not be added…").
+   */
+  readonly detail: string | null;
   readonly start: () => void;
 }
 
@@ -90,6 +102,7 @@ export function ingestionFailure(code: string | null): IngestionFailure {
   if (code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
   if (code.includes("OKF_BUSY")) return "busy";
   if (code.includes("OKF_NO_MODEL")) return "noModel";
+  if (code.includes("OKF_NO_TRANSCRIPT")) return "noTranscript";
   return "unavailable";
 }
 
@@ -117,6 +130,7 @@ export function useMeetingIngestion(options: MeetingIngestionOptions): MeetingIn
   const [running, setRunning] = useState(false);
   const [outcome, setOutcome] = useState<"succeeded" | "failed" | null>(null);
   const [failure, setFailure] = useState<IngestionFailure | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
   const active = useRef<AbortController | null>(null);
   const generation = useRef(0);
 
@@ -125,6 +139,7 @@ export function useMeetingIngestion(options: MeetingIngestionOptions): MeetingIn
   useEffect(() => {
     setOutcome(null);
     setFailure(null);
+    setDetail(null);
     return () => {
       generation.current += 1;
       active.current?.abort();
@@ -141,6 +156,7 @@ export function useMeetingIngestion(options: MeetingIngestionOptions): MeetingIn
     setRunning(true);
     setOutcome(null);
     setFailure(null);
+    setDetail(null);
     void (async () => {
       let status: OkfIngestRpcValue;
       try {
@@ -156,6 +172,7 @@ export function useMeetingIngestion(options: MeetingIngestionOptions): MeetingIn
         if (controller.signal.aborted || !mounted.current || generation.current !== request) return;
         setRunning(false);
         setFailure(ingestionFailure(errorCode(cause)));
+        setDetail(cause instanceof Error ? cause.message : null);
         setOutcome("failed");
         return;
       }
@@ -167,11 +184,12 @@ export function useMeetingIngestion(options: MeetingIngestionOptions): MeetingIn
         return;
       }
       setFailure(status.state === "failed" ? ingestionFailure(status.error_code) : "timeout");
+      setDetail(status.state === "failed" ? status.message : null);
       setOutcome("failed");
     })();
   }, [client, meetingId, mounted, onIngested]);
 
-  return { running, outcome, failure, start };
+  return { running, outcome, failure, detail, start };
 }
 
 export interface StoredMeetingsOptions {

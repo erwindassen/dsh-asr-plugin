@@ -78,7 +78,7 @@ function storedMeetings(overrides: Partial<StoredMeetings> = {}): StoredMeetings
 }
 
 function ingestion(overrides: Partial<MeetingIngestion> = {}): MeetingIngestion {
-  return { running: false, outcome: null, failure: null, start: vi.fn(), ...overrides };
+  return { running: false, outcome: null, failure: null, detail: null, start: vi.fn(), ...overrides };
 }
 
 function props(overrides: Partial<PanelViewProps> = {}): PanelViewProps {

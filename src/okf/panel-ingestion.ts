@@ -105,6 +105,8 @@ function ingestionMessage(error: unknown): string {
       return "Another ingestion is already running.";
     case "OKF_NO_MODEL":
       return "Choose a model in DSH settings first.";
+    case "OKF_NOT_VERSIONED":
+      return "The folder could not be turned into a Git repository.";
     default:
       return "The ingestion could not start.";
   }

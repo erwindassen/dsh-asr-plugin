@@ -10,6 +10,8 @@ import {
   type StoredMeetingSyncDeps,
 } from "../../src/application/stored-meeting-sync.js";
 import { OkfError } from "../../src/okf/contracts.js";
+import { MAX_STORED_MEETINGS, listStoredMeetings } from "../../src/storage/stored-meeting-query.js";
+import { openMeetingDatabase } from "../../src/storage/database.js";
 import type { MeetingRecord } from "../../src/storage/types.js";
 
 const IN_FOLDER = "11111111-1111-4111-8111-111111111111";
@@ -86,6 +88,25 @@ describe("createStoredMeetingSync", () => {
     const directory = await bundle([IN_FOLDER.toUpperCase()]);
     const harness = deps(directory, [meeting(IN_FOLDER, 1)]);
     await expect(harness.sync.preview()).resolves.toEqual({ removed: 0, kept: 1 });
+  });
+
+  it("asks the repository for a page it accepts instead of failing the sync", async () => {
+    // Regression: the reconciler asked for 500 while the storage query rejects
+    // anything above MAX_STORED_MEETINGS, so every sync failed with
+    // "Stored meeting limit is invalid" instead of counting meetings.
+    expect(MAX_SYNC_MEETINGS).toBe(MAX_STORED_MEETINGS);
+    const storeRoot = await mkdtemp(path.join(tmpdir(), "dsh-sync-db-"));
+    roots.push(storeRoot);
+    const database = openMeetingDatabase(path.join(storeRoot, "meetings.sqlite3"));
+    try {
+      expect(() => listStoredMeetings(database, MAX_SYNC_MEETINGS)).not.toThrow();
+    } finally {
+      database.close();
+    }
+    const directory = await bundle([IN_FOLDER]);
+    const harness = deps(directory, [meeting(IN_FOLDER, 1)]);
+    await expect(harness.sync.preview()).resolves.toEqual({ removed: 0, kept: 1 });
+    expect(harness.listStoredMeetings).toHaveBeenCalledWith(MAX_STORED_MEETINGS);
   });
 
   it("refuses to scan without a configured folder", async () => {

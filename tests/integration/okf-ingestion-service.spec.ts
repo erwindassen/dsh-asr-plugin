@@ -16,6 +16,7 @@ import {
 import {
   OKF_INGESTION_JOURNAL_FILE,
   createOkfGitTransaction,
+  type OkfGitTransaction,
 } from "../../src/okf/git-transaction.js";
 import {
   createOkfIngestionService,
@@ -537,6 +538,62 @@ describe.skipIf(!gitAvailable())("createOkfIngestionService", () => {
     expect(await lastSubject(plain)).toBe(`ingest ${MEETING_ID}@v1`);
     expect(await statusPorcelain(plain)).toBe("");
     expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toHaveLength(1);
+  });
+
+  it("records an attempt when the folder cannot be prepared", async () => {
+    const harness = await createHarness();
+    const broken: OkfGitTransaction = {
+      ...transaction,
+      inspect: async () => {
+        throw Object.assign(new Error("spawn git ENOENT"), { code: "ENOENT" });
+      },
+    };
+    const service = createOkfIngestionService({
+      repository: harness.meetings,
+      attempts: harness.attempts,
+      git: broken,
+      lock: createOkfBundleLock(),
+      agent: harness.agent,
+      settings: () => ({ directory: harness.bundle, ingest: true }),
+      jobs: harness.jobs.jobs,
+      logger: () => undefined,
+    });
+
+    const error = await service.run({ meetingId: MEETING_ID }).catch((thrown: unknown) => thrown);
+
+    expectOkfError(error, "OKF_GIT_FAILED");
+    // The attempt is recorded before any git work, so a preparation failure is
+    // explained in the panel instead of leaving no row at all.
+    expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toEqual([
+      expect.objectContaining({
+        state: "failed",
+        errorCode: "OKF_GIT_FAILED",
+        errorMessage: expect.stringContaining("ENOENT"),
+      }),
+    ]);
+  });
+
+  it("ignores an attribution reader that no longer knows the meeting", async () => {
+    const harness = await createHarness();
+    const service = createOkfIngestionService({
+      repository: harness.meetings,
+      attempts: harness.attempts,
+      speakerNames: {
+        list: () => {
+          throw new Error("MEETING_NOT_FOUND");
+        },
+      },
+      git: transaction,
+      lock: createOkfBundleLock(),
+      agent: harness.agent,
+      settings: () => ({ directory: harness.bundle, ingest: true }),
+      jobs: harness.jobs.jobs,
+      logger: () => undefined,
+    });
+
+    // A panel row can outlive its meeting (a Sync removes meetings). Reading
+    // attribution must not become the failure the user sees.
+    await expect(service.run({ meetingId: MEETING_ID })).resolves.toMatchObject({ kind: "ingested" });
   });
 
   it("does not start work when no folder is configured", async () => {

@@ -13,9 +13,14 @@ import { stat } from "node:fs/promises";
 import { listBundleMeetingIds } from "../okf/bundle-meetings.js";
 import { OkfError } from "../okf/contracts.js";
 import type { MeetingRepository } from "../storage/meeting-repository.js";
+import { MAX_STORED_MEETINGS } from "../storage/stored-meeting-query.js";
 
-/** Upper bound for one reconciliation; far above any realistic library. */
-export const MAX_SYNC_MEETINGS = 500;
+/**
+ * Upper bound for one reconciliation. It is the storage page size: the query
+ * rejects anything larger, and asking for a bigger page turned every sync into
+ * "Stored meeting limit is invalid" instead of a count.
+ */
+export const MAX_SYNC_MEETINGS = MAX_STORED_MEETINGS;
 
 export interface StoredMeetingSyncResult {
   /** Stored meetings the folder does not hold. */
