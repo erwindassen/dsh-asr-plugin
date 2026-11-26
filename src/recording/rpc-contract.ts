@@ -21,6 +21,10 @@ export const RECORDING_RPC_ENDPOINTS = [
   "transcripts/speaker-names",
   "transcripts/save-speaker-names",
   "okf/choose-directory",
+  "meetings/list",
+  "meetings/transcript",
+  "okf/ingest",
+  "okf/ingest/status",
 ] as const;
 
 export type RecordingRpcEndpoint = (typeof RECORDING_RPC_ENDPOINTS)[number];
@@ -109,6 +113,52 @@ export interface TranscriptExportRpcValue {
   readonly transcript_version: number;
 }
 
+/** One stored meeting the panel can load into its draft view. */
+export interface StoredMeetingRpcEntry {
+  readonly meeting_id: string;
+  readonly title: string;
+  readonly started_at: string | null;
+  readonly duration_ms: number | null;
+  readonly transcript_version: number;
+  readonly status: "completed" | "partial";
+  /** Version the browser already knows is in the knowledge base, or null. */
+  readonly ingested_transcript_version: number | null;
+}
+
+export interface StoredMeetingsRpcPayload {
+  readonly limit?: number;
+}
+
+export interface StoredMeetingsRpcValue {
+  readonly items: readonly StoredMeetingRpcEntry[];
+}
+
+export interface StoredMeetingTranscriptRpcPayload {
+  readonly meeting_id: string;
+}
+
+export interface StoredMeetingTranscriptRpcValue {
+  readonly meeting_id: string;
+  readonly title: string;
+  readonly transcript_version: number;
+  readonly duration_ms: number | null;
+  readonly segments: readonly RecordingRpcSegment[];
+}
+
+export interface OkfIngestRpcPayload {
+  readonly meeting_id: string;
+  readonly force?: boolean;
+}
+
+/** One ingestion attempt, from the queue to its terminal state. */
+export interface OkfIngestRpcValue {
+  readonly job_id: string | null;
+  readonly state: "idle" | "running" | "succeeded" | "failed";
+  readonly transcript_version: number | null;
+  readonly error_code: string | null;
+  readonly message: string | null;
+}
+
 export interface RecordingRpcControlPayload {
   readonly action: "start" | "stop" | "mic_on" | "mic_off" | "system_on" | "system_off";
   readonly meeting_id?: string;
@@ -153,6 +203,7 @@ export interface AudioDeviceInventoryRpc {
 }
 
 export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string
+  | StoredMeetingsRpcValue | StoredMeetingTranscriptRpcValue | OkfIngestRpcValue
   | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 
 export type RecordingRpcResult<T = RecordingRpcValue> =
