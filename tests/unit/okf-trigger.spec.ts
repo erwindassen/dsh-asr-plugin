@@ -101,6 +101,7 @@ class FakeMeetingRepository implements MeetingRepository {
   getCommittedTranscriptSnapshot(_meetingId: string) { return unsupported(); }
   getMeetingPage(_input: In<"getMeetingPage">) { return unsupported(); }
   listMeetingReferenceRecords(_input: In<"listMeetingReferenceRecords">) { return unsupported(); }
+  listStoredMeetings(_limit: number) { return unsupported(); }
   listDeletingMeetings() { return unsupported(); }
   listRecordingsNeedingRecovery() { return unsupported(); }
   recordDeletionFailure(_input: In<"recordDeletionFailure">) { return unsupported(); }
