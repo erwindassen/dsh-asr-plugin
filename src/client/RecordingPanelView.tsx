@@ -61,10 +61,14 @@ export { isRecordingActive } from "./recording-view-state.js";
  */
 export function canIngest(props: Pick<PanelViewProps, "ingestion" | "pending" | "storedMeetings" | "view">): boolean {
   const stored = props.storedMeetings;
-  return stored !== undefined && stored.selected !== null && stored.transcript !== null
-    && !stored.transcriptLoading && stored.transcriptError === null
-    && !isRecordingActive(props.view) && !props.pending
-    && props.ingestion !== undefined && !props.ingestion.running;
+  if (stored === undefined || props.ingestion === undefined || props.ingestion.running) return false;
+  if (isRecordingActive(props.view) || props.pending) return false;
+  // A meeting displayed from the list needs its transcript loaded first.
+  if (stored.selected !== null) {
+    return stored.transcript !== null && !stored.transcriptLoading && stored.transcriptError === null;
+  }
+  // Otherwise the panel's own meeting can be ingested once it is committed.
+  return props.view?.transcriptVersion !== null && props.view?.transcriptVersion !== undefined;
 }
 
 function phaseState(view: RecordingRpcView | null): StateDotState {

@@ -109,6 +109,7 @@ describe("panelIngestion", () => {
     const value = await panelIngestion(test.service).start(MEETING_ID, { force: false });
     expect(value).toMatchObject({ state: "failed", job_id: null });
     expect(value.message).toBe("Choose an Open knowledge base folder in settings first.");
+    expect(value.error_code).toBe("OKF_NOT_CONFIGURED");
     expect(JSON.stringify(value)).not.toContain("/secret");
   });
 

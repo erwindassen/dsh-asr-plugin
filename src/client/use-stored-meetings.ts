@@ -64,10 +64,12 @@ function errorCode(cause: unknown): string | null {
 /**
  * Only the categories the panel can explain are kept; the raw message may name
  * a folder, a transcript or an internal failure and must never reach the UI.
+ * A failed RPC wraps the host code inside its message, so match on containment.
  */
 export function ingestionFailure(code: string | null): IngestionFailure {
-  if (code === "OKF_NOT_CONFIGURED") return "notConfigured";
-  if (code === "OKF_BUSY") return "busy";
+  if (code === null) return "unavailable";
+  if (code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
+  if (code.includes("OKF_BUSY")) return "busy";
   return "unavailable";
 }
 
@@ -183,8 +185,18 @@ export function useStoredMeetings(options: StoredMeetingsOptions): StoredMeeting
     return () => controller.abort();
   }, [client, mounted, reloadToken]);
 
+  const wasActive = useRef(false);
   useEffect(() => {
-    if (active) setSelected(null);
+    if (active) {
+      setSelected(null);
+      wasActive.current = true;
+      return;
+    }
+    // A finished recording adds a meeting; list again so it can be picked.
+    if (wasActive.current) {
+      wasActive.current = false;
+      setReloadToken(token => token + 1);
+    }
   }, [active]);
 
   useEffect(() => {

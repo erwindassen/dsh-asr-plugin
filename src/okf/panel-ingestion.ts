@@ -33,7 +33,7 @@ export function panelIngestion(service: OkfIngestionService): PanelIngestion {
           job_id: null,
           state: "failed",
           transcript_version: null,
-          error_code: null,
+          error_code: errorCode(error),
           message: ingestionMessage(error),
         };
       }
@@ -87,12 +87,16 @@ export function panelIngestion(service: OkfIngestionService): PanelIngestion {
   };
 }
 
+/** A stable code the panel can explain; never the underlying message. */
+function errorCode(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || !("code" in error)) return null;
+  const code = (error as { code: unknown }).code;
+  return typeof code === "string" ? code : null;
+}
+
 /** Short, path-free text for the panel; never the underlying cause. */
 function ingestionMessage(error: unknown): string {
-  const code = typeof error === "object" && error !== null && "code" in error
-    ? String((error as { code: unknown }).code)
-    : "";
-  switch (code) {
+  switch (errorCode(error)) {
     case "OKF_NOT_CONFIGURED":
       return "Choose an Open knowledge base folder in settings first.";
     case "OKF_NO_TRANSCRIPT":

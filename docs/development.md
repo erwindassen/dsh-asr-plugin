@@ -68,11 +68,15 @@ session work root. Workers do not use network or SQLite.
 Product child processes use DSH Subprocess. The signed Helper owns capture,
 macOS permission interaction, chunks and watchdogs.
 
-Open knowledge base ingestion is host code plus one child Agent. `src/okf/contracts.ts`
-holds the shared types and ports; storage keeps attempt state in `okf_ingestion`;
-`src/okf/git-transaction.ts` makes one ingestion one commit; `src/host/okf-host.ts`
-wires the slices into `apply`. Bundle writes use `node:fs` from host code because
-the child Agent's workspace is the bundle itself. See [okf](okf.md).
+Open knowledge base ingestion is host code plus one child Agent, started by the
+recording panel or `/asr-ingest` rather than by a transcript commit.
+`src/okf/contracts.ts` holds the shared types and ports; storage keeps attempt state
+in `okf_ingestion`; `src/okf/git-transaction.ts` makes one ingestion one commit;
+`src/okf/panel-ingestion.ts` maps an attempt onto the panel's wire shape;
+`src/application/stored-meeting-panel.ts` is the read model behind the panel's
+meeting list; `src/host/okf-host.ts` wires the slices into `apply`. Bundle writes
+use `node:fs` from host code because the child Agent's workspace is the bundle
+itself. See [okf](okf.md).
 
 Speaker attribution is one row per meeting and label in `meeting_speaker_names`;
 `src/transcripts/speaker-attribution.ts` owns normalisation and the problem kinds,

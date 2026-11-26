@@ -126,6 +126,17 @@ it("keeps ingest disabled until a committed transcript is selected", () => {
   expect(canIngest(props({ storedMeetings: storedMeetings({ selected: null, transcript: null }) }))).toBe(false);
 });
 
+it("ingests the panel's own meeting once its transcript is committed", () => {
+  const idle = { ...recordingView, phase: "completed", resultStatus: "completed", transcriptVersion: 1 } as const;
+  expect(canIngest(props({
+    view: idle, storedMeetings: storedMeetings({ selected: null, transcript: null }),
+  }))).toBe(true);
+  const draftOnly = { ...recordingView, phase: "cancelled", transcriptVersion: null } as const;
+  expect(canIngest(props({
+    view: draftOnly, storedMeetings: storedMeetings({ selected: null, transcript: null }),
+  }))).toBe(false);
+});
+
 it("keeps ingest disabled while a recording owns the panel", () => {
   const overrides = { view: recordingView };
   expect(canIngest(props(overrides))).toBe(false);

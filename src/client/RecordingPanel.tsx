@@ -429,8 +429,13 @@ export function RecordingPanel(props: RecordingPanelProps) {
   const storedMeetings = useStoredMeetings({
     active: isRecordingActive(snapshot.view), client, mounted: snapshot.mounted,
   });
+  // Ingest what the panel is showing: the meeting picked from the list, or the
+  // panel's own meeting once its transcript is committed.
+  const committed = snapshot.view?.transcriptVersion === null || snapshot.view?.transcriptVersion === undefined
+    ? null
+    : snapshot.view.meetingId;
   const ingestion = useMeetingIngestion({
-    client, meetingId: storedMeetings.selected?.meeting_id ?? null,
+    client, meetingId: storedMeetings.selected?.meeting_id ?? committed,
     mounted: snapshot.mounted, onIngested: storedMeetings.reload,
   });
   const preview = storedMeetings.selected === null ? snapshot.preview : (storedMeetings.transcript?.segments ?? []);
@@ -445,7 +450,10 @@ export function RecordingPanel(props: RecordingPanelProps) {
   });
   const exportTranscript = useTranscriptExport({
     client, labels, mounted: snapshot.mounted, setError: snapshot.setError, setNotice: setExportNotice,
-    setPending, settings, speakerNames: attribution.names, translate, view: snapshot.view,
+    setPending, settings, translate, view: snapshot.view,
+    // Attribution belongs to the transcript on screen; while a stored meeting is
+    // displayed the export still targets the live one, so its names stay unused.
+    speakerNames: storedMeetings.selected === null ? attribution.names : {},
   });
   const failure = snapshot.error ?? trackError(snapshot.view);
   return <RecordingPanelView devices={devices} exportNotice={exportNotice} exportTranscript={exportTranscript}
