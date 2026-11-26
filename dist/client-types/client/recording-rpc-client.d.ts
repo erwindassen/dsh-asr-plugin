@@ -1,5 +1,5 @@
 import type { ClientConnectionRpc } from "@deepseek-ai/dsh-client-connection/client";
-import { type AudioDeviceInventoryRpc, type MeetingReferenceRpcCandidate, type MeetingReferenceRpcCandidatesPayload, type MeetingReferenceRpcResolvePayload, type RecordingRpcControlPayload, type RecordingRpcStateValue, type RecordingRpcView, type SaveSpeakerNamesRpcPayload, type SpeakerNamesRpcPayload, type SpeakerNamesRpcValue, type TranscriptExportRpcPayload, type TranscriptExportRpcValue } from "../recording/rpc-contract.js";
+import { type AudioDeviceInventoryRpc, type MeetingReferenceRpcCandidate, type MeetingReferenceRpcCandidatesPayload, type MeetingReferenceRpcResolvePayload, type RecordingRpcControlPayload, type RecordingRpcStateValue, type RecordingRpcView, type OkfIngestRpcPayload, type OkfIngestRpcValue, type SaveSpeakerNamesRpcPayload, type StoredMeetingRpcEntry, type StoredMeetingTranscriptRpcPayload, type StoredMeetingTranscriptRpcValue, type SpeakerNamesRpcPayload, type SpeakerNamesRpcValue, type TranscriptExportRpcPayload, type TranscriptExportRpcValue } from "../recording/rpc-contract.js";
 export declare function parseRecordingRpcView(value: unknown): RecordingRpcView;
 export declare class RecordingRpcClient {
     private readonly rpc;
@@ -14,6 +14,14 @@ export declare class RecordingRpcClient {
     speakerNames(payload: SpeakerNamesRpcPayload, signal?: AbortSignal): Promise<SpeakerNamesRpcValue>;
     /** Replaces the stored attribution for one meeting; an empty map clears it. */
     saveSpeakerNames(payload: SaveSpeakerNamesRpcPayload, signal?: AbortSignal): Promise<SpeakerNamesRpcValue>;
+    /** Stored meetings the panel can load into its draft view, newest first. */
+    listMeetings(limit?: number, signal?: AbortSignal): Promise<readonly StoredMeetingRpcEntry[]>;
+    /** Committed transcript of one stored meeting, for the draft view. */
+    meetingTranscript(payload: StoredMeetingTranscriptRpcPayload, signal?: AbortSignal): Promise<StoredMeetingTranscriptRpcValue>;
+    /** Starts one ingestion run for a stored meeting. */
+    ingestMeeting(payload: OkfIngestRpcPayload, signal?: AbortSignal): Promise<OkfIngestRpcValue>;
+    /** Reads the current or last ingestion attempt for one stored meeting. */
+    ingestionStatus(payload: StoredMeetingTranscriptRpcPayload, signal?: AbortSignal): Promise<OkfIngestRpcValue>;
     /** Lists CoreAudio devices through the signed helper. */
     listDevices(signal?: AbortSignal): Promise<AudioDeviceInventoryRpc>;
     /** Resolves the folder the user picked, or null when the dialog was cancelled. */

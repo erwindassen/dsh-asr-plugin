@@ -15,6 +15,7 @@ export interface MeetingRepository {
     getCommittedTranscriptSnapshot(meetingId: string): CommittedTranscriptSnapshot;
     getMeetingPage(input: GetMeetingPageInput): MeetingPage;
     listMeetingReferenceRecords(input: ListMeetingReferenceRecordsInput): readonly MeetingRecord[];
+    listStoredMeetings(limit: number): readonly MeetingRecord[];
     listDeletingMeetings(): readonly MeetingRecord[];
     listRecordingsNeedingRecovery(): readonly MeetingRecord[];
     recordDeletionFailure(input: RecordDeletionFailureInput): MeetingRecord;

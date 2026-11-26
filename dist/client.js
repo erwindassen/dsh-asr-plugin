@@ -711,9 +711,9 @@ window.__ModuleLoader__.load({
 							children: t("okfConsent")
 						})] })
 					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 						className: ModelSettingsPage_module_default.downloadRouting,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("label", { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 							className: ModelSettingsPage_module_default.label,
 							children: t("okfFolder")
 						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
@@ -726,21 +726,7 @@ window.__ModuleLoader__.load({
 								directory: event.target.value,
 								autoIngest: value.autoIngest
 							})
-						})] }), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-							className: ModelSettingsPage_module_default.runtimeRow,
-							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-								className: ModelSettingsPage_module_default.label,
-								children: t("okfAutoIngest")
-							}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Switch, {
-								checked: value.autoIngest,
-								label: t("okfAutoIngest"),
-								disabled: !writable || picking,
-								onChange: (next) => setDraft({
-									directory: value.directory,
-									autoIngest: next
-								})
-							})]
-						})]
+						})] })
 					}),
 					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: ModelSettingsPage_module_default.downloadActions,
@@ -1749,6 +1735,7 @@ window.__ModuleLoader__.load({
 			"header": "Expx1a_header",
 			"hint": "Expx1a_hint",
 			"icon": "Expx1a_icon",
+			"ingest": "Expx1a_ingest",
 			"mainControl": "Expx1a_mainControl",
 			"menu": "Expx1a_menu",
 			"menuCheck": "Expx1a_menuCheck",
@@ -1777,6 +1764,13 @@ window.__ModuleLoader__.load({
 			"split": "Expx1a_split",
 			"splitMain": "Expx1a_splitMain",
 			"status": "Expx1a_status",
+			"stored": "Expx1a_stored",
+			"storedError": "Expx1a_storedError",
+			"storedHeading": "Expx1a_storedHeading",
+			"storedList": "Expx1a_storedList",
+			"storedMeta": "Expx1a_storedMeta",
+			"storedRow": "Expx1a_storedRow",
+			"storedTitle": "Expx1a_storedTitle",
 			"text": "Expx1a_text",
 			"toggle": "Expx1a_toggle",
 			"tracks": "Expx1a_tracks",
@@ -1838,6 +1832,22 @@ window.__ModuleLoader__.load({
 						translate
 					})]
 				})
+			});
+		}
+		function IngestControl({ canIngest, ingestion, translate }) {
+			const busy = ingestion?.running ?? false;
+			const label = translate(busy ? "panel.ingesting" : "panel.ingest");
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+				variant: "ghost",
+				className: `${RecordingPanel_module_default.ingest} ${!canIngest ? RecordingPanel_module_default.off : ""}`,
+				"aria-label": label,
+				"aria-busy": busy,
+				disabled: !canIngest || busy,
+				onClick: () => void ingestion?.start(),
+				children: busy ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					className: RecordingPanel_module_default.spinner,
+					"aria-hidden": "true"
+				}) : label
 			});
 		}
 		function Chevron() {
@@ -1977,6 +1987,7 @@ window.__ModuleLoader__.load({
 			const canReference = props.hasRecordingHistory || props.view?.recordingStartedAtMs != null;
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
 				/* @__PURE__ */ (0, react_jsx_runtime.jsx)(MainControl, { ...props }),
+				/* @__PURE__ */ (0, react_jsx_runtime.jsx)(IngestControl, { ...props }),
 				/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TrackButton, {
 					...props,
 					track: "mic"
@@ -1997,6 +2008,12 @@ window.__ModuleLoader__.load({
 					})
 				})
 			] });
+		}
+		//#endregion
+		//#region src/client/recording-view-state.ts
+		/** A live recording owns the draft area, so stored transcripts stay inactive. */
+		function isRecordingActive(view) {
+			return view?.phase === "starting" || view?.phase === "recording" || view?.phase === "finalizing";
 		}
 		//#endregion
 		//#region src/client/RecognizerSelect.tsx
@@ -2192,12 +2209,21 @@ window.__ModuleLoader__.load({
 		}
 		//#endregion
 		//#region src/client/RecordingPanelView.tsx
-		function isActive(view) {
-			return view?.phase === "starting" || view?.phase === "recording" || view?.phase === "finalizing";
+		/**
+		* Ingestion is user-driven: it becomes available only for a committed
+		* transcript that is currently displayed and only while no recording owns the
+		* draft area.
+		*/
+		function canIngest(props) {
+			const stored = props.storedMeetings;
+			if (stored === void 0 || props.ingestion === void 0 || props.ingestion.running) return false;
+			if (isRecordingActive(props.view) || props.pending) return false;
+			if (stored.selected !== null) return stored.transcript !== null && !stored.transcriptLoading && stored.transcriptError === null;
+			return props.view?.transcriptVersion !== null && props.view?.transcriptVersion !== void 0;
 		}
 		function phaseState(view) {
 			if (waitingForSound(view)) return "warning";
-			if (isActive(view)) return "ongoing";
+			if (isRecordingActive(view)) return "ongoing";
 			if (view?.phase === "failed") return "error";
 			if (view?.phase === "partial") return "warning";
 			return view?.phase === "completed" ? "done" : "idle";
@@ -2238,25 +2264,30 @@ window.__ModuleLoader__.load({
 				}, track))
 			})] });
 		}
-		function Preview({ attribution, preview, translate, view }) {
+		function Preview({ attribution, preview, stored, translate, view }) {
 			const names = attribution?.names ?? {};
+			const storedPreview = stored ?? null;
+			const title = translate(storedPreview === null ? "panel.previewAria" : "panel.storedTitle");
+			const storedHint = storedPreview?.failed === true ? "panel.storedLoadFailed" : storedPreview?.version === null || storedPreview?.version === void 0 ? "panel.storedLoading" : "panel.storedEmptyTranscript";
+			const empty = preview.length === 0 ? storedPreview === null ? translate(view === null ? "panel.readyHint" : "panel.draftWaiting") : translate(storedHint) : null;
+			const chip = storedPreview === null ? translate("panel.previewSpeaker") : storedPreview.failed === true ? translate("panel.storedLoadFailed") : storedPreview.version === null ? translate("panel.storedLoading") : translate("panel.storedVersion", { version: String(storedPreview.version) });
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 				className: RecordingPanel_module_default.preview,
-				"aria-label": translate("panel.previewAria"),
+				"aria-label": title,
 				children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: RecordingPanel_module_default.previewHeading,
 					children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: RecordingPanel_module_default.previewTitle,
-						children: translate("panel.previewAria")
+						children: title
 					}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: RecordingPanel_module_default.chip,
-						children: translate("panel.previewSpeaker")
+						children: chip
 					})]
 				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 					className: RecordingPanel_module_default.segments,
-					children: [preview.length === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+					children: [empty !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 						className: RecordingPanel_module_default.hint,
-						children: translate(view === null ? "panel.readyHint" : "panel.draftWaiting")
+						children: empty
 					}), preview.map((segment) => /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: RecordingPanel_module_default.segment,
 						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {
@@ -2268,6 +2299,100 @@ window.__ModuleLoader__.load({
 						})]
 					}, segment.seq))]
 				})]
+			});
+		}
+		function storedDate(entry) {
+			if (entry.started_at === null) return "";
+			const date = new Date(entry.started_at);
+			return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString();
+		}
+		function ingestionFailureKey(failure) {
+			if (failure === "notConfigured") return "panel.ingestNotConfigured";
+			if (failure === "busy") return "panel.ingestBusy";
+			if (failure === "timeout") return "panel.ingestTimeout";
+			return "panel.ingestFailed";
+		}
+		/** Committed meetings the panel can preview and ingest into the knowledge base. */
+		function StoredMeetingsSection({ ingestion, storedMeetings, translate }) {
+			if (storedMeetings === void 0) return null;
+			const { disabled, entries, error, loading, select, selected, transcriptError, transcriptLoading } = storedMeetings;
+			const busy = ingestion?.running ?? false;
+			const failure = ingestion?.outcome === "failed" ? ingestion.failure : null;
+			const emptyHint = error === null ? translate("panel.storedEmpty") : translate("panel.storedLoadFailed");
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("section", {
+				className: RecordingPanel_module_default.stored,
+				"aria-label": translate("panel.storedMeetings"),
+				children: [
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: RecordingPanel_module_default.storedHeading,
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: RecordingPanel_module_default.previewTitle,
+							children: translate("panel.storedMeetings")
+						}), loading && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: RecordingPanel_module_default.spinner,
+							"aria-hidden": "true"
+						})]
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						children: translate("panel.storedHint")
+					}),
+					entries.length === 0 && !loading && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						children: emptyHint
+					}),
+					entries.length > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						className: RecordingPanel_module_default.storedList,
+						role: "listbox",
+						"aria-label": translate("panel.storedMeetings"),
+						children: entries.map((entry) => {
+							const ingested = entry.ingested_transcript_version !== null && entry.ingested_transcript_version >= entry.transcript_version;
+							const date = storedDate(entry);
+							return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
+								type: "button",
+								role: "option",
+								"aria-selected": selected?.meeting_id === entry.meeting_id,
+								className: RecordingPanel_module_default.storedRow,
+								disabled: disabled || busy,
+								onClick: () => select(entry),
+								children: [
+									/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: RecordingPanel_module_default.storedTitle,
+										children: entry.title === "" ? translate("panel.storedUntitled") : entry.title
+									}),
+									date !== "" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: RecordingPanel_module_default.storedMeta,
+										children: date
+									}),
+									ingested && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+										className: RecordingPanel_module_default.chip,
+										children: translate("panel.storedIngested")
+									})
+								]
+							}, entry.meeting_id);
+						})
+					}),
+					transcriptLoading && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						role: "status",
+						children: translate("panel.storedLoading")
+					}),
+					transcriptError !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.storedError,
+						role: "alert",
+						children: translate("panel.storedLoadFailed")
+					}),
+					ingestion?.outcome === "succeeded" && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						role: "status",
+						children: translate("panel.ingested")
+					}),
+					failure !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.storedError,
+						role: "alert",
+						children: translate(ingestionFailureKey(failure))
+					})
+				]
 			});
 		}
 		/**
@@ -2326,7 +2451,7 @@ window.__ModuleLoader__.load({
 			})] });
 		}
 		function FooterStatus({ translate, view }) {
-			const text = isActive(view) ? view?.draftStale ? translate("panel.draftStale") : freshness(view, translate) : view?.finalizationMs === null || view?.finalizationMs === void 0 ? translate("panel.previewHint") : translate("panel.finalization", { seconds: String(Math.round(view.finalizationMs / 100) / 10) });
+			const text = isRecordingActive(view) ? view?.draftStale ? translate("panel.draftStale") : freshness(view, translate) : view?.finalizationMs === null || view?.finalizationMs === void 0 ? translate("panel.previewHint") : translate("panel.finalization", { seconds: String(Math.round(view.finalizationMs / 100) / 10) });
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 				className: `${RecordingPanel_module_default.hint} ${view?.draftStale ? RecordingPanel_module_default.warning : ""}`,
 				children: text
@@ -2383,7 +2508,10 @@ window.__ModuleLoader__.load({
 							...layout.move,
 							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingIcon, { name: "grip" })
 						}),
-						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingControls, { ...props }),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingControls, {
+							...props,
+							canIngest: canIngest(props)
+						}),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", { className: RecordingPanel_module_default.spacer }),
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecognizerSelect, {
 							revision: props.settingsRevision,
@@ -2422,7 +2550,8 @@ window.__ModuleLoader__.load({
 						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(SpeakerAttributionSection, {
 							attribution: props.attribution,
 							translate
-						})
+						}),
+						/* @__PURE__ */ (0, react_jsx_runtime.jsx)(StoredMeetingsSection, { ...props })
 					]
 				}), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("footer", {
 					className: RecordingPanel_module_default.footer,
@@ -2475,6 +2604,51 @@ window.__ModuleLoader__.load({
 			return names;
 		}
 		const UUID_PATTERN$1 = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+		/** One row of the panel's stored-meeting list. */
+		function storedMeeting(value) {
+			const item = record(value);
+			exact(item, [
+				"meeting_id",
+				"title",
+				"started_at",
+				"duration_ms",
+				"transcript_version",
+				"status",
+				"ingested_transcript_version"
+			]);
+			if (typeof item.meeting_id !== "string" || !UUID_PATTERN$1.test(item.meeting_id)) throw new Error("INVALID_RESPONSE");
+			if (typeof item.title !== "string") throw new Error("INVALID_RESPONSE");
+			if (item.status !== "completed" && item.status !== "partial") throw new Error("INVALID_RESPONSE");
+			const ingested = item.ingested_transcript_version;
+			return {
+				meeting_id: item.meeting_id,
+				title: item.title,
+				started_at: nullableString(item.started_at),
+				duration_ms: item.duration_ms === null ? null : nonnegativeInteger(item.duration_ms),
+				transcript_version: nonnegativeInteger(item.transcript_version),
+				status: item.status,
+				ingested_transcript_version: ingested === null ? null : nonnegativeInteger(ingested)
+			};
+		}
+		function okfIngestValue(value) {
+			const item = record(value);
+			exact(item, [
+				"job_id",
+				"state",
+				"transcript_version",
+				"error_code",
+				"message"
+			]);
+			const state = item.state;
+			if (state !== "idle" && state !== "running" && state !== "succeeded" && state !== "failed") throw new Error("INVALID_RESPONSE");
+			return {
+				job_id: nullableString(item.job_id),
+				state,
+				transcript_version: item.transcript_version === null ? null : nonnegativeInteger(item.transcript_version),
+				error_code: nullableString(item.error_code),
+				message: nullableString(item.message)
+			};
+		}
 		function record(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("INVALID_RESPONSE");
 			return value;
@@ -2738,6 +2912,42 @@ window.__ModuleLoader__.load({
 				exact(value, ["speaker_names"]);
 				return { speaker_names: speakerNameMap(value.speaker_names) };
 			}
+			/** Stored meetings the panel can load into its draft view, newest first. */
+			async listMeetings(limit, signal) {
+				const value = record(await call(this.rpc, "meetings/list", limit === void 0 ? {} : { limit }, signal));
+				exact(value, ["items"]);
+				if (!Array.isArray(value.items)) throw new Error("INVALID_RESPONSE");
+				return value.items.map(storedMeeting);
+			}
+			/** Committed transcript of one stored meeting, for the draft view. */
+			async meetingTranscript(payload, signal) {
+				const value = record(await call(this.rpc, "meetings/transcript", payload, signal));
+				exact(value, [
+					"meeting_id",
+					"title",
+					"transcript_version",
+					"duration_ms",
+					"segments"
+				]);
+				if (typeof value.meeting_id !== "string" || !UUID_PATTERN$1.test(value.meeting_id)) throw new Error("INVALID_RESPONSE");
+				if (typeof value.title !== "string") throw new Error("INVALID_RESPONSE");
+				if (!Array.isArray(value.segments)) throw new Error("INVALID_RESPONSE");
+				return {
+					meeting_id: value.meeting_id,
+					title: value.title,
+					transcript_version: nonnegativeInteger(value.transcript_version),
+					duration_ms: value.duration_ms === null ? null : nonnegativeInteger(value.duration_ms),
+					segments: value.segments.map(segment)
+				};
+			}
+			/** Starts one ingestion run for a stored meeting. */
+			async ingestMeeting(payload, signal) {
+				return okfIngestValue(await call(this.rpc, "okf/ingest", payload, signal));
+			}
+			/** Reads the current or last ingestion attempt for one stored meeting. */
+			async ingestionStatus(payload, signal) {
+				return okfIngestValue(await call(this.rpc, "okf/ingest/status", payload, signal));
+			}
 			/** Lists CoreAudio devices through the signed helper. */
 			async listDevices(signal) {
 				return audioDeviceInventory(await call(this.rpc, "devices/list", {}, signal));
@@ -2757,6 +2967,201 @@ window.__ModuleLoader__.load({
 				return value;
 			}
 		};
+		//#endregion
+		//#region src/client/use-stored-meetings.ts
+		/** Poll cadence while the host works on an ingestion. */
+		const INGEST_POLL_MS = 2e3;
+		function pause(ms, signal) {
+			return new Promise((resolve) => {
+				if (signal.aborted) {
+					resolve();
+					return;
+				}
+				let timer;
+				const onAbort = () => {
+					clearTimeout(timer);
+					resolve();
+				};
+				timer = setTimeout(() => {
+					signal.removeEventListener("abort", onAbort);
+					resolve();
+				}, ms);
+				signal.addEventListener("abort", onAbort, { once: true });
+			});
+		}
+		function errorCode$1(cause) {
+			if (cause instanceof Error) return cause.message;
+			return typeof cause === "string" ? cause : null;
+		}
+		/**
+		* Only the categories the panel can explain are kept; the raw message may name
+		* a folder, a transcript or an internal failure and must never reach the UI.
+		* A failed RPC wraps the host code inside its message, so match on containment.
+		*/
+		function ingestionFailure(code) {
+			if (code === null) return "unavailable";
+			if (code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
+			if (code.includes("OKF_BUSY")) return "busy";
+			return "unavailable";
+		}
+		/**
+		* Starts one user-driven ingestion and polls its attempt until it settles.
+		* The poll is bounded; a timeout shows the same short retry message as a
+		* failure instead of leaving the button spinning forever.
+		*/
+		function useMeetingIngestion(options) {
+			const { client, meetingId, mounted, onIngested } = options;
+			const [running, setRunning] = (0, react.useState)(false);
+			const [outcome, setOutcome] = (0, react.useState)(null);
+			const [failure, setFailure] = (0, react.useState)(null);
+			const active = (0, react.useRef)(null);
+			const generation = (0, react.useRef)(0);
+			(0, react.useEffect)(() => {
+				setOutcome(null);
+				setFailure(null);
+				return () => {
+					generation.current += 1;
+					active.current?.abort();
+					setRunning(false);
+				};
+			}, [meetingId]);
+			return {
+				running,
+				outcome,
+				failure,
+				start: (0, react.useCallback)(() => {
+					if (meetingId === null) return;
+					const controller = new AbortController();
+					active.current?.abort();
+					active.current = controller;
+					const request = ++generation.current;
+					setRunning(true);
+					setOutcome(null);
+					setFailure(null);
+					(async () => {
+						let status;
+						try {
+							status = await client.ingestMeeting({ meeting_id: meetingId }, controller.signal);
+							for (let attempt = 0; status.state !== "succeeded" && status.state !== "failed" && attempt < 150; attempt += 1) {
+								await pause(INGEST_POLL_MS, controller.signal);
+								if (controller.signal.aborted || !mounted.current) return;
+								status = await client.ingestionStatus({ meeting_id: meetingId }, controller.signal);
+							}
+						} catch (cause) {
+							if (controller.signal.aborted || !mounted.current || generation.current !== request) return;
+							setRunning(false);
+							setFailure(ingestionFailure(errorCode$1(cause)));
+							setOutcome("failed");
+							return;
+						}
+						if (controller.signal.aborted || !mounted.current || generation.current !== request) return;
+						setRunning(false);
+						if (status.state === "succeeded") {
+							setOutcome("succeeded");
+							onIngested?.(meetingId);
+							return;
+						}
+						setFailure(status.state === "failed" ? ingestionFailure(status.error_code) : "timeout");
+						setOutcome("failed");
+					})();
+				}, [
+					client,
+					meetingId,
+					mounted,
+					onIngested
+				])
+			};
+		}
+		/**
+		* Lists committed meetings and loads one committed transcript on demand. A
+		* live recording clears the selection so the draft area always follows it.
+		*/
+		function useStoredMeetings(options) {
+			const { active, client, mounted } = options;
+			const [entries, setEntries] = (0, react.useState)([]);
+			const [loading, setLoading] = (0, react.useState)(true);
+			const [error, setError] = (0, react.useState)(null);
+			const [reloadToken, setReloadToken] = (0, react.useState)(0);
+			const [selected, setSelected] = (0, react.useState)(null);
+			const [transcript, setTranscript] = (0, react.useState)(null);
+			const [transcriptLoading, setTranscriptLoading] = (0, react.useState)(false);
+			const [transcriptError, setTranscriptError] = (0, react.useState)(null);
+			const [selectionAttempt, setSelectionAttempt] = (0, react.useState)(0);
+			(0, react.useEffect)(() => {
+				const controller = new AbortController();
+				setLoading(true);
+				client.listMeetings(void 0, controller.signal).then((items) => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setEntries(items);
+					setError(null);
+					setLoading(false);
+				}).catch(() => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setError("LOAD_FAILED");
+					setLoading(false);
+				});
+				return () => controller.abort();
+			}, [
+				client,
+				mounted,
+				reloadToken
+			]);
+			const wasActive = (0, react.useRef)(false);
+			(0, react.useEffect)(() => {
+				if (active) {
+					setSelected(null);
+					wasActive.current = true;
+					return;
+				}
+				if (wasActive.current) {
+					wasActive.current = false;
+					setReloadToken((token) => token + 1);
+				}
+			}, [active]);
+			(0, react.useEffect)(() => {
+				if (selected === null) {
+					setTranscript(null);
+					setTranscriptLoading(false);
+					setTranscriptError(null);
+					return;
+				}
+				const controller = new AbortController();
+				setTranscript(null);
+				setTranscriptError(null);
+				setTranscriptLoading(true);
+				client.meetingTranscript({ meeting_id: selected.meeting_id }, controller.signal).then((value) => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setTranscript(value);
+					setTranscriptLoading(false);
+				}).catch(() => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setTranscriptError("LOAD_FAILED");
+					setTranscriptLoading(false);
+				});
+				return () => controller.abort();
+			}, [
+				client,
+				mounted,
+				selected,
+				selectionAttempt
+			]);
+			return {
+				entries,
+				loading,
+				error,
+				selected,
+				transcript,
+				transcriptLoading,
+				transcriptError,
+				disabled: active,
+				select: (0, react.useCallback)((entry) => {
+					setSelected(entry);
+					setSelectionAttempt((attempt) => attempt + 1);
+				}, []),
+				clear: (0, react.useCallback)(() => setSelected(null), []),
+				reload: (0, react.useCallback)(() => setReloadToken((token) => token + 1), [])
+			};
+		}
 		//#endregion
 		//#region src/client/RecordingPanel.tsx
 		function recordOrEmpty(value) {
@@ -3102,12 +3507,29 @@ window.__ModuleLoader__.load({
 				mic: typeof configValues.mic_device_uid === "string" ? configValues.mic_device_uid : "",
 				system: typeof configValues.system_device_uid === "string" ? configValues.system_device_uid : ""
 			}), [configValues]);
-			const labels = (0, react.useMemo)(() => speakerLabels(snapshot.preview), [snapshot.preview]);
+			const storedMeetings = useStoredMeetings({
+				active: isRecordingActive(snapshot.view),
+				client,
+				mounted: snapshot.mounted
+			});
+			const committed = snapshot.view?.transcriptVersion === null || snapshot.view?.transcriptVersion === void 0 ? null : snapshot.view.meetingId;
+			const ingestion = useMeetingIngestion({
+				client,
+				meetingId: storedMeetings.selected?.meeting_id ?? committed,
+				mounted: snapshot.mounted,
+				onIngested: storedMeetings.reload
+			});
+			const preview = storedMeetings.selected === null ? snapshot.preview : storedMeetings.transcript?.segments ?? [];
+			const stored = storedMeetings.selected === null ? null : {
+				failed: storedMeetings.transcriptError !== null,
+				version: storedMeetings.transcript?.transcript_version ?? null
+			};
+			const labels = (0, react.useMemo)(() => speakerLabels(preview), [preview]);
 			const attribution = useSpeakerAttribution({
 				client,
 				labels,
-				meetingId: snapshot.view?.meetingId ?? null,
-				mounted: snapshot.mounted
+				mounted: snapshot.mounted,
+				meetingId: storedMeetings.selected?.meeting_id ?? snapshot.view?.meetingId ?? null
 			});
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingPanelView, {
 				devices,
@@ -3120,9 +3542,9 @@ window.__ModuleLoader__.load({
 					setNotice: setExportNotice,
 					setPending,
 					settings,
-					speakerNames: attribution.names,
 					translate,
-					view: snapshot.view
+					view: snapshot.view,
+					speakerNames: storedMeetings.selected === null ? attribution.names : {}
 				}),
 				refreshDevices,
 				selectDevice,
@@ -3134,12 +3556,15 @@ window.__ModuleLoader__.load({
 				attribution,
 				hasRecordingHistory: snapshot.hasRecordingHistory,
 				prepare,
-				preview: snapshot.preview,
+				preview,
 				run,
 				settings,
 				settingsRevision: settingsSnapshot?.revision,
 				translate,
-				view: snapshot.view
+				view: snapshot.view,
+				ingestion,
+				stored,
+				storedMeetings
 			});
 		}
 		//#endregion
@@ -3587,6 +4012,23 @@ window.__ModuleLoader__.load({
 			"panel.devicesUnavailable": "未能读取可用设备",
 			"panel.recognizerParakeet": "英语 / 欧洲",
 			"panel.previewHint": "本次录音草稿 · 正式原稿请通过 @ 引用会议",
+			"panel.ingest": "收录",
+			"panel.ingesting": "正在收录",
+			"panel.ingested": "已加入开放知识库。",
+			"panel.ingestFailed": "未能加入开放知识库，请稍后重试。",
+			"panel.ingestNotConfigured": "请先在插件设置中选择知识库文件夹。",
+			"panel.ingestBusy": "已有收录任务正在运行，请稍后重试。",
+			"panel.ingestTimeout": "收录用时过长，请稍后在插件设置中查看。",
+			"panel.storedMeetings": "已保存的会议",
+			"panel.storedHint": "选择一场会议查看已提交的原稿；原稿为只读。",
+			"panel.storedEmpty": "还没有已保存的会议。",
+			"panel.storedLoading": "正在读取原稿…",
+			"panel.storedLoadFailed": "未能读取这场会议的原稿。",
+			"panel.storedUntitled": "未命名会议",
+			"panel.storedIngested": "已收录",
+			"panel.storedTitle": "已保存的原稿",
+			"panel.storedVersion": "第 {version} 版 · 只读",
+			"panel.storedEmptyTranscript": "这场会议还没有可显示的原稿。",
 			"panel.activity": "录音状态指示（不是声音音量）",
 			"panel.track.on": "采集中",
 			"panel.track.off": "已关闭",
@@ -3675,6 +4117,23 @@ window.__ModuleLoader__.load({
 			"panel.devicesUnavailable": "Devices are unavailable",
 			"panel.recognizerParakeet": "English / European",
 			"panel.previewHint": "Current recording draft · use @ for the committed transcript",
+			"panel.ingest": "Ingest",
+			"panel.ingesting": "Ingesting",
+			"panel.ingested": "Added to the knowledge base.",
+			"panel.ingestFailed": "The meeting could not be added to the knowledge base. Retry later.",
+			"panel.ingestNotConfigured": "Choose a knowledge base folder in plugin settings first.",
+			"panel.ingestBusy": "Another ingestion is already running. Retry when it finishes.",
+			"panel.ingestTimeout": "Ingestion is taking too long. Check the plugin settings later.",
+			"panel.storedMeetings": "Saved meetings",
+			"panel.storedHint": "Select a meeting to preview its committed transcript. The preview is read-only.",
+			"panel.storedEmpty": "No saved meetings yet.",
+			"panel.storedLoading": "Loading transcript…",
+			"panel.storedLoadFailed": "That meeting's transcript could not be loaded.",
+			"panel.storedUntitled": "Untitled meeting",
+			"panel.storedIngested": "Ingested",
+			"panel.storedTitle": "Stored transcript",
+			"panel.storedVersion": "v{version} · read-only",
+			"panel.storedEmptyTranscript": "This meeting has no transcript segments yet.",
 			"panel.activity": "Recording status indicator (not audio level)",
 			"panel.track.on": "Capturing",
 			"panel.track.off": "Off",
@@ -3801,6 +4260,6 @@ if (typeof document !== "undefined" && !document.querySelector("style[data-plugi
         const style = document.createElement("style");
         style.dataset.plugin = "@huliux/dsh-asr-plugin";
         style.dataset.pluginCss = "@huliux/dsh-asr-plugin/client";
-        style.textContent = "._2-6Zyq_page{width:100%;min-width:0;max-width:640px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);gap:12px;font-size:13px;line-height:20px;display:grid}._2-6Zyq_card{border:.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);background:var(--dsw-alias-settings-card-fill);min-width:0;padding:20px}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_modelTitle,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading,._2-6Zyq_saveRow{align-items:center;gap:12px;display:flex}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading{justify-content:space-between}._2-6Zyq_heading{align-items:flex-start;padding:4px 0 8px}._2-6Zyq_heading>div,._2-6Zyq_modelCopy{min-width:0}._2-6Zyq_heading>button,._2-6Zyq_modelRow>button{flex-shrink:0}._2-6Zyq_title{margin:0 0 4px;font-size:14px;font-weight:600;line-height:22px}._2-6Zyq_label{font-weight:500}._2-6Zyq_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:12px;line-height:18px}._2-6Zyq_modelBlock{padding:2px 0 18px}._2-6Zyq_modelBlock+._2-6Zyq_modelBlock{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:18px}._2-6Zyq_modelTitle{flex-wrap:wrap;gap:8px;margin-bottom:4px}._2-6Zyq_runtimeRow{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:12px}._2-6Zyq_loading,._2-6Zyq_notice,._2-6Zyq_error{color:var(--dsw-alias-label-secondary);align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;line-height:18px;display:flex}._2-6Zyq_loading>*,._2-6Zyq_notice>*,._2-6Zyq_error>*{flex-shrink:0;align-self:center}._2-6Zyq_error{color:var(--dsw-alias-label-error)}._2-6Zyq_instructions{gap:12px;min-width:0;padding-top:16px;display:grid}._2-6Zyq_command{gap:6px;min-width:0;display:grid}._2-6Zyq_diagnostics{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary);margin:0;padding-left:18px;font-size:12px;line-height:18px}._2-6Zyq_diagnostics:empty{display:none}._2-6Zyq_diagnosticGroups{gap:14px;margin:16px 0;display:grid}._2-6Zyq_diagnosticGroup+._2-6Zyq_diagnosticGroup{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:14px}._2-6Zyq_helpHeading{width:fit-content;max-width:100%}._2-6Zyq_connectionSummary{color:var(--dsw-alias-label-secondary);margin-left:12px;font-size:12px}._2-6Zyq_downloadRouting{gap:8px;min-width:0;margin-top:16px;display:grid}._2-6Zyq_downloadRouting label{margin-top:4px}._2-6Zyq_downloadActions{flex-wrap:wrap;gap:8px;display:flex}._2-6Zyq_saveRow{flex-wrap:wrap;margin-top:12px}._2-6Zyq_downloadProgress{gap:8px;min-width:0;margin-top:12px;display:grid}._2-6Zyq_progressHeading>span{align-items:center;gap:8px;display:flex}._2-6Zyq_progressBytes{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:12px}._2-6Zyq_downloadProgress progress{width:100%;height:4px;accent-color:var(--dsw-alias-label-primary)}@media (width<=600px){._2-6Zyq_card{padding:16px}._2-6Zyq_heading,._2-6Zyq_modelRow{gap:8px}._2-6Zyq_modelTitle{gap:4px}}@media (width<=980px){._2-6Zyq_page{padding-bottom:180px}}._2-6Zyq_proxyOptions{gap:8px;margin-top:4px;display:grid}._2-6Zyq_proxyOptions a{width:fit-content}._2-6Zyq_preparationSteps{color:var(--dsw-alias-label-secondary);gap:8px;margin:4px 0 0;padding:0;font-size:12px;list-style:none;display:grid}._2-6Zyq_preparationSteps li{align-items:center;gap:8px;display:flex}.Expx1a_panel{z-index:1200;box-sizing:border-box;pointer-events:auto;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;font-size:12px;line-height:18px;display:flex;position:fixed;box-shadow:0 1px 3px #00000008,0 6px 20px -4px #00000012}.Expx1a_panel[data-expanded=true]{border-radius:16px}.Expx1a_header{box-sizing:border-box;flex-shrink:0;align-items:center;gap:4px;height:46px;padding:5px;display:flex}.Expx1a_header>*{flex-shrink:0}.Expx1a_header>.Expx1a_spacer{flex:auto;min-width:0}.Expx1a_panel button{border-radius:8px;padding:0}.Expx1a_panel button:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.Expx1a_control{flex-shrink:0;width:36px;min-width:24px;height:36px}.Expx1a_split{flex-shrink:0;align-items:center;display:inline-flex;position:relative}.Expx1a_splitMain{border-top-right-radius:0;border-bottom-right-radius:0;width:32px;min-width:22px}.Expx1a_caret{width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary);border-top-left-radius:0;border-bottom-left-radius:0}.Expx1a_caret:hover,.Expx1a_caretOpen{color:var(--dsw-alias-label-primary)}.Expx1a_caretIcon{display:block}.Expx1a_menu{z-index:10;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);border-radius:10px;flex-direction:column;width:max-content;min-width:180px;max-width:320px;max-height:240px;padding:4px;display:flex;position:absolute;bottom:calc(100% + 6px);left:0;overflow:auto;box-shadow:0 6px 20px -4px #0000001f}.Expx1a_menuItem{width:100%;color:var(--dsw-alias-label-primary);text-align:left;overflow-wrap:anywhere;background:0 0;border-radius:6px;align-items:center;gap:6px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_menuItem:hover{background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_menu[data-below=true]{top:calc(100% + 6px);bottom:auto}.Expx1a_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:6px 8px;font-size:12px;line-height:18px;display:block}.Expx1a_menuCheck{width:10px;color:var(--dsw-alias-label-primary);display:inline-block}.Expx1a_mainControl{flex-shrink:0;gap:6px;width:60px;min-width:48px;height:36px}.Expx1a_move{cursor:grab;touch-action:none;width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary)}.Expx1a_move:active{cursor:grabbing}.Expx1a_toggle{width:28px;min-width:24px;height:36px;color:var(--dsw-alias-label-secondary)}.Expx1a_spacer{flex:1;min-width:0}.Expx1a_icon{background:currentColor;flex-shrink:0;width:20px;height:20px;display:block;mask-position:50%;mask-size:contain;mask-repeat:no-repeat}.Expx1a_play,.Expx1a_actionIcon{width:24px;height:24px}.Expx1a_grip{width:5.4px;height:8.4px}.Expx1a_expand,.Expx1a_collapse,.Expx1a_resize .Expx1a_icon{width:18px;height:18px}.Expx1a_check{width:16px;height:16px;color:var(--dsw-alias-state-success-primary)}.Expx1a_off{color:var(--dsw-alias-label-tertiary)}.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_error,.Expx1a_errorControl{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}.Expx1a_errorControl{width:28px;min-width:28px}.Expx1a_error.Expx1a_noSignal,.Expx1a_errorControl.Expx1a_noSignal{color:var(--dsw-alias-state-warn-label)}.Expx1a_body{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.Expx1a_status{flex-shrink:0;justify-content:space-between;align-items:center;gap:8px;padding:16px;display:flex}.Expx1a_phase{align-items:center;gap:8px;font-weight:500;display:inline-flex}.Expx1a_tracks{flex-wrap:wrap;flex-shrink:0;gap:8px;padding:0 16px;display:flex}.Expx1a_chip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;align-items:center;padding:4px 8px;font-size:11px;line-height:17px;display:inline-flex}.Expx1a_chip.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_body>.Expx1a_error{margin:8px 16px 0}.Expx1a_recognizer{align-items:center;gap:4px;min-width:0;display:inline-flex}.Expx1a_recognizerLabel{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:11px;line-height:17px}.Expx1a_recognizerSelect{border:1px solid var(--dsw-alias-interactive-border);height:22px;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;padding:0 4px;font-family:inherit;font-size:11px}.Expx1a_recognizerSelect:disabled{opacity:.5}.Expx1a_hint,.Expx1a_segmentMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px;line-height:17px}.Expx1a_hint.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_preview{flex-direction:column;flex:1;min-height:80px;padding:16px;display:flex}.Expx1a_previewHeading{justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;display:flex}.Expx1a_previewTitle{font-weight:500}.Expx1a_segments{overscroll-behavior:contain;flex:1;min-height:0;overflow:auto}.Expx1a_segment{color:var(--dsw-alias-label-secondary);gap:4px;margin-bottom:12px;display:grid}.Expx1a_segment:last-child{color:var(--dsw-alias-label-primary);margin-bottom:0}.Expx1a_text{overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-size:14px;line-height:23px}.Expx1a_footer{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;align-items:center;gap:4px;padding:10px 8px 10px 12px;display:flex}.Expx1a_footer>.Expx1a_hint{overflow-wrap:anywhere;flex:1;min-width:0}.Expx1a_utility{width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_resize{cursor:nwse-resize;touch-action:none;width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_wave{flex-shrink:0}.Expx1a_wave path{transform-box:fill-box;transform-origin:50%}.Expx1a_wave[data-recording-wave=moving] path{animation:.9s ease-in-out infinite Expx1a_recordingWave}.Expx1a_wave path:nth-child(2){animation-delay:-.45s}.Expx1a_wave path:nth-child(3){animation-delay:-.225s}.Expx1a_wave path:nth-child(4){animation-delay:-.675s}.Expx1a_wave[data-recording-wave=still]{color:var(--dsw-alias-label-tertiary)}.Expx1a_spinner{box-sizing:border-box;border:2px solid var(--dsw-alias-border-l3);border-top-color:var(--dsw-alias-label-primary);border-radius:50%;width:18px;height:18px;animation:1s linear infinite Expx1a_recordingSpin}@keyframes Expx1a_recordingWave{0%,to{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes Expx1a_recordingSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.Expx1a_wave[data-recording-wave=moving] path,.Expx1a_spinner{animation:none}}.Expx1a_error{white-space:pre-line}.Expx1a_attribution{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;padding:12px 16px}.Expx1a_attribution p{margin:8px 0 0}.Expx1a_attributionSummary{color:var(--dsw-alias-label-primary);font-weight:500}.Expx1a_attributionSummary:focus-visible,.Expx1a_attributionInput:focus-visible{outline:2px solid var(--dsw-alias-interactive-border);outline-offset:1px;border-radius:4px}.Expx1a_attributionFields{flex-direction:column;gap:8px;margin-top:8px;display:flex}.Expx1a_attributionField{grid-template-columns:minmax(64px,.4fr) 1fr;align-items:center;gap:8px;display:grid}.Expx1a_attributionLabel{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}.Expx1a_attributionInput{border:1px solid var(--dsw-alias-interactive-border);min-width:0;height:24px;color:var(--dsw-alias-label-primary);font:inherit;background:0 0;border-radius:6px;padding:0 6px}.Expx1a_attributionError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;margin:6px 16px 0;font-size:11px;line-height:17px}\n";
+        style.textContent = "._2-6Zyq_page{width:100%;min-width:0;max-width:640px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);gap:12px;font-size:13px;line-height:20px;display:grid}._2-6Zyq_card{border:.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);background:var(--dsw-alias-settings-card-fill);min-width:0;padding:20px}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_modelTitle,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading,._2-6Zyq_saveRow{align-items:center;gap:12px;display:flex}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading{justify-content:space-between}._2-6Zyq_heading{align-items:flex-start;padding:4px 0 8px}._2-6Zyq_heading>div,._2-6Zyq_modelCopy{min-width:0}._2-6Zyq_heading>button,._2-6Zyq_modelRow>button{flex-shrink:0}._2-6Zyq_title{margin:0 0 4px;font-size:14px;font-weight:600;line-height:22px}._2-6Zyq_label{font-weight:500}._2-6Zyq_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:12px;line-height:18px}._2-6Zyq_modelBlock{padding:2px 0 18px}._2-6Zyq_modelBlock+._2-6Zyq_modelBlock{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:18px}._2-6Zyq_modelTitle{flex-wrap:wrap;gap:8px;margin-bottom:4px}._2-6Zyq_runtimeRow{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:12px}._2-6Zyq_loading,._2-6Zyq_notice,._2-6Zyq_error{color:var(--dsw-alias-label-secondary);align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;line-height:18px;display:flex}._2-6Zyq_loading>*,._2-6Zyq_notice>*,._2-6Zyq_error>*{flex-shrink:0;align-self:center}._2-6Zyq_error{color:var(--dsw-alias-label-error)}._2-6Zyq_instructions{gap:12px;min-width:0;padding-top:16px;display:grid}._2-6Zyq_command{gap:6px;min-width:0;display:grid}._2-6Zyq_diagnostics{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary);margin:0;padding-left:18px;font-size:12px;line-height:18px}._2-6Zyq_diagnostics:empty{display:none}._2-6Zyq_diagnosticGroups{gap:14px;margin:16px 0;display:grid}._2-6Zyq_diagnosticGroup+._2-6Zyq_diagnosticGroup{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:14px}._2-6Zyq_helpHeading{width:fit-content;max-width:100%}._2-6Zyq_connectionSummary{color:var(--dsw-alias-label-secondary);margin-left:12px;font-size:12px}._2-6Zyq_downloadRouting{gap:8px;min-width:0;margin-top:16px;display:grid}._2-6Zyq_downloadRouting label{margin-top:4px}._2-6Zyq_downloadActions{flex-wrap:wrap;gap:8px;display:flex}._2-6Zyq_saveRow{flex-wrap:wrap;margin-top:12px}._2-6Zyq_downloadProgress{gap:8px;min-width:0;margin-top:12px;display:grid}._2-6Zyq_progressHeading>span{align-items:center;gap:8px;display:flex}._2-6Zyq_progressBytes{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:12px}._2-6Zyq_downloadProgress progress{width:100%;height:4px;accent-color:var(--dsw-alias-label-primary)}@media (width<=600px){._2-6Zyq_card{padding:16px}._2-6Zyq_heading,._2-6Zyq_modelRow{gap:8px}._2-6Zyq_modelTitle{gap:4px}}@media (width<=980px){._2-6Zyq_page{padding-bottom:180px}}._2-6Zyq_proxyOptions{gap:8px;margin-top:4px;display:grid}._2-6Zyq_proxyOptions a{width:fit-content}._2-6Zyq_preparationSteps{color:var(--dsw-alias-label-secondary);gap:8px;margin:4px 0 0;padding:0;font-size:12px;list-style:none;display:grid}._2-6Zyq_preparationSteps li{align-items:center;gap:8px;display:flex}.Expx1a_panel{z-index:1200;box-sizing:border-box;pointer-events:auto;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;font-size:12px;line-height:18px;display:flex;position:fixed;box-shadow:0 1px 3px #00000008,0 6px 20px -4px #00000012}.Expx1a_panel[data-expanded=true]{border-radius:16px}.Expx1a_header{box-sizing:border-box;flex-shrink:0;align-items:center;gap:4px;height:46px;padding:5px;display:flex}.Expx1a_header>*{flex-shrink:0}.Expx1a_header>.Expx1a_spacer{flex:auto;min-width:0}.Expx1a_panel button{border-radius:8px;padding:0}.Expx1a_panel button:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.Expx1a_control{flex-shrink:0;width:36px;min-width:24px;height:36px}.Expx1a_split{flex-shrink:0;align-items:center;display:inline-flex;position:relative}.Expx1a_splitMain{border-top-right-radius:0;border-bottom-right-radius:0;width:32px;min-width:22px}.Expx1a_caret{width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary);border-top-left-radius:0;border-bottom-left-radius:0}.Expx1a_caret:hover,.Expx1a_caretOpen{color:var(--dsw-alias-label-primary)}.Expx1a_caretIcon{display:block}.Expx1a_menu{z-index:10;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);border-radius:10px;flex-direction:column;width:max-content;min-width:180px;max-width:320px;max-height:240px;padding:4px;display:flex;position:absolute;bottom:calc(100% + 6px);left:0;overflow:auto;box-shadow:0 6px 20px -4px #0000001f}.Expx1a_menuItem{width:100%;color:var(--dsw-alias-label-primary);text-align:left;overflow-wrap:anywhere;background:0 0;border-radius:6px;align-items:center;gap:6px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_menuItem:hover{background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_menu[data-below=true]{top:calc(100% + 6px);bottom:auto}.Expx1a_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:6px 8px;font-size:12px;line-height:18px;display:block}.Expx1a_menuCheck{width:10px;color:var(--dsw-alias-label-primary);display:inline-block}.Expx1a_mainControl{flex-shrink:0;gap:6px;width:60px;min-width:48px;height:36px}.Expx1a_move{cursor:grab;touch-action:none;width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary)}.Expx1a_move:active{cursor:grabbing}.Expx1a_toggle{width:28px;min-width:24px;height:36px;color:var(--dsw-alias-label-secondary)}.Expx1a_spacer{flex:1;min-width:0}.Expx1a_icon{background:currentColor;flex-shrink:0;width:20px;height:20px;display:block;mask-position:50%;mask-size:contain;mask-repeat:no-repeat}.Expx1a_play,.Expx1a_actionIcon{width:24px;height:24px}.Expx1a_grip{width:5.4px;height:8.4px}.Expx1a_expand,.Expx1a_collapse,.Expx1a_resize .Expx1a_icon{width:18px;height:18px}.Expx1a_check{width:16px;height:16px;color:var(--dsw-alias-state-success-primary)}.Expx1a_off{color:var(--dsw-alias-label-tertiary)}.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_error,.Expx1a_errorControl{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}.Expx1a_errorControl{width:28px;min-width:28px}.Expx1a_error.Expx1a_noSignal,.Expx1a_errorControl.Expx1a_noSignal{color:var(--dsw-alias-state-warn-label)}.Expx1a_body{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.Expx1a_status{flex-shrink:0;justify-content:space-between;align-items:center;gap:8px;padding:16px;display:flex}.Expx1a_phase{align-items:center;gap:8px;font-weight:500;display:inline-flex}.Expx1a_tracks{flex-wrap:wrap;flex-shrink:0;gap:8px;padding:0 16px;display:flex}.Expx1a_chip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;align-items:center;padding:4px 8px;font-size:11px;line-height:17px;display:inline-flex}.Expx1a_chip.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_body>.Expx1a_error{margin:8px 16px 0}.Expx1a_recognizer{align-items:center;gap:4px;min-width:0;display:inline-flex}.Expx1a_recognizerLabel{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:11px;line-height:17px}.Expx1a_recognizerSelect{border:1px solid var(--dsw-alias-interactive-border);height:22px;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;padding:0 4px;font-family:inherit;font-size:11px}.Expx1a_recognizerSelect:disabled{opacity:.5}.Expx1a_hint,.Expx1a_segmentMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px;line-height:17px}.Expx1a_hint.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_preview{flex-direction:column;flex:1;min-height:80px;padding:16px;display:flex}.Expx1a_previewHeading{justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;display:flex}.Expx1a_previewTitle{font-weight:500}.Expx1a_segments{overscroll-behavior:contain;flex:1;min-height:0;overflow:auto}.Expx1a_segment{color:var(--dsw-alias-label-secondary);gap:4px;margin-bottom:12px;display:grid}.Expx1a_segment:last-child{color:var(--dsw-alias-label-primary);margin-bottom:0}.Expx1a_text{overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-size:14px;line-height:23px}.Expx1a_footer{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;align-items:center;gap:4px;padding:10px 8px 10px 12px;display:flex}.Expx1a_footer>.Expx1a_hint{overflow-wrap:anywhere;flex:1;min-width:0}.Expx1a_utility{width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_resize{cursor:nwse-resize;touch-action:none;width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_wave{flex-shrink:0}.Expx1a_wave path{transform-box:fill-box;transform-origin:50%}.Expx1a_wave[data-recording-wave=moving] path{animation:.9s ease-in-out infinite Expx1a_recordingWave}.Expx1a_wave path:nth-child(2){animation-delay:-.45s}.Expx1a_wave path:nth-child(3){animation-delay:-.225s}.Expx1a_wave path:nth-child(4){animation-delay:-.675s}.Expx1a_wave[data-recording-wave=still]{color:var(--dsw-alias-label-tertiary)}.Expx1a_spinner{box-sizing:border-box;border:2px solid var(--dsw-alias-border-l3);border-top-color:var(--dsw-alias-label-primary);border-radius:50%;width:18px;height:18px;animation:1s linear infinite Expx1a_recordingSpin}@keyframes Expx1a_recordingWave{0%,to{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes Expx1a_recordingSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.Expx1a_wave[data-recording-wave=moving] path,.Expx1a_spinner{animation:none}}.Expx1a_error{white-space:pre-line}.Expx1a_attribution{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;padding:12px 16px}.Expx1a_attribution p{margin:8px 0 0}.Expx1a_attributionSummary{color:var(--dsw-alias-label-primary);font-weight:500}.Expx1a_attributionSummary:focus-visible,.Expx1a_attributionInput:focus-visible{outline:2px solid var(--dsw-alias-interactive-border);outline-offset:1px;border-radius:4px}.Expx1a_attributionFields{flex-direction:column;gap:8px;margin-top:8px;display:flex}.Expx1a_attributionField{grid-template-columns:minmax(64px,.4fr) 1fr;align-items:center;gap:8px;display:grid}.Expx1a_attributionLabel{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}.Expx1a_attributionInput{border:1px solid var(--dsw-alias-interactive-border);min-width:0;height:24px;color:var(--dsw-alias-label-primary);font:inherit;background:0 0;border-radius:6px;padding:0 6px}.Expx1a_attributionError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;margin:6px 16px 0;font-size:11px;line-height:17px}.Expx1a_panel .Expx1a_ingest{min-width:60px;height:24px;color:var(--dsw-alias-label-primary);flex-shrink:0;padding:0 10px;font-size:12px;line-height:18px}.Expx1a_panel .Expx1a_ingest:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}.Expx1a_stored{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex-shrink:0;gap:8px;padding:12px 16px;display:flex}.Expx1a_storedHeading{align-items:center;gap:8px;display:flex}.Expx1a_stored .Expx1a_hint,.Expx1a_stored p{margin:0}.Expx1a_stored .Expx1a_spinner{border-width:1.5px;width:14px;height:14px}.Expx1a_storedList{overscroll-behavior:contain;flex-direction:column;gap:2px;max-height:140px;display:flex;overflow:auto}.Expx1a_panel .Expx1a_storedRow{width:100%;color:var(--dsw-alias-label-primary);text-align:left;background:0 0;border-radius:6px;align-items:center;gap:8px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_panel .Expx1a_storedRow:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_panel .Expx1a_storedRow[aria-selected=true]{background:var(--dsw-alias-interactive-bg-hover);box-shadow:inset 2px 0 0 var(--dsw-alias-label-primary)}.Expx1a_panel .Expx1a_storedRow:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}.Expx1a_storedTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.Expx1a_storedMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;flex-shrink:0;font-size:11px}.Expx1a_storedError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:11px;line-height:17px}\n";
         document.head.appendChild(style);
       }

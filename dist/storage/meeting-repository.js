@@ -4,6 +4,7 @@ import { MeetingRepositoryError } from "./errors.js";
 import { listMeetingReferenceRecords as queryMeetingReferenceRecords } from "./meeting-reference-query.js";
 import { getCommittedTranscriptSlice as queryCommittedTranscriptSlice, getCommittedTranscriptSnapshot as queryCommittedTranscriptSnapshot, getMeetingPage as queryMeetingPage, searchMeetings as queryMeetings, } from "./meeting-query.js";
 import { parseMeetingRow } from "./row-mappers.js";
+import { listStoredMeetings as queryStoredMeetings } from "./stored-meeting-query.js";
 import { beginRecordingFinalization as beginRecordingFinalizationState, createRecording as createRecordingState, listRecordingsNeedingRecovery as listRecordingsNeedingRecoveryState, recordRecoveredRecordingSource as recordRecoveredRecordingSourceState, recordRecordingStarted as recordRecordingStartedState, recordRecordingRecoveryFailure as recordRecordingRecoveryFailureState, } from "./recording-repository.js";
 import { validateBeginDeletion, validateBeginRetranscription, validateCommitIdentity, validateCompleteDeletion, validateCreateImport, validateFinishRun, validateRecordDeletionFailure, validateRecordManagedSource, validateTranscriptCandidate, } from "./validation.js";
 class SqliteMeetingRepository {
@@ -195,6 +196,9 @@ class SqliteMeetingRepository {
     }
     listMeetingReferenceRecords(input) {
         return queryMeetingReferenceRecords(this.database, input);
+    }
+    listStoredMeetings(limit) {
+        return queryStoredMeetings(this.database, limit);
     }
     listDeletingMeetings() {
         return inReadOperation(() => this.database.prepare(`

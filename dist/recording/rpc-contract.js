@@ -18,5 +18,9 @@ export const RECORDING_RPC_ENDPOINTS = [
     "transcripts/speaker-names",
     "transcripts/save-speaker-names",
     "okf/choose-directory",
+    "meetings/list",
+    "meetings/transcript",
+    "okf/ingest",
+    "okf/ingest/status",
 ];
 //# sourceMappingURL=rpc-contract.js.map

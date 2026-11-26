@@ -2,7 +2,7 @@ import type { RecordingPermissions } from "./permission-contract.js";
 import type { ModelDownloadStatus } from "../assets/model-download-contract.js";
 import type { ModelSettingsStatus } from "../assets/model-settings-contract.js";
 export declare const RECORDING_RPC_CHANNEL = "/dsh-asr-recording";
-export declare const RECORDING_RPC_ENDPOINTS: readonly ["state", "control", "references/candidates", "references/resolve", "models/status", "models/prepare", "models/download/status", "models/download/start", "models/download/cancel", "permissions/status", "permissions/test", "permissions/open-settings", "devices/list", "transcripts/export", "transcripts/choose-directory", "transcripts/speaker-names", "transcripts/save-speaker-names", "okf/choose-directory"];
+export declare const RECORDING_RPC_ENDPOINTS: readonly ["state", "control", "references/candidates", "references/resolve", "models/status", "models/prepare", "models/download/status", "models/download/start", "models/download/cancel", "permissions/status", "permissions/test", "permissions/open-settings", "devices/list", "transcripts/export", "transcripts/choose-directory", "transcripts/speaker-names", "transcripts/save-speaker-names", "okf/choose-directory", "meetings/list", "meetings/transcript", "okf/ingest", "okf/ingest/status"];
 export type RecordingRpcEndpoint = (typeof RECORDING_RPC_ENDPOINTS)[number];
 export type RecordingRpcPhase = "starting" | "recording" | "finalizing" | "completed" | "empty" | "partial" | "failed" | "cancelled";
 export type MeetingReferenceRpcPhase = RecordingRpcPhase | "processing";
@@ -69,6 +69,45 @@ export interface TranscriptExportRpcValue {
     readonly segment_count: number;
     readonly transcript_version: number;
 }
+/** One stored meeting the panel can load into its draft view. */
+export interface StoredMeetingRpcEntry {
+    readonly meeting_id: string;
+    readonly title: string;
+    readonly started_at: string | null;
+    readonly duration_ms: number | null;
+    readonly transcript_version: number;
+    readonly status: "completed" | "partial";
+    /** Version the browser already knows is in the knowledge base, or null. */
+    readonly ingested_transcript_version: number | null;
+}
+export interface StoredMeetingsRpcPayload {
+    readonly limit?: number;
+}
+export interface StoredMeetingsRpcValue {
+    readonly items: readonly StoredMeetingRpcEntry[];
+}
+export interface StoredMeetingTranscriptRpcPayload {
+    readonly meeting_id: string;
+}
+export interface StoredMeetingTranscriptRpcValue {
+    readonly meeting_id: string;
+    readonly title: string;
+    readonly transcript_version: number;
+    readonly duration_ms: number | null;
+    readonly segments: readonly RecordingRpcSegment[];
+}
+export interface OkfIngestRpcPayload {
+    readonly meeting_id: string;
+    readonly force?: boolean;
+}
+/** One ingestion attempt, from the queue to its terminal state. */
+export interface OkfIngestRpcValue {
+    readonly job_id: string | null;
+    readonly state: "idle" | "running" | "succeeded" | "failed";
+    readonly transcript_version: number | null;
+    readonly error_code: string | null;
+    readonly message: string | null;
+}
 export interface RecordingRpcControlPayload {
     readonly action: "start" | "stop" | "mic_on" | "mic_off" | "system_on" | "system_off";
     readonly meeting_id?: string;
@@ -106,7 +145,7 @@ export interface AudioDeviceInventoryRpc {
     readonly default_output_uid: string | null;
     readonly devices: readonly AudioDeviceRpcEntry[];
 }
-export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
+export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string | StoredMeetingsRpcValue | StoredMeetingTranscriptRpcValue | OkfIngestRpcValue | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 export type RecordingRpcResult<T = RecordingRpcValue> = {
     readonly ok: true;
     readonly value: T;

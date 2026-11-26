@@ -1,4 +1,5 @@
 import type { Context } from "@deepseek-ai/cordis";
+import { type OkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
 import { type SpeakerNameRepository } from "../storage/speaker-name-repository.js";
 import type { MeetingRepository } from "../storage/meeting-repository.js";
 import { type OkfIngestionService, type OkfSettings } from "../okf/ingestion-service.js";
@@ -13,9 +14,11 @@ export interface OkfHostOptions {
     } | null;
 }
 export interface OkfHost {
-    /** Repository whose `commitTranscript` starts an automatic ingestion. */
+    /** Unwrapped repository; ingestion is user-driven, so commits start nothing. */
     readonly repository: MeetingRepository;
     readonly service: OkfIngestionService;
+    /** Ingestion attempt log, shared with the recording panel's read model. */
+    readonly attempts: OkfIngestionRepository;
     /** Per-meeting speaker attribution, shared with the recording panel RPC. */
     readonly speakerNames: SpeakerNameRepository;
     hasCommand: boolean;

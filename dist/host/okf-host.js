@@ -10,7 +10,6 @@ import { createOkfGitTransaction } from "../okf/git-transaction.js";
 import { createOkfIngestionAgent, } from "../okf/ingestion-agent.js";
 import { userTextMessage } from "../okf/user-message.js";
 import { createOkfIngestionService, } from "../okf/ingestion-service.js";
-import { startOkfIngestion, withTranscriptCommitHook } from "../okf/trigger.js";
 /**
  * `AgentHandle` from the registry wraps the driver; the ingestion agent expects
  * the flattened shape, so this adapter owns the one place that difference lives.
@@ -85,17 +84,9 @@ export function installOkfHost(context, options) {
         jobs: context.jobs,
         logger: (line) => { context.logger("dsh-asr").info(line); },
     });
-    const repository = withTranscriptCommitHook(options.repository, {
-        onCommitted: (meetingId) => {
-            const record = options.repository.getMeeting(meetingId);
-            startOkfIngestion(service, {
-                settings: options.settings,
-                ...(record?.committedStatus === null || record?.committedStatus === undefined
-                    ? {}
-                    : { committedStatus: record.committedStatus }),
-            }, meetingId);
-        },
-    });
+    // Ingestion is user-driven: the panel button and `/asr-ingest` are the only
+    // entry points, so committing a transcript never starts work on its own.
+    const repository = options.repository;
     const definition = createAsrIngestCommand({
         directory: () => options.settings().directory,
         // No session-scoped reference is available to a plugin command yet.
@@ -120,6 +111,7 @@ export function installOkfHost(context, options) {
     return {
         repository,
         service,
+        attempts,
         speakerNames,
         hasCommand,
         async dispose() {

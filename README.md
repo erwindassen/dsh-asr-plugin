@@ -136,12 +136,15 @@ schema, the validation rules and the failure behaviour.
 ## Open knowledge base (optional)
 
 Set a **Bundle folder** under **Open knowledge base** in plugin settings to have
-each committed transcript summarised into an OKF bundle: a meeting page with
-extracted entities, concepts, action items and deadlines, linked to a copy of the
+a transcript summarised into an OKF bundle: a meeting page with extracted
+entities, concepts, action items and deadlines, linked to a copy of the
 transcript, plus generated indexes for upcoming deadlines and pending actions.
 The folder becomes a Git repository and one ingestion is one commit, so every
-change is inspectable and reversible. Automatic ingestion is on by default and can
-be switched off; `/asr-ingest <meeting-id> [--force]` re-runs it manually.
+change is inspectable and reversible.
+
+Ingestion never starts on its own. Press **Ingest** next to start/stop once a
+meeting is on screen, pick a stored meeting from the list below the transcript to
+ingest an older one, or run `/asr-ingest <meeting-id> [--force]`.
 
 See [docs/okf.md](docs/okf.md) for the layout, the transaction and rollback rules,
 and the failure and privacy guarantees.
