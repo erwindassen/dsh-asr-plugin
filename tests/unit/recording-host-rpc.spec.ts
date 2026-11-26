@@ -299,3 +299,136 @@ it("lists audio devices without accepting device paths or helper arguments", asy
   }
   expect(devices.list).toHaveBeenCalledOnce();
 });
+
+it("serves the committed meeting list and one meeting's transcript snapshot", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  const meeting = "a4f7e766-928b-4a96-87d7-f81921fddd1c";
+  const other = "b5e8f877-a39c-4ba7-98e8-f92a2feee2d1";
+  const entry = {
+    meeting_id: meeting,
+    title: "产品周会",
+    started_at: null,
+    duration_ms: 1_000,
+    transcript_version: 2,
+    status: "partial" as const,
+    ingested_transcript_version: 1,
+  };
+  const transcript = {
+    meeting_id: meeting,
+    title: "产品周会",
+    transcript_version: 2,
+    duration_ms: 1_000,
+    segments: [{ seq: 1, startMs: 0, endMs: 900, speakerLabel: "Erwin", text: "synthetic" }],
+  };
+  const meetings = {
+    list: vi.fn((_limit: number) => [entry]),
+    transcript: vi.fn((meetingId: string) => meetingId === meeting ? transcript : null),
+  };
+  const ingestion = { start: vi.fn(), status: vi.fn() };
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication,
+  undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+  { meetings, ingestion });
+  const signal = new AbortController().signal;
+
+  expect(await handler("meetings/list", {}, signal)).toEqual({ ok: true, value: { items: [entry] } });
+  expect(meetings.list).toHaveBeenLastCalledWith(20);
+  expect(await handler("meetings/list", { limit: 5 }, signal)).toEqual({ ok: true, value: { items: [entry] } });
+  expect(meetings.list).toHaveBeenLastCalledWith(5);
+  expect(await handler("meetings/transcript", { meeting_id: meeting }, signal))
+    .toEqual({ ok: true, value: transcript });
+  expect(meetings.transcript).toHaveBeenCalledExactlyOnceWith(meeting);
+  expect(await handler("meetings/transcript", { meeting_id: other }, signal)).toMatchObject({
+    ok: false, error: { message: "MEETING_NOT_FOUND" },
+  });
+
+  for (const payload of [
+    { limit: 0 }, { limit: 51 }, { limit: 2.5 }, { limit: "5" }, { limit: 5, extra: true },
+  ]) {
+    expect(await handler("meetings/list", payload, signal)).toMatchObject({ ok: false });
+  }
+  for (const payload of [{}, { meeting_id: "not-a-uuid" }, { meeting_id: meeting, extra: true }]) {
+    expect(await handler("meetings/transcript", payload, signal)).toMatchObject({ ok: false });
+  }
+  expect(meetings.list).toHaveBeenCalledTimes(2);
+  expect(meetings.transcript).toHaveBeenCalledTimes(2);
+});
+
+it("starts and reports one meeting's OKF ingestion without accepting extra fields", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  const meeting = "a4f7e766-928b-4a96-87d7-f81921fddd1c";
+  const running = {
+    job_id: "job-1", state: "running" as const, transcript_version: 2,
+    error_code: null, message: null,
+  };
+  const ingestion = {
+    start: vi.fn(async (_meetingId: string, _options: { readonly force: boolean }) => running),
+    status: vi.fn((_meetingId: string) => running),
+  };
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication,
+  undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+  { meetings: { list: vi.fn(), transcript: vi.fn() }, ingestion });
+  const signal = new AbortController().signal;
+
+  expect(await handler("okf/ingest", { meeting_id: meeting }, signal)).toEqual({ ok: true, value: running });
+  expect(ingestion.start).toHaveBeenLastCalledWith(meeting, { force: false });
+  expect(await handler("okf/ingest", { meeting_id: meeting, force: true }, signal))
+    .toEqual({ ok: true, value: running });
+  expect(ingestion.start).toHaveBeenLastCalledWith(meeting, { force: true });
+  expect(await handler("okf/ingest/status", { meeting_id: meeting }, signal))
+    .toEqual({ ok: true, value: running });
+  expect(ingestion.status).toHaveBeenCalledExactlyOnceWith(meeting);
+
+  for (const payload of [{}, { meeting_id: "not-a-uuid" }, { meeting_id: meeting, force: "yes" },
+    { meeting_id: meeting, extra: true }]) {
+    expect(await handler("okf/ingest", payload, signal)).toMatchObject({ ok: false });
+  }
+  expect(ingestion.start).toHaveBeenCalledTimes(2);
+  expect(await handler("okf/ingest/status", { meeting_id: meeting, extra: true }, signal))
+    .toMatchObject({ ok: false });
+});
+
+it("previews and applies one folder reconciliation without accepting extra fields", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  const sync = vi.fn(async (apply: boolean) => ({ removed: apply ? 2 : 2, kept: 3 }));
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication,
+  undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+  { meetings: { list: vi.fn(), transcript: vi.fn() }, ingestion: { start: vi.fn(), status: vi.fn() }, sync });
+  const signal = new AbortController().signal;
+
+  expect(await handler("meetings/sync", {}, signal)).toEqual({ ok: true, value: { removed: 2, kept: 3 } });
+  expect(sync).toHaveBeenLastCalledWith(false);
+  expect(await handler("meetings/sync", { apply: true }, signal))
+    .toEqual({ ok: true, value: { removed: 2, kept: 3 } });
+  expect(sync).toHaveBeenLastCalledWith(true);
+
+  for (const payload of [{ apply: "yes" }, { apply: true, extra: true }]) {
+    expect(await handler("meetings/sync", payload, signal)).toMatchObject({ ok: false });
+  }
+  expect(sync).toHaveBeenCalledTimes(2);
+});
+
+it("keeps the panel endpoints unknown when no panel ports were wired", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication);
+  const signal = new AbortController().signal;
+  const meeting = "a4f7e766-928b-4a96-87d7-f81921fddd1c";
+  const unknownEndpoint = await handler("unknown", {}, signal);
+  expect(unknownEndpoint).toMatchObject({ ok: false, error: { code: "internal" } });
+  for (const [endpoint, payload] of [
+    ["meetings/list", {}],
+    ["meetings/transcript", { meeting_id: meeting }],
+    ["okf/ingest", { meeting_id: meeting }],
+    ["okf/ingest/status", { meeting_id: meeting }],
+    ["meetings/sync", {}],
+  ] as const) {
+    await expect(handler(endpoint, payload, signal)).resolves.toEqual(unknownEndpoint);
+  }
+});

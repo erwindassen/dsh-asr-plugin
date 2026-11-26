@@ -1,17 +1,22 @@
 # Open knowledge base ingestion
 
-Optional post-processing that turns every committed transcript into a readable,
+Optional post-processing that turns a committed transcript into a readable,
 linkable knowledge bundle in a folder the user chooses. The transcript itself
 stays the source of truth; the bundle is a derived, versioned view of it.
 
+Ingestion is always started by the user — from the recording panel or with
+`/asr-ingest` — so nothing runs behind the user's back when a transcript
+commits.
+
 ## What the user sets up
 
-Settings gains an "Open knowledge base" section with two values:
+Settings gains an "Open knowledge base" section with one value:
 
 | Setting | Config key | Default | Meaning |
 | --- | --- | --- | --- |
 | Bundle folder | `okf_directory` | empty | Empty disables the feature entirely |
-| Automatic ingestion | `okf_ingest` | `true` | Summarise each committed transcript without asking |
+
+`okf_ingest` still exists so older profiles keep parsing, but it is ignored.
 
 Choosing a folder is the consent step: it authorises the plugin and the
 summarising child agent to create and update files in that tree, makes the folder
@@ -45,8 +50,10 @@ escapes fail the link gate. `http(s)` targets are allowed.
 
 ## One ingestion = one git transaction
 
-1. A committed transcript version (import or retranscription) starts one job.
-   Drafts, cancelled recordings and failed runs never trigger it.
+1. The user starts one job for one committed transcript version, from the panel
+   button or `/asr-ingest`. Drafts, cancelled recordings and failed runs cannot
+   be ingested. A folder that is not a repository yet is initialised in place on
+   the first run, so the files already in it become the baseline commit.
 2. The bundle lock serialises the whole bundle, not one meeting, because the git
    index is a single lock. A foreign `index.lock` is waited out with backoff.
 3. An ingestion journal is written to `.git/okf-ingestion-journal` *before* any
@@ -61,6 +68,10 @@ escapes fail the link gate. `http(s)` targets are allowed.
    `git reset --hard <baseline>` plus `git clean -fd`, so the worktree ends
    byte-identical to where it started.
 
+The attempt row is written before the folder is prepared, so a failure while
+checking or initialising the Git repository is also recorded; the panel prints
+that failing step under its message instead of a generic retry notice.
+
 Attempt state lives in the `okf_ingestion` table (schema version 6, additive) and
 is surfaced by `meeting_get` as an `okf` block: `state`, `transcript_version`,
 `attempt`, `finished_at`, `error_code`.
@@ -74,6 +85,17 @@ as untrusted data: imperative text inside a recording is never a rule, pages cit
 segment timestamps, and `index.md` files are off limits because the plugin
 regenerates them.
 
+The child does not get the host's filesystem tools. It is created from the
+plugin, not by the interactive subagent path, so its tool set carries search and
+the meeting tools but no `write` or `bash`. The plugin therefore lends it exactly
+one authority: `okf_write_page`, which writes a single bundle-relative page into
+`meetings/`, `actions/`, `deadlines/`, `entities/`, `concepts/` or `sources/`, and
+refuses `index.md`, `references/` and any path that resolves outside the bundle.
+The authority is opened when the child session starts and withdrawn when it is
+disposed, so no other session can write through it. A run that describes pages
+instead of writing them leaves the bundle empty and fails with "did not write this
+meeting's page".
+
 The `okf` skill is the page-convention authority. When the host can prove the
 skill is missing, ingestion degrades to the transcript copy plus regenerated
 indexes and never writes summaries from memory. When the host cannot answer, the
@@ -82,9 +104,9 @@ transaction rolls back.
 
 ## Re-running ingestion
 
-Automatic ingestion skips a version that already ingested successfully, so a
-duplicate trigger costs nothing. A manual `/asr-ingest` always runs, which is how
-a page is refreshed after the model configuration or the prompt changes.
+Ingesting a version that is already in the bundle updates its pages instead of
+forking them, so a repeat run is the way to refresh a page after the model
+configuration or the prompt changes.
 
 ## Known limitations
 
@@ -96,19 +118,63 @@ a page is refreshed after the model configuration or the prompt changes.
   `OKF_BUSY` instead of queueing.
 - Nested Git repositories inside the bundle make `git clean -fd` refuse; ingestion
   then fails and the worktree is left for manual inspection.
+- The child can only write pages through `okf_write_page`; a model that insists on
+  answering in prose instead of calling the tool makes the ingestion fail rather
+  than invent pages.
 
-## `/asr-ingest`
+## Starting an ingestion
 
-Manual (re-)ingestion:
+### From the recording panel
+
+An **Ingest** button sits next to start/stop. It stays disabled until a meeting
+is on screen and nothing is recording:
+
+| Panel state | Button |
+| --- | --- |
+| A recording is running | disabled |
+| The panel's own meeting, transcript committed | enabled |
+| A meeting picked from the list below the transcript | enabled once its transcript loads |
+| No meeting on screen | disabled |
+
+The section under the transcript lists the committed meetings the panel can
+show. Clicking one loads it into the transcript area as a read-only copy with its
+version, and the Ingest button then applies to that meeting. Starting a recording
+clears the selection and the panel follows the live draft again. An ingestion runs
+as a job, so the panel polls its attempt and reports success or a short failure
+reason without ever showing a path.
+
+Ingestion summarises with a child agent, and that agent runs on the model selected
+in DSH settings. With no model selected the run refuses with `OKF_NO_MODEL` and the
+panel says so instead of reporting a writer failure.
+
+### Keeping the list in step with the folder
+
+The list is read from the plugin database, so a meeting whose files were removed
+from the bundle folder would linger. **Sync**, next to the *Saved meetings*
+label, reconciles the two: it counts the stored meetings that the folder's
+`references/transcripts/` copies do not cover, asks for confirmation, and then
+deletes them, which also releases any managed audio. It refuses with
+`OKF_NOT_CONFIGURED` when no folder is set and `OKF_INVALID_DIRECTORY` when the
+configured folder is missing, because deleting on a broken setting would wipe the
+library. Only the plugin's own transcript copies count as evidence — the pages a
+summarising agent writes are not proof that a meeting is in the bundle. One sync
+considers the newest 50 stored meetings, the storage page size; a meeting older
+than that page is never removed by a sync, so a very large library needs several
+passes only if it is also very large on disk.
+
+### `/asr-ingest`
 
 ```
-/asr-ingest <meeting-id>            ingest the current committed version
-/asr-ingest <meeting-id> --force    ingest even when automatic ingestion is off
+/asr-ingest <meeting-id>          ingest the current committed version
+/asr-ingest <meeting-id> --force  rerun even when this version is already ingested
 ```
 
-The command reports the job id, refuses with a clear message when no bundle folder
-is configured, and routes into the same entry point as automatic ingestion, so
-idempotency, locking and rollback behave identically.
+The meeting id is printed in the metadata block at the top of every exported
+transcript (`meeting_id`), and `meeting_search` returns it too. The command reports
+the job id and refuses with a clear message when no bundle folder is configured.
+
+Both entry points share one code path, so idempotency, locking and rollback
+behave identically.
 
 ## Failure and privacy rules
 

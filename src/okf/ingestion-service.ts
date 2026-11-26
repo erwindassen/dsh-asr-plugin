@@ -80,7 +80,15 @@ export interface OkfIngestionDeps {
 
 /** Stored names as a label-to-name map; a missing store means no attribution. */
 function attribution(deps: OkfIngestionDeps, meetingId: string): Readonly<Record<string, string>> {
-  const stored = deps.speakerNames?.list(meetingId) ?? [];
+  // A stale panel row (a meeting deleted by a Sync, say) must not turn into an
+  // opaque failure before the attempt log exists: the transcript lookup that
+  // follows is the one that reports "no transcript" in the user's language.
+  let stored: readonly { readonly label: string; readonly name: string }[] = [];
+  try {
+    stored = deps.speakerNames?.list(meetingId) ?? [];
+  } catch {
+    stored = [];
+  }
   const names: Record<string, string> = {};
   for (const entry of stored) names[entry.label] = entry.name;
   return names;
@@ -194,6 +202,32 @@ function bundleRows(
     .sort((left, right) => right.startedAtMs - left.startedAtMs);
 }
 
+/**
+ * Text worth persisting for a failed attempt. Our own failures already read
+ * well; a raw filesystem or runtime error is the interesting case, so its name,
+ * errno code and message survive instead of a generic "Ingestion failed".
+ * The bundle root is folded to `<bundle>` so no absolute path is stored.
+ */
+function failureDetail(error: unknown, root?: string): string {
+  const raw = error instanceof OkfError
+    ? error.message
+    : error instanceof Error
+      ? (() => {
+      const code = (error as NodeJS.ErrnoException).code;
+      const prefix = typeof code === "string" && code !== "" ? `${error.name} ${code}` : error.name;
+        return `${prefix}: ${error.message}`;
+      })()
+      : "Ingestion failed";
+  const folded = root === undefined || root === "" ? raw : raw.split(root).join("<bundle>");
+  return folded.length > 400 ? `${folded.slice(0, 397)}...` : folded;
+}
+
+/** Stable code for a rejection, so a client can match it without parsing text. */
+function failureCode(error: unknown, aborted: boolean): string {
+  if (error instanceof OkfError) return error.code;
+  return aborted ? "CANCELLED_BY_USER" : "OKF_GIT_FAILED";
+}
+
 export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionService {
   const now = deps.nowMs ?? (() => Date.now());
   const running = new Set<Promise<unknown>>();
@@ -222,14 +256,6 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
     }
     const settings = deps.settings();
     const directory = requireConfiguredDirectory(settings);
-    if (settings.ingest !== true && request.force !== true) {
-      return {
-        kind: "disabled",
-        meetingId: request.meetingId,
-        jobId: null,
-        message: "Automatic ingestion is turned off; run /asr-ingest to ingest this meeting",
-      };
-    }
     const view: OkfMeetingView = buildOkfMeetingView(
       deps.repository,
       request.meetingId,
@@ -238,14 +264,6 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
     const root = await realpath(directory);
     return deps.lock.runExclusive(root, async () => {
       const signal = combined(request);
-      const inspection = await deps.git.inspect(root, signal);
-      if (!inspection.versioned) {
-        throw new OkfError("OKF_NOT_VERSIONED", "The Open knowledge base folder is not a Git repository");
-      }
-      const interrupted = await deps.git.recoverInterrupted(root, signal);
-      if (interrupted !== undefined) {
-        deps.logger?.(`recovered interrupted OKF ingestion ${interrupted.label}`);
-      }
       const previous = deps.attempts.findAttempt(
         view.meetingId,
         view.transcriptVersion,
@@ -265,6 +283,9 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
       let attemptOpen = false;
       let committed = false;
       try {
+        // The attempt is recorded before any git work, so a failure while
+        // preparing the folder still explains itself in the panel and the log
+        // instead of leaving the user with a generic message and no record.
         deps.attempts.beginAttempt({
           meetingId: view.meetingId,
           transcriptVersion: view.transcriptVersion,
@@ -272,6 +293,17 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
           startedAtMs,
         });
         attemptOpen = true;
+        const inspection = await deps.git.inspect(root, signal);
+        if (!inspection.versioned) {
+          // The folder the user picked in settings is the bundle by definition,
+          // so the first ingestion makes it a repository instead of refusing to
+          // run. `initialise` is idempotent and leaves an empty tree uncommitted.
+          await deps.git.initialise(root, signal);
+        }
+        const interrupted = await deps.git.recoverInterrupted(root, signal);
+        if (interrupted !== undefined) {
+          deps.logger?.(`recovered interrupted OKF ingestion ${interrupted.label}`);
+        }
         session = await deps.git.begin({
           root,
           label: `ingest ${view.meetingId}@v${view.transcriptVersion}`,
@@ -376,7 +408,7 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
               state: "failed",
               finishedAtMs: now(),
               errorCode: code,
-              errorMessage: (error instanceof OkfError ? error.message : "Ingestion failed").slice(0, 200),
+              errorMessage: failureDetail(error).slice(0, 200),
             });
           } catch (bookkeepingError) {
             deps.logger?.(`OKF ingestion bookkeeping failed: ${bookkeepingError instanceof Error ? bookkeepingError.name : "unknown"}`);
@@ -402,14 +434,6 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
           message: "Choose an Open knowledge base folder in settings first",
         };
       }
-      if (settings.ingest !== true && request.force !== true) {
-        return {
-          kind: "disabled",
-          meetingId: request.meetingId,
-          jobId: null,
-          message: "Automatic ingestion is switched off; pass --force to ingest anyway",
-        };
-      }
       if (shutdownController.signal.aborted) {
         return {
           kind: "disabled",
@@ -429,11 +453,13 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
           track(
             ingestOnce({ ...request, signal: controller.signal }).then(
               resolveDone,
-              () => resolveDone({
+              (error: unknown) => resolveDone({
                 kind: "failed",
                 meetingId: request.meetingId,
                 jobId: String(job.id),
-                message: "Ingestion failed and was rolled back",
+                // Keep the real cause: the panel shows this text, and a generic
+                // "failed and was rolled back" tells nobody what to fix.
+                message: `${failureCode(error, controller.signal.aborted)}: ${failureDetail(error, settings.directory)}`,
               }),
             ),
           );

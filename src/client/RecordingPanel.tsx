@@ -28,7 +28,9 @@ import {
   type SpeakerNameMap,
 } from "../transcripts/speaker-attribution.js";
 import { RecordingPanelView } from "./RecordingPanelView.js";
+import { isRecordingActive } from "./recording-view-state.js";
 import { RecordingRpcClient } from "./recording-rpc-client.js";
+import { useMeetingIngestion, useStoredMeetings } from "./use-stored-meetings.js";
 
 const POLL_MS = 2_000;
 const SPEAKER_SAVE_DELAY_MS = 400;
@@ -424,19 +426,41 @@ export function RecordingPanel(props: RecordingPanelProps) {
     mic: typeof configValues.mic_device_uid === "string" ? configValues.mic_device_uid : "",
     system: typeof configValues.system_device_uid === "string" ? configValues.system_device_uid : "",
   }), [configValues]);
-  const labels = useMemo(() => speakerLabels(snapshot.preview), [snapshot.preview]);
+  const storedMeetings = useStoredMeetings({
+    active: isRecordingActive(snapshot.view), client, mounted: snapshot.mounted,
+  });
+  // Ingest what the panel is showing: the meeting picked from the list, or the
+  // panel's own meeting once its transcript is committed.
+  const committed = snapshot.view?.transcriptVersion === null || snapshot.view?.transcriptVersion === undefined
+    ? null
+    : snapshot.view.meetingId;
+  const ingestion = useMeetingIngestion({
+    client, meetingId: storedMeetings.selected?.meeting_id ?? committed,
+    mounted: snapshot.mounted, onIngested: storedMeetings.reload,
+  });
+  const preview = storedMeetings.selected === null ? snapshot.preview : (storedMeetings.transcript?.segments ?? []);
+  const stored = storedMeetings.selected === null ? null : {
+    failed: storedMeetings.transcriptError !== null,
+    version: storedMeetings.transcript?.transcript_version ?? null,
+  };
+  const labels = useMemo(() => speakerLabels(preview), [preview]);
   const attribution = useSpeakerAttribution({
-    client, labels, meetingId: snapshot.view?.meetingId ?? null, mounted: snapshot.mounted,
+    client, labels, mounted: snapshot.mounted,
+    meetingId: storedMeetings.selected?.meeting_id ?? snapshot.view?.meetingId ?? null,
   });
   const exportTranscript = useTranscriptExport({
     client, labels, mounted: snapshot.mounted, setError: snapshot.setError, setNotice: setExportNotice,
-    setPending, settings, speakerNames: attribution.names, translate, view: snapshot.view,
+    setPending, settings, translate, view: snapshot.view,
+    // Attribution belongs to the transcript on screen; while a stored meeting is
+    // displayed the export still targets the live one, so its names stay unused.
+    speakerNames: storedMeetings.selected === null ? attribution.names : {},
   });
   const failure = snapshot.error ?? trackError(snapshot.view);
   return <RecordingPanelView devices={devices} exportNotice={exportNotice} exportTranscript={exportTranscript}
     refreshDevices={refreshDevices} selectDevice={selectDevice} selectedDevices={selectedDevices}
     failure={failure} join={join} pending={pendingAction !== null} pendingAction={pendingAction}
     attribution={attribution} hasRecordingHistory={snapshot.hasRecordingHistory} prepare={prepare}
-    preview={snapshot.preview} run={run} settings={settings} settingsRevision={settingsSnapshot?.revision}
-    translate={translate} view={snapshot.view} />;
+    preview={preview} run={run} settings={settings} settingsRevision={settingsSnapshot?.revision}
+    translate={translate} view={snapshot.view} ingestion={ingestion} stored={stored}
+    storedMeetings={storedMeetings} />;
 }

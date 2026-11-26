@@ -3,16 +3,27 @@ import type { ModelSettingsStatus } from "../assets/model-settings-contract.js";
 import type { RecordingPermissionControl } from "./permission-contract.js";
 import type { TranscriptExportControl } from "../transcripts/transcript-export-contract.js";
 import { normalizeSpeakerName } from "../transcripts/speaker-attribution.js";
+import { MeetingRepositoryError } from "../storage/errors.js";
 import type { AudioDeviceService } from "./audio-devices.js";
 import type { MeetingApplication } from "../application/meeting-application.js";
 import type { MeetingReferenceCandidate } from "../application/meeting-reference.js";
+import {
+  DEFAULT_STORED_MEETINGS_LIMIT,
+  MAX_STORED_MEETINGS_LIMIT,
+} from "../application/stored-meeting-panel.js";
 import type { RecordingControlInput } from "../application/recording-application.js";
 import {
   RECORDING_RPC_CHANNEL,
   type MeetingReferenceRpcCandidatesPayload,
   type MeetingReferenceRpcResolvePayload,
+  type OkfIngestRpcPayload,
+  type OkfIngestRpcValue,
   type RecordingRpcControlPayload,
   type RecordingRpcResult,
+  type StoredMeetingRpcEntry,
+  type StoredMeetingsRpcPayload,
+  type StoredMeetingsSyncRpcPayload,
+  type StoredMeetingTranscriptRpcValue,
   type TranscriptExportRpcPayload,
 } from "./rpc-contract.js";
 
@@ -41,6 +52,34 @@ export interface RecordingRpcConnection {
 export interface SpeakerNameStore {
   list(meetingId: string): readonly { readonly label: string; readonly name: string }[];
   replace(meetingId: string, names: readonly { readonly label: string; readonly name: string }[]): void;
+}
+
+/** Committed meetings and transcripts the recording panel can reopen. */
+export interface StoredMeetingSource {
+  list(limit: number): readonly StoredMeetingRpcEntry[];
+  /**
+   * The committed snapshot, or `null` when no such meeting exists. A meeting
+   * that exists without a committed transcript is reported as an error, like
+   * transcript export does.
+   */
+  transcript(meetingId: string): StoredMeetingTranscriptRpcValue | null;
+}
+
+/** Host control for one meeting's OKF ingestion attempts. */
+export interface OkfIngestionControl {
+  start(meetingId: string, options: { readonly force: boolean }): Promise<OkfIngestRpcValue>;
+  status(meetingId: string): OkfIngestRpcValue;
+}
+
+/**
+ * Panel reads and controls layered over prepared storage. Both halves are
+ * optional as a pair: without them the panel endpoints stay unknown.
+ */
+export interface RecordingPanelPorts {
+  readonly meetings: StoredMeetingSource;
+  readonly ingestion: OkfIngestionControl;
+  /** Optional folder-to-database reconciliation for the panel's Sync button. */
+  readonly sync?: (apply: boolean) => Promise<{ readonly removed: number; readonly kept: number }>;
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -121,6 +160,42 @@ function speakerNamesValue(store: SpeakerNameStore, meetingId: string): Readonly
   return names;
 }
 
+function meetingsListPayload(payload: unknown): StoredMeetingsRpcPayload {
+  const value = record(payload);
+  if (value === null || !exact(value, ["limit"])) inputError();
+  if (value.limit === undefined) return {};
+  if (!Number.isSafeInteger(value.limit)
+    || (value.limit as number) < 1
+    || (value.limit as number) > MAX_STORED_MEETINGS_LIMIT) inputError();
+  return { limit: value.limit as number };
+}
+
+function storedMeetingIdPayload(payload: unknown): { readonly meeting_id: string } {
+  const value = record(payload);
+  if (value === null || !exact(value, ["meeting_id"])
+    || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)) inputError();
+  return { meeting_id: value.meeting_id };
+}
+
+function okfIngestPayload(payload: unknown): OkfIngestRpcPayload {
+  const value = record(payload);
+  if (value === null || !exact(value, ["force", "meeting_id"])
+    || typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)
+    || (value.force !== undefined && typeof value.force !== "boolean")) inputError();
+  return {
+    meeting_id: value.meeting_id,
+    ...(value.force === undefined ? {} : { force: value.force as boolean }),
+  };
+}
+
+function meetingsSyncPayload(payload: unknown): StoredMeetingsSyncRpcPayload {
+  const value = record(payload);
+  if (value === null || !exact(value, ["apply"])) inputError();
+  const apply = value["apply"];
+  if (apply !== undefined && typeof apply !== "boolean") inputError();
+  return apply === undefined ? {} : { apply };
+}
+
 function transcriptExportPayload(payload: unknown): TranscriptExportRpcPayload {
   const value = record(payload);
   if (value === null || !exact(value,
@@ -189,6 +264,7 @@ export function registerRecordingHostRpc(
   devices?: AudioDeviceService,
   chooseOkfDirectory?: (signal?: AbortSignal) => Promise<string | null>,
   speakerNames?: SpeakerNameStore,
+  panel?: RecordingPanelPorts,
 ): () => Promise<void> {
   return connection.rpc.handle(RECORDING_RPC_CHANNEL, async (endpoint, payload, signal) => {
     try {
@@ -278,6 +354,40 @@ export function registerRecordingHostRpc(
         speakerNames.replace(request.meeting_id, Object.entries(request.speaker_names)
           .map(([label, name]) => ({ meetingId: request.meeting_id, label, name })));
         return { ok: true, value: { speaker_names: speakerNamesValue(speakerNames, request.meeting_id) } };
+      }
+      if (panel !== undefined && endpoint === "meetings/list") {
+        const request = meetingsListPayload(payload);
+        return {
+          ok: true,
+          value: {
+            items: panel.meetings.list(request.limit ?? DEFAULT_STORED_MEETINGS_LIMIT),
+          },
+        };
+      }
+      if (panel !== undefined && endpoint === "meetings/transcript") {
+        const request = storedMeetingIdPayload(payload);
+        const transcript = panel.meetings.transcript(request.meeting_id);
+        if (transcript === null) {
+          throw new MeetingRepositoryError("MEETING_NOT_FOUND", "Meeting does not exist");
+        }
+        return { ok: true, value: transcript };
+      }
+      if (panel !== undefined && endpoint === "meetings/sync" && panel.sync !== undefined) {
+        const request = meetingsSyncPayload(payload);
+        return { ok: true, value: await panel.sync(request.apply ?? false) };
+      }
+      if (panel !== undefined && endpoint === "okf/ingest") {
+        const request = okfIngestPayload(payload);
+        return {
+          ok: true,
+          value: await panel.ingestion.start(request.meeting_id, {
+            force: request.force ?? false,
+          }),
+        };
+      }
+      if (panel !== undefined && endpoint === "okf/ingest/status") {
+        const request = storedMeetingIdPayload(payload);
+        return { ok: true, value: panel.ingestion.status(request.meeting_id) };
       }
       if (endpoint.startsWith("transcripts/") && transcripts !== undefined) {
         if (endpoint === "transcripts/choose-directory") {

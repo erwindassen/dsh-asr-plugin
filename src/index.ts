@@ -25,6 +25,9 @@ import { registerRecordingHostRpc } from "./recording/host-rpc.js";
 import { createMacDirectoryPicker } from "./transcripts/directory-picker.js";
 import { createTranscriptExportControl } from "./transcripts/transcript-export-control.js";
 import { installOkfHost, type OkfHost } from "./host/okf-host.js";
+import { createStoredMeetingPanel } from "./application/stored-meeting-panel.js";
+import { createStoredMeetingSync } from "./application/stored-meeting-sync.js";
+import { panelIngestion } from "./okf/panel-ingestion.js";
 import { admittingThrough, recordingHttpConnection, type RecordingWebServer } from "./recording/http-connection.js";
 import { acquireDataRootLease } from "./storage/data-root-lease.js";
 import { openManagedAudioStore } from "./storage/managed-audio-store.js";
@@ -33,6 +36,7 @@ import {
   type MeetingRepository,
 } from "./storage/meeting-repository.js";
 import { registerMeetingTools } from "./tools/meeting-tools.js";
+import { registerOkfTools } from "./tools/okf-tools.js";
 import { createDshWorkerSpawner } from "./worker/dsh-spawner.js";
 import { createPackagedWorkerLaunch } from "./worker/launch.js";
 import {
@@ -80,7 +84,7 @@ export const Config = z.object({
   okf_directory: z.string().default("").volatile()
     .description("Folder holding the Open knowledge base bundle; empty disables ingestion"),
   okf_ingest: z.boolean().default(true).volatile()
-    .description("Summarise each committed transcript into the Open knowledge base automatically"),
+    .description("Legacy setting; ingestion now starts from the recording panel or /asr-ingest"),
   mic_device_uid: z.string().default("").volatile()
     .description("Microphone device UID; empty follows the macOS default input"),
   system_device_uid: z.string().default("").volatile()
@@ -322,6 +326,7 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
         };
       },
     });
+    registerOkfTools(context, { pages: okf.pages });
     const downloads = new ModelDownloadController({ dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT,
       jobs: context.jobs, transport: context.subprocess, settings: () => {
         const current = effectiveConfig<ParsedConfig>(context);
@@ -347,6 +352,27 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
     // `connection.admit`, so the call has to come from a context that injected
     // `connection.authentication`. 0.2.2 has no such service, never runs the
     // nested inject, and keeps admitting through the connection it always used.
+    const ingestion = lifetime.okf === undefined ? undefined : panelIngestion(lifetime.okf.service);
+    const panelPorts = lifetime.okf === undefined || ingestion === undefined ? undefined : {
+      meetings: createStoredMeetingPanel({
+        meetings: repository,
+        ingestion: lifetime.okf.attempts,
+        speakerNames: lifetime.okf.speakerNames,
+      }),
+      ingestion,
+      // The folder is what the user can see, so Syncing it removes the stored
+      // meetings it does not hold — the same deletion the delete tool performs.
+      sync: async (apply: boolean) => {
+        const reconciliation = createStoredMeetingSync({
+          repository,
+          remove: async (meetingId: string, expectedVersion: number) => {
+            await application.deleteMeeting({ meetingId, expectedVersion });
+          },
+          directory: () => okfSettings().directory,
+        });
+        return apply ? reconciliation.run() : reconciliation.preview();
+      },
+    };
     let authenticated: Context | undefined;
     context.inject(["connection", "connection.authentication"], (authContext) => {
       authenticated = authContext;
@@ -361,7 +387,7 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
       const removeRpc = registerRecordingHostRpc(connection, application, signal => readModelSettings(
         { dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT, engine: selectedEngine(context), signal },
       ), downloads, recording.permissions, signal => application.prepareRecording(signal), transcripts,
-      recording.devices, chooseOkfDirectory, lifetime.okf?.speakerNames);
+      recording.devices, chooseOkfDirectory, lifetime.okf?.speakerNames, panelPorts);
       webContext.effect(() => removeRpc, "dsh-asr: recording client RPC");
     });
   } catch (error) {

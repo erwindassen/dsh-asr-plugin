@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 
 import { createOkfIngestionAgent, DEFAULT_OKF_AGENT_TIMEOUT_MS, OKF_INGEST_SKILL_NAME } from "../../src/okf/ingestion-agent.js";
-import type { OkfAgentHandle } from "../../src/okf/ingestion-agent.js";
+import type { OkfAgentHandle, OkfAgentSeed } from "../../src/okf/ingestion-agent.js";
+import { OkfError } from "../../src/okf/contracts.js";
 import type { OkfAgentPort, OkfAgentRequest, OkfMeetingView } from "../../src/okf/contracts.js";
 
 const SESSION_ID = "session-okf-1";
@@ -68,6 +69,7 @@ function makeRequest(overrides: { readonly signal?: AbortSignal; readonly transc
 interface Harness {
   readonly port: OkfAgentPort;
   readonly created: CreateAgentOptions[];
+  readonly seeds: OkfAgentSeed[];
   readonly skills: string[];
 }
 
@@ -78,11 +80,13 @@ function harness(overrides: {
   readonly sessionId?: () => string;
 } = {}): Harness {
   const created: CreateAgentOptions[] = [];
+  const seeds: OkfAgentSeed[] = [];
   const skills: string[] = [];
   const port = createOkfIngestionAgent({
     agents: {
-      async create(options) {
+      async create(options, seed) {
         created.push(options);
+        seeds.push(seed);
         return overrides.create === undefined ? fakeHandle().handle : await overrides.create(options);
       },
     },
@@ -93,10 +97,16 @@ function harness(overrides: {
     sessionId: overrides.sessionId ?? (() => SESSION_ID),
     ...(overrides.timeoutMs === undefined ? {} : { timeoutMs: overrides.timeoutMs }),
   });
-  return { port, created, skills };
+  return { port, created, seeds, skills };
 }
 
 describe("createOkfIngestionAgent", () => {
+  it("hands the bundle and the meeting to the host so it can lend a writer", async () => {
+    const test = harness({ create: async () => fakeHandle().handle });
+    await test.port.ingest(makeRequest());
+    expect(test.seeds).toEqual([{ meetingId: MEETING.meetingId, directory: BUNDLE }]);
+  });
+
   it("does not create a child when the okf skill is unavailable", async () => {
     const test = harness({ skillAvailable: () => false });
     const outcome = await test.port.ingest(makeRequest());
@@ -133,12 +143,19 @@ describe("createOkfIngestionAgent", () => {
     expect(hook.state.disposed).toBe(true);
   });
 
-  it("returns a failed outcome without paths when the child cannot start", async () => {
-    const test = harness({ create: async () => { throw new Error("spawn failed at /secret/path"); } });
+  it("reports why the child could not start without repeating the bundle path", async () => {
+    const test = harness({ create: async () => { throw new Error(`spawn failed for ${BUNDLE}/nested`); } });
     const outcome = await test.port.ingest(makeRequest());
     expect(outcome.kind).toBe("failed");
-    expect(outcome.message).toBe("The Open knowledge base writer could not start.");
-    expect(outcome.message).not.toContain("/secret");
+    expect(outcome.message).toContain("The Open knowledge base writer could not start.");
+    expect(outcome.message).toContain("spawn failed for <bundle>/nested");
+    expect(outcome.message).not.toContain(BUNDLE);
+  });
+
+  it("keeps a typed refusal instead of blaming the writer", async () => {
+    const refusal = new OkfError("OKF_NO_MODEL", "Choose a model in DSH settings before summarising a meeting");
+    const test = harness({ create: async () => { throw refusal; } });
+    await expect(test.port.ingest(makeRequest())).rejects.toBe(refusal);
   });
 
   it("fails without transcript text when the child throws", async () => {

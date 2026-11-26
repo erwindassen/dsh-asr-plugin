@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 
-import type { OkfAgentOutcome, OkfAgentPort, OkfAgentRequest, OkfMeetingView } from "./contracts.js";
+import { OkfError, type OkfAgentOutcome, type OkfAgentPort, type OkfAgentRequest, type OkfMeetingView } from "./contracts.js";
 
 /** Prompt asset shared with the `okf` skill conventions. */
 const INGEST_INSTRUCTION_URL = new URL("../../assets/prompts/okf-ingest.md", import.meta.url);
@@ -27,8 +27,14 @@ export interface OkfAgentHandle {
   dispose?(): Promise<void>;
 }
 
+/** What the host needs to lend the child its one write authority. */
+export interface OkfAgentSeed {
+  readonly meetingId: string;
+  readonly directory: string;
+}
+
 export interface OkfAgentFactory {
-  create(options: CreateAgentOptions): Promise<OkfAgentHandle>;
+  create(options: CreateAgentOptions, seed: OkfAgentSeed): Promise<OkfAgentHandle>;
 }
 
 export interface OkfIngestionAgentDeps {
@@ -54,6 +60,21 @@ function failed(message: string): OkfAgentOutcome {
 
 function isAborted(signal: AbortSignal | undefined): boolean {
   return signal !== undefined && signal.aborted;
+}
+
+/**
+ * Explain why the child agent could not be created.
+ *
+ * The agent factory fails for reasons the user can act on (an unknown model
+ * route, a session backend refusing the id, a missing workspace), and the
+ * fixed sentence we used to report hid all of them behind "could not start".
+ * The cause is folded to one line with the bundle path removed.
+ */
+function startFailure(error: unknown, directory: string): string {
+  const name = error instanceof Error && error.name !== "" ? error.name : "Error";
+  const detail = error instanceof Error ? error.message : String(error);
+  const folded = detail.split(directory).join("<bundle>");
+  return `${WRITER_START_FAILED_MESSAGE} ${name}: ${singleLine(folded, 300)}`;
 }
 
 function singleLine(value: string, limit = 200): string {
@@ -208,11 +229,14 @@ export function createOkfIngestionAgent(deps: OkfIngestionAgentDeps): OkfAgentPo
             sessionId: deps.sessionId() as CreateAgentOptions["sessionId"],
             meta: { cwd: request.directory, origin: "subagent" },
             signal: controller.signal,
-          });
-        } catch {
+          }, { meetingId: request.meeting.meetingId, directory: request.directory });
+        } catch (error) {
+          // A typed refusal (no model route, no folder) keeps its code so the
+          // panel can name the problem instead of "could not start".
+          if (error instanceof OkfError) throw error;
           return failed(timedOut
             ? TIMEOUT_MESSAGE
-            : controller.signal.aborted ? CANCELLED_MESSAGE : WRITER_START_FAILED_MESSAGE);
+            : controller.signal.aborted ? CANCELLED_MESSAGE : startFailure(error, request.directory));
         }
 
         if (controller.signal.aborted) {
@@ -227,7 +251,10 @@ export function createOkfIngestionAgent(deps: OkfIngestionAgentDeps): OkfAgentPo
         }
         if (outcome === "failed") return failed(WRITER_FAILED_MESSAGE);
         return { kind: "ingested" };
-      } catch {
+      } catch (error) {
+        // Typed refusals travel to the caller so the panel can name the cause;
+        // anything else is an unidentified writer failure and must leak nothing.
+        if (error instanceof OkfError) throw error;
         return failed(timedOut
           ? TIMEOUT_MESSAGE
           : controller.signal.aborted ? CANCELLED_MESSAGE : WRITER_FAILED_MESSAGE);

@@ -21,6 +21,22 @@ original folder or to the plugin's database.
   participants, decisions, extracted entities, concepts, action items and
   deadlines.
 
+## Write with the tool
+
+Your session has no shell and no filesystem tools. The only way to create or
+update a page is the `okf_write_page` tool:
+
+```
+okf_write_page(path: "meetings/2026-01-31-weekly-review.md", content: "<the whole page>")
+```
+
+- `path` is bundle-relative, inside `meetings/`, `actions/`, `deadlines/`,
+  `entities/`, `concepts/` or `sources/`.
+- `content` is the complete page including frontmatter. Call it once per page.
+- `index.md` files and `references/` are refused: the plugin owns them.
+- Never paste pages into your final answer. An answer that only describes the
+  pages leaves the bundle empty, and the ingestion fails.
+
 ## Pages to write
 
 - `meetings/<yyyy-mm-dd>-<slug>.md` — the meeting.
@@ -65,4 +81,4 @@ meeting to the `sources` of every page you create or update.
 
 ## Finish
 
-- Reply with one line listing the pages you wrote.
+- Reply with one line listing the paths you wrote with `okf_write_page`.

@@ -39,6 +39,18 @@ function MainControl({ pending, pendingAction, run, translate, view }: Pick<Pane
   </Tooltip>;
 }
 
+function IngestControl({ canIngest, ingestion, translate }: Pick<PanelViewProps, "canIngest" | "ingestion" | "translate">) {
+  const busy = ingestion?.running ?? false;
+  const label = translate(busy ? "panel.ingesting" : "panel.ingest");
+  return <Tooltip label={label}>
+    <Button variant="ghost" className={`${styles.ingest} ${!canIngest ? styles.off : ""}`}
+      aria-label={label} aria-busy={busy} disabled={!canIngest || busy}
+      onClick={() => void ingestion?.start()}>
+      {busy ? <span className={styles.spinner} aria-hidden="true" /> : <RecordingIcon name="ingest" />}
+    </Button>
+  </Tooltip>;
+}
+
 function Chevron() {
   return <svg aria-hidden="true" viewBox="0 0 12 12" width="12" height="12" className={styles.caretIcon}>
     <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" strokeWidth="1.5"
@@ -146,6 +158,7 @@ export function RecordingControls(props: PanelViewProps) {
   const canReference = props.hasRecordingHistory || props.view?.recordingStartedAtMs != null;
   return <>
     <MainControl {...props} />
+    <IngestControl {...props} />
     <TrackButton {...props} track="mic" /><TrackButton {...props} track="system" />
     <Tooltip label={props.translate("panel.join")}>
       <Button variant="ghost" className={`${styles.control} ${!canReference ? styles.off : ""}`}

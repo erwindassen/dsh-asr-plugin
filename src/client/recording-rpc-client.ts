@@ -14,7 +14,13 @@ import {
   type RecordingRpcStateValue,
   type RecordingRpcTrack,
   type RecordingRpcView,
+  type OkfIngestRpcPayload,
+  type OkfIngestRpcValue,
   type SaveSpeakerNamesRpcPayload,
+  type StoredMeetingRpcEntry,
+  type StoredMeetingTranscriptRpcPayload,
+  type StoredMeetingsSyncRpcPayload,
+  type StoredMeetingTranscriptRpcValue,
   type SpeakerNamesRpcPayload,
   type SpeakerNamesRpcValue,
   type TranscriptExportRpcPayload,
@@ -31,6 +37,56 @@ function speakerNameMap(value: unknown): Readonly<Record<string, string>> {
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+/** One row of the panel's stored-meeting list. */
+function storedMeeting(value: unknown): StoredMeetingRpcEntry {
+  const item = record(value);
+  exact(item, [
+    "meeting_id", "title", "started_at", "duration_ms",
+    "transcript_version", "status", "ingested_transcript_version",
+  ]);
+  if (typeof item.meeting_id !== "string" || !UUID_PATTERN.test(item.meeting_id)) {
+    throw new Error("INVALID_RESPONSE");
+  }
+  if (typeof item.title !== "string") throw new Error("INVALID_RESPONSE");
+  if (item.status !== "completed" && item.status !== "partial") throw new Error("INVALID_RESPONSE");
+  const ingested = item.ingested_transcript_version;
+  return {
+    meeting_id: item.meeting_id,
+    title: item.title,
+    started_at: nullableString(item.started_at),
+    duration_ms: item.duration_ms === null ? null : nonnegativeInteger(item.duration_ms),
+    transcript_version: nonnegativeInteger(item.transcript_version),
+    status: item.status,
+    ingested_transcript_version: ingested === null ? null : nonnegativeInteger(ingested),
+  };
+}
+
+function okfIngestValue(value: unknown): OkfIngestRpcValue {
+  const item = record(value);
+  exact(item, ["job_id", "state", "transcript_version", "error_code", "message"]);
+  const state = item.state;
+  if (state !== "idle" && state !== "running" && state !== "succeeded" && state !== "failed") {
+    throw new Error("INVALID_RESPONSE");
+  }
+  return {
+    job_id: nullableString(item.job_id),
+    state,
+    transcript_version: item.transcript_version === null
+      ? null : nonnegativeInteger(item.transcript_version),
+    error_code: nullableString(item.error_code),
+    message: nullableString(item.message),
+  };
+}
+
+function storedMeetingsSyncValue(value: unknown): { readonly removed: number; readonly kept: number } {
+  const item = record(value);
+  exact(item, ["removed", "kept"]);
+  return {
+    removed: nonnegativeInteger(item.removed),
+    kept: nonnegativeInteger(item.kept),
+  };
+}
 
 function record(value: unknown): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("INVALID_RESPONSE");
@@ -317,6 +373,62 @@ export class RecordingRpcClient {
     const value = record(await call(this.rpc, "transcripts/save-speaker-names", payload, signal));
     exact(value, ["speaker_names"]);
     return { speaker_names: speakerNameMap(value.speaker_names) };
+  }
+
+
+  /** Stored meetings the panel can load into its draft view, newest first. */
+  async listMeetings(limit?: number, signal?: AbortSignal): Promise<readonly StoredMeetingRpcEntry[]> {
+    const value = record(await call(
+      this.rpc,
+      "meetings/list",
+      limit === undefined ? {} : { limit },
+      signal,
+    ));
+    exact(value, ["items"]);
+    if (!Array.isArray(value.items)) throw new Error("INVALID_RESPONSE");
+    return value.items.map(storedMeeting);
+  }
+
+  /** Committed transcript of one stored meeting, for the draft view. */
+  async meetingTranscript(
+    payload: StoredMeetingTranscriptRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<StoredMeetingTranscriptRpcValue> {
+    const value = record(await call(this.rpc, "meetings/transcript", payload, signal));
+    exact(value, ["meeting_id", "title", "transcript_version", "duration_ms", "segments"]);
+    if (typeof value.meeting_id !== "string" || !UUID_PATTERN.test(value.meeting_id)) {
+      throw new Error("INVALID_RESPONSE");
+    }
+    if (typeof value.title !== "string") throw new Error("INVALID_RESPONSE");
+    if (!Array.isArray(value.segments)) throw new Error("INVALID_RESPONSE");
+    return {
+      meeting_id: value.meeting_id,
+      title: value.title,
+      transcript_version: nonnegativeInteger(value.transcript_version),
+      duration_ms: value.duration_ms === null ? null : nonnegativeInteger(value.duration_ms),
+      segments: value.segments.map(segment),
+    };
+  }
+
+  /** Starts one ingestion run for a stored meeting. */
+  async ingestMeeting(payload: OkfIngestRpcPayload, signal?: AbortSignal): Promise<OkfIngestRpcValue> {
+    return okfIngestValue(await call(this.rpc, "okf/ingest", payload, signal));
+  }
+
+  /** Reads the current or last ingestion attempt for one stored meeting. */
+  async ingestionStatus(
+    payload: StoredMeetingTranscriptRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<OkfIngestRpcValue> {
+    return okfIngestValue(await call(this.rpc, "okf/ingest/status", payload, signal));
+  }
+
+  /** Counts, or removes, the stored meetings the OKF folder does not hold. */
+  async syncMeetings(
+    payload: StoredMeetingsSyncRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<{ readonly removed: number; readonly kept: number }> {
+    return storedMeetingsSyncValue(await call(this.rpc, "meetings/sync", payload, signal));
   }
 
   /** Lists CoreAudio devices through the signed helper. */

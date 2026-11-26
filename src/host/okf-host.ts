@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Context } from "@deepseek-ai/cordis";
 import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 
-import { createOkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
+import { createOkfIngestionRepository, type OkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
 import { createSpeakerNameRepository, type SpeakerNameRepository } from "../storage/speaker-name-repository.js";
 import { openMeetingDatabase } from "../storage/database.js";
 import type { MeetingRepository } from "../storage/meeting-repository.js";
@@ -20,14 +20,15 @@ import {
   createOkfIngestionAgent,
   type OkfAgentFactory,
   type OkfAgentHandle,
+  type OkfAgentSeed,
 } from "../okf/ingestion-agent.js";
+import { createPageWriteRegistry, type OkfPageWriteRegistry } from "../okf/write-session.js";
 import { userTextMessage } from "../okf/user-message.js";
 import {
   createOkfIngestionService,
   type OkfIngestionService,
   type OkfSettings,
 } from "../okf/ingestion-service.js";
-import { startOkfIngestion, withTranscriptCommitHook } from "../okf/trigger.js";
 
 /** Command runtime as reached through `context.get("commands")`; the package is not installed. */
 interface CommandRuntime {
@@ -43,11 +44,15 @@ export interface OkfHostOptions {
 }
 
 export interface OkfHost {
-  /** Repository whose `commitTranscript` starts an automatic ingestion. */
+  /** Unwrapped repository; ingestion is user-driven, so commits start nothing. */
   readonly repository: MeetingRepository;
   readonly service: OkfIngestionService;
+  /** Ingestion attempt log, shared with the recording panel's read model. */
+  readonly attempts: OkfIngestionRepository;
   /** Per-meeting speaker attribution, shared with the recording panel RPC. */
   readonly speakerNames: SpeakerNameRepository;
+  /** Write authority the summarising child uses through `okf_write_page`. */
+  readonly pages: OkfPageWriteRegistry;
   hasCommand: boolean;
   dispose(): Promise<void>;
 }
@@ -56,15 +61,95 @@ export interface OkfHost {
  * `AgentHandle` from the registry wraps the driver; the ingestion agent expects
  * the flattened shape, so this adapter owns the one place that difference lives.
  */
-function agentFactory(context: Context): OkfAgentFactory {
+/** Route a child agent needs; the plugin runs outside any agent turn. */
+interface AgentRouteOptions {
+  readonly agentOptions: NonNullable<CreateAgentOptions["agentOptions"]>;
+  readonly agentPreset?: string;
+}
+
+/** Reads the default model selection DSH settings own, plus the composed preset. */
+function agentRoute(context: Context): AgentRouteOptions {
+  const defaults = context.get("agentDefaultModel") as
+    | { currentSelection?: () => unknown }
+    | undefined;
+  let selection: unknown;
+  try {
+    selection = defaults?.currentSelection?.();
+  } catch {
+    selection = undefined;
+  }
+  const fields = (typeof selection === "object" && selection !== null ? selection : {}) as Record<string, unknown>;
+  const route = (typeof fields.route === "object" && fields.route !== null ? fields.route : {}) as Record<string, unknown>;
+  const provider = typeof fields.provider === "string" ? fields.provider : route.provider;
+  const model = typeof fields.model === "string" ? fields.model : route.model;
+  if (typeof provider !== "string" || provider === "" || typeof model !== "string" || model === "") {
+    throw new OkfError(
+      "OKF_NO_MODEL",
+      "Choose a model in DSH settings before summarising a meeting",
+    );
+  }
+  const reasoningEffort = fields.reasoningEffort ?? route.reasoningEffort;
+  const agentOptions: NonNullable<CreateAgentOptions["agentOptions"]> = {
+    provider,
+    model,
+    ...(typeof reasoningEffort === "string" ? { reasoningEffort } : {}),
+  } as NonNullable<CreateAgentOptions["agentOptions"]>;
+
+  const presets = context.get("agentPresets") as
+    | { composedPreset?: (scope: Context) => string | undefined }
+    | undefined;
+  let agentPreset: string | undefined;
+  try {
+    agentPreset = presets?.composedPreset?.(context);
+  } catch {
+    agentPreset = undefined;
+  }
+  return agentPreset === undefined ? { agentOptions } : { agentOptions, agentPreset };
+}
+
+/** Exported for tests: the adapter owns the model route and the write session. */
+export function okfAgentFactory(context: Context, pages: OkfPageWriteRegistry): OkfAgentFactory {
+  // Cordis resolves a service proxy against the fiber that reads it, and the
+  // plugin root never injected `agents`, so `context.agents` threw "cannot get
+  // property \"agents\" without inject" the moment a summarising child was
+  // created. Hold a context that declared the injection and create through it.
+  let agentsContext: Context | undefined;
+  context.inject(["agents"], (agentsCtx) => {
+    agentsContext = agentsCtx;
+    return () => {
+      if (agentsContext === agentsCtx) agentsContext = undefined;
+    };
+  });
   return {
-    async create(options: CreateAgentOptions): Promise<OkfAgentHandle> {
-      const handle = await context.agents.create(options);
+    async create(options: CreateAgentOptions, seed: OkfAgentSeed): Promise<OkfAgentHandle> {
+      const route = agentRoute(context);
+      const meta = route.agentPreset === undefined
+        ? options.meta
+        : { ...options.meta, agentPreset: route.agentPreset };
+      const agents = agentsContext?.agents;
+      if (agents === undefined) {
+        throw new OkfError(
+          "OKF_AGENT_FAILED",
+          "The agent service is not available yet; reopen the application and try again",
+        );
+      }
+      const handle = await agents.create({
+        ...options,
+        agentOptions: route.agentOptions,
+        ...(meta === undefined ? {} : { meta }),
+      });
+      // The child's tool set has no filesystem tools, so the plugin lends it one
+      // writer for this bundle only, for as long as the child lives.
+      const sessionId = String(options.sessionId);
+      pages.open(sessionId, { root: seed.directory, meetingId: seed.meetingId });
       return {
         followup: (text: string) => handle.agent.followup(userTextMessage(text)),
         whenIdle: () => handle.agent.whenIdle(),
         interrupt: () => handle.agent.cancel({ kind: "parent" }),
-        dispose: async () => { await handle.dispose(); },
+        dispose: async () => {
+          pages.close(sessionId);
+          await handle.dispose();
+        },
       };
     },
   };
@@ -112,6 +197,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
   const database = openMeetingDatabase(options.databasePath);
   const attempts = createOkfIngestionRepository(database);
   const speakerNames = createSpeakerNameRepository(database);
+  const pages = createPageWriteRegistry();
   const service = createOkfIngestionService({
     repository: options.repository,
     attempts,
@@ -119,7 +205,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
     git: createOkfGitTransaction(createOkfGitPort(context)),
     lock: createOkfBundleLock(),
     agent: createOkfIngestionAgent({
-      agents: agentFactory(context),
+      agents: okfAgentFactory(context, pages),
       skillAvailable: skillProbe(context),
       sessionId: () => `okf-ingest-${randomUUID()}`,
     }),
@@ -127,17 +213,9 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
     jobs: context.jobs,
     logger: (line) => { context.logger("dsh-asr").info(line); },
   });
-  const repository = withTranscriptCommitHook(options.repository, {
-    onCommitted: (meetingId) => {
-      const record = options.repository.getMeeting(meetingId);
-      startOkfIngestion(service, {
-        settings: options.settings,
-        ...(record?.committedStatus === null || record?.committedStatus === undefined
-          ? {}
-          : { committedStatus: record.committedStatus }),
-      }, meetingId);
-    },
-  });
+  // Ingestion is user-driven: the panel button and `/asr-ingest` are the only
+  // entry points, so committing a transcript never starts work on its own.
+  const repository = options.repository;
   const definition = createAsrIngestCommand({
     directory: () => options.settings().directory,
     // No session-scoped reference is available to a plugin command yet.
@@ -166,7 +244,9 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
   return {
     repository,
     service,
+    attempts,
     speakerNames,
+    pages,
     hasCommand,
     async dispose(): Promise<void> {
       // Abort in-flight ingestions first: closing the connection underneath a

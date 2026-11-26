@@ -50,7 +50,10 @@ admitted series exposes; DSH 0.2.3 removed the `requestRejection` wrapper the
 adapter used before. From 0.2.3 that gate resolves its credential verifier
 through the fiber that calls it, so the route handler admits through a context
 that injected `connection.authentication` and falls back to the plain
-connection where the host has no such service. The client coordinator
+connection where the host has no such service. The same rule governs the
+summarising child agent: `agents.create` is called from a context that injected
+`agents`, because the plugin root never declares it and a bare `ctx.agents`
+throws `cannot get property "agents" without inject`. The client coordinator
 normalizes composer send states before applying the meeting reference policy.
 Check admission and client and host integration before expanding the supported
 series. `probe:p0-07:config` checks the CLI against the development host version.
@@ -68,11 +71,21 @@ session work root. Workers do not use network or SQLite.
 Product child processes use DSH Subprocess. The signed Helper owns capture,
 macOS permission interaction, chunks and watchdogs.
 
-Open knowledge base ingestion is host code plus one child Agent. `src/okf/contracts.ts`
-holds the shared types and ports; storage keeps attempt state in `okf_ingestion`;
-`src/okf/git-transaction.ts` makes one ingestion one commit; `src/host/okf-host.ts`
-wires the slices into `apply`. Bundle writes use `node:fs` from host code because
-the child Agent's workspace is the bundle itself. See [okf](okf.md).
+Open knowledge base ingestion is host code plus one child Agent, started by the
+recording panel or `/asr-ingest` rather than by a transcript commit.
+`src/okf/contracts.ts` holds the shared types and ports; storage keeps attempt state
+in `okf_ingestion`; `src/okf/git-transaction.ts` makes one ingestion one commit;
+`src/okf/panel-ingestion.ts` maps an attempt onto the panel's wire shape;
+`src/okf/page-writer.ts` and `src/okf/write-session.ts` are the child's one write
+authority, surfaced by `src/tools/okf-tools.ts` as `okf_write_page`, because a
+child created from plugin code gets no filesystem tools of its own;
+`src/application/stored-meeting-panel.ts` is the read model behind the panel's
+meeting list and `src/application/stored-meeting-sync.ts` reconciles that list with
+the folder, counting through `src/okf/bundle-meetings.ts`; `src/host/okf-host.ts`
+wires the slices into `apply`, and `agentRoute` there gives the child the default
+model selection because a plugin runs outside any agent turn. Bundle writes
+use `node:fs` from host code because the child Agent's workspace is the bundle
+itself. See [okf](okf.md).
 
 Speaker attribution is one row per meeting and label in `meeting_speaker_names`;
 `src/transcripts/speaker-attribution.ts` owns normalisation and the problem kinds,

@@ -3,6 +3,8 @@ import { dirname, join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 
 import { JobId, type JobRegistry } from "@deepseek-ai/dsh-jobs";
+import type { Context } from "@deepseek-ai/cordis";
+import type { ToolDefinition } from "@deepseek-ai/dsh-tools";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createOkfBundleLock } from "../../src/okf/bundle-lock.js";
@@ -16,6 +18,7 @@ import {
 import {
   OKF_INGESTION_JOURNAL_FILE,
   createOkfGitTransaction,
+  type OkfGitTransaction,
 } from "../../src/okf/git-transaction.js";
 import {
   createOkfIngestionService,
@@ -39,6 +42,8 @@ import {
   createOkfIngestionRepository,
   type OkfIngestionRepository,
 } from "../../src/storage/okf-ingestion-repository.js";
+import { registerOkfTools } from "../../src/tools/okf-tools.js";
+import { createPageWriteRegistry } from "../../src/okf/write-session.js";
 import {
   createRealGitPort,
   createTemporaryRoot,
@@ -210,6 +215,8 @@ function defaultAgentPages(request: OkfAgentRequest): readonly OkfFile[] {
 
 interface HarnessOptions {
   readonly agent?: FakeAgentPlan;
+  /** Replaces the fake writer, for tests that drive the child's real authority. */
+  readonly agentPort?: OkfAgentPort;
 }
 
 interface Harness {
@@ -219,6 +226,7 @@ interface Harness {
   readonly database: DatabaseSync;
   readonly attempts: OkfIngestionRepository;
   readonly agent: FakeAgent;
+  readonly agentPort: OkfAgentPort;
   readonly jobs: RecordingJobs;
   readonly logs: readonly string[];
   readonly service: OkfIngestionService;
@@ -292,7 +300,8 @@ async function createHarness(options: HarnessOptions = {}): Promise<Harness> {
   };
   const jobs = createRecordingJobs();
   const logs: string[] = [];
-  const agent = new FakeAgent(options.agent);
+  const fakeAgent = new FakeAgent(options.agent);
+  const agent: OkfAgentPort = options.agentPort ?? fakeAgent;
 
   const serviceFor = (directory: string): OkfIngestionService => {
     const settings: OkfSettings = { directory, ingest: true };
@@ -317,7 +326,8 @@ async function createHarness(options: HarnessOptions = {}): Promise<Harness> {
     meetings,
     database,
     attempts,
-    agent,
+    agent: fakeAgent,
+    agentPort: agent,
     jobs,
     logs,
     service: serviceFor(bundle),
@@ -521,19 +531,131 @@ describe.skipIf(!gitAvailable())("createOkfIngestionService", () => {
     });
   });
 
-  it("fails with OKF_NOT_VERSIONED before recording an attempt in a plain folder", async () => {
+  it("initialises a folder that is not a repository yet and keeps its files", async () => {
     const harness = await createHarness();
     const plain = join(harness.root, "plain");
     await mkdir(plain);
     await writeFile(join(plain, "note.md"), "# Not a repository\n", "utf8");
-    const treeBefore = await hashTree(plain);
 
-    const error = await failedRun(harness.serviceFor(plain));
+    const outcome = await harness.serviceFor(plain).run({ meetingId: MEETING_ID });
 
-    expectOkfError(error, "OKF_NOT_VERSIONED");
-    expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toHaveLength(0);
-    expect(await hashTree(plain)).toBe(treeBefore);
-    await expect(readdir(join(plain, ".git"))).rejects.toMatchObject({ code: "ENOENT" });
+    // The folder chosen in settings is the bundle, so the first run makes it a
+    // repository instead of refusing: the user's own files become the baseline.
+    expect(outcome.kind).toBe("ingested");
+    expect(await readFile(join(plain, "note.md"), "utf8")).toBe("# Not a repository\n");
+    expect(await commitCount(plain)).toBe(2);
+    expect(await lastSubject(plain)).toBe(`ingest ${MEETING_ID}@v1`);
+    expect(await statusPorcelain(plain)).toBe("");
+    expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toHaveLength(1);
+  });
+
+  it("records an attempt when the folder cannot be prepared", async () => {
+    const harness = await createHarness();
+    const broken: OkfGitTransaction = {
+      ...transaction,
+      inspect: async () => {
+        throw Object.assign(new Error("spawn git ENOENT"), { code: "ENOENT" });
+      },
+    };
+    const service = createOkfIngestionService({
+      repository: harness.meetings,
+      attempts: harness.attempts,
+      git: broken,
+      lock: createOkfBundleLock(),
+      agent: harness.agent,
+      settings: () => ({ directory: harness.bundle, ingest: true }),
+      jobs: harness.jobs.jobs,
+      logger: () => undefined,
+    });
+
+    const error = await service.run({ meetingId: MEETING_ID }).catch((thrown: unknown) => thrown);
+
+    expectOkfError(error, "OKF_GIT_FAILED");
+    // The attempt is recorded before any git work, so a preparation failure is
+    // explained in the panel instead of leaving no row at all.
+    expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toEqual([
+      expect.objectContaining({
+        state: "failed",
+        errorCode: "OKF_GIT_FAILED",
+        errorMessage: expect.stringContaining("ENOENT"),
+      }),
+    ]);
+  });
+
+  it("writes pages through okf_write_page, the only writer the child has", async () => {
+    const registry = createPageWriteRegistry();
+    const registered: ToolDefinition[] = [];
+    registerOkfTools(
+      {
+        tools: {
+          register: (definition: ToolDefinition) => {
+            registered.push(definition);
+            return () => undefined;
+          },
+        },
+      } as unknown as Context,
+      { pages: registry },
+    );
+    const tool = registered[0];
+    if (tool === undefined) throw new Error("okf_write_page was not registered");
+    const sessionId = "okf-ingest-page-tool";
+    const write = async (path: string, content: string): Promise<unknown> =>
+      await tool.execute({ path, content }, { agent: { session: { id: sessionId } } } as never);
+
+    const test = await createHarness({
+      agentPort: {
+        async ingest(request: OkfAgentRequest): Promise<OkfAgentOutcome> {
+          registry.open(sessionId, { root: request.directory, meetingId: request.meeting.meetingId });
+          try {
+            const page = await write(meetingRelativePath(request.meeting), [
+              "---",
+              "type: Meeting",
+              `id: ${request.meeting.meetingId}`,
+              "status: stable",
+              `sources: [${request.meeting.meetingId}]`,
+              "---",
+              "",
+              "# Written through the tool",
+              "",
+            ].join("\n"));
+            expect(page).toMatchObject({ relative_path: MEETING_PAGE });
+            return { kind: "ingested" };
+          } finally {
+            registry.close(sessionId);
+          }
+        },
+      },
+    });
+
+    const outcome = await test.service.run({ meetingId: MEETING_ID });
+
+    expect(outcome).toMatchObject({ kind: "ingested" });
+    await expect(readFile(bundlePath(test.bundle, MEETING_PAGE), "utf8")).resolves.toContain("Written through the tool");
+    await expect(lastSubject(test.bundle)).resolves.toBe(`ingest ${MEETING_ID}@v1`);
+    expect(registry.get(sessionId)).toBeUndefined();
+  });
+
+  it("ignores an attribution reader that no longer knows the meeting", async () => {
+    const harness = await createHarness();
+    const service = createOkfIngestionService({
+      repository: harness.meetings,
+      attempts: harness.attempts,
+      speakerNames: {
+        list: () => {
+          throw new Error("MEETING_NOT_FOUND");
+        },
+      },
+      git: transaction,
+      lock: createOkfBundleLock(),
+      agent: harness.agent,
+      settings: () => ({ directory: harness.bundle, ingest: true }),
+      jobs: harness.jobs.jobs,
+      logger: () => undefined,
+    });
+
+    // A panel row can outlive its meeting (a Sync removes meetings). Reading
+    // attribution must not become the failure the user sees.
+    await expect(service.run({ meetingId: MEETING_ID })).resolves.toMatchObject({ kind: "ingested" });
   });
 
   it("does not start work when no folder is configured", async () => {
