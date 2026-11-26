@@ -44,13 +44,29 @@ function agentRoute(context) {
     return agentPreset === undefined ? { agentOptions } : { agentOptions, agentPreset };
 }
 function agentFactory(context) {
+    // Cordis resolves a service proxy against the fiber that reads it, and the
+    // plugin root never injected `agents`, so `context.agents` threw "cannot get
+    // property \"agents\" without inject" the moment a summarising child was
+    // created. Hold a context that declared the injection and create through it.
+    let agentsContext;
+    context.inject(["agents"], (agentsCtx) => {
+        agentsContext = agentsCtx;
+        return () => {
+            if (agentsContext === agentsCtx)
+                agentsContext = undefined;
+        };
+    });
     return {
         async create(options) {
             const route = agentRoute(context);
             const meta = route.agentPreset === undefined
                 ? options.meta
                 : { ...options.meta, agentPreset: route.agentPreset };
-            const handle = await context.agents.create({
+            const agents = agentsContext?.agents;
+            if (agents === undefined) {
+                throw new OkfError("OKF_AGENT_FAILED", "The agent service is not available yet; reopen the application and try again");
+            }
+            const handle = await agents.create({
                 ...options,
                 agentOptions: route.agentOptions,
                 ...(meta === undefined ? {} : { meta }),

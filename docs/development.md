@@ -50,7 +50,10 @@ admitted series exposes; DSH 0.2.3 removed the `requestRejection` wrapper the
 adapter used before. From 0.2.3 that gate resolves its credential verifier
 through the fiber that calls it, so the route handler admits through a context
 that injected `connection.authentication` and falls back to the plain
-connection where the host has no such service. The client coordinator
+connection where the host has no such service. The same rule governs the
+summarising child agent: `agents.create` is called from a context that injected
+`agents`, because the plugin root never declares it and a bare `ctx.agents`
+throws `cannot get property "agents" without inject`. The client coordinator
 normalizes composer send states before applying the meeting reference policy.
 Check admission and client and host integration before expanding the supported
 series. `probe:p0-07:config` checks the CLI against the development host version.
