@@ -106,6 +106,9 @@
 .panel .ingest:disabled { color: var(--dsw-alias-label-tertiary); cursor: default; }
 .stored { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--dsw-alias-border-l2); flex-shrink: 0; }
 .storedHeading { display: flex; align-items: center; gap: 8px; }
+/* Sync sits at the right of the heading; its confirmation stays inline. */
+.syncButton { margin-left: auto; flex-shrink: 0; }
+.syncRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .stored .hint, .stored p { margin: 0; }
 .stored .spinner { width: 14px; height: 14px; border-width: 1.5px; }
 .storedList { display: flex; flex-direction: column; gap: 2px; max-height: 140px; overflow: auto; overscroll-behavior: contain; }

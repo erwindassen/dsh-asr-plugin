@@ -3,6 +3,7 @@ import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 
 import { createOkfIngestionAgent, DEFAULT_OKF_AGENT_TIMEOUT_MS, OKF_INGEST_SKILL_NAME } from "../../src/okf/ingestion-agent.js";
 import type { OkfAgentHandle } from "../../src/okf/ingestion-agent.js";
+import { OkfError } from "../../src/okf/contracts.js";
 import type { OkfAgentPort, OkfAgentRequest, OkfMeetingView } from "../../src/okf/contracts.js";
 
 const SESSION_ID = "session-okf-1";
@@ -139,6 +140,12 @@ describe("createOkfIngestionAgent", () => {
     expect(outcome.kind).toBe("failed");
     expect(outcome.message).toBe("The Open knowledge base writer could not start.");
     expect(outcome.message).not.toContain("/secret");
+  });
+
+  it("keeps a typed refusal instead of blaming the writer", async () => {
+    const refusal = new OkfError("OKF_NO_MODEL", "Choose a model in DSH settings before summarising a meeting");
+    const test = harness({ create: async () => { throw refusal; } });
+    await expect(test.port.ingest(makeRequest())).rejects.toBe(refusal);
   });
 
   it("fails without transcript text when the child throws", async () => {

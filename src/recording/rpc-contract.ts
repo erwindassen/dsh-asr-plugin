@@ -23,6 +23,7 @@ export const RECORDING_RPC_ENDPOINTS = [
   "okf/choose-directory",
   "meetings/list",
   "meetings/transcript",
+  "meetings/sync",
   "okf/ingest",
   "okf/ingest/status",
 ] as const;
@@ -145,6 +146,17 @@ export interface StoredMeetingTranscriptRpcValue {
   readonly segments: readonly RecordingRpcSegment[];
 }
 
+/** One reconciliation pass over the Open knowledge base folder. */
+export interface StoredMeetingsSyncRpcPayload {
+  /** false (default) only counts; true removes the missing meetings. */
+  readonly apply?: boolean;
+}
+
+export interface StoredMeetingsSyncRpcValue {
+  readonly removed: number;
+  readonly kept: number;
+}
+
 export interface OkfIngestRpcPayload {
   readonly meeting_id: string;
   readonly force?: boolean;
@@ -203,7 +215,7 @@ export interface AudioDeviceInventoryRpc {
 }
 
 export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string
-  | StoredMeetingsRpcValue | StoredMeetingTranscriptRpcValue | OkfIngestRpcValue
+  | StoredMeetingsRpcValue | StoredMeetingTranscriptRpcValue | StoredMeetingsSyncRpcValue | OkfIngestRpcValue
   | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 
 export type RecordingRpcResult<T = RecordingRpcValue> =

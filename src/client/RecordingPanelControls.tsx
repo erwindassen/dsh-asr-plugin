@@ -42,11 +42,13 @@ function MainControl({ pending, pendingAction, run, translate, view }: Pick<Pane
 function IngestControl({ canIngest, ingestion, translate }: Pick<PanelViewProps, "canIngest" | "ingestion" | "translate">) {
   const busy = ingestion?.running ?? false;
   const label = translate(busy ? "panel.ingesting" : "panel.ingest");
-  return <Button variant="ghost" className={`${styles.ingest} ${!canIngest ? styles.off : ""}`}
-    aria-label={label} aria-busy={busy} disabled={!canIngest || busy}
-    onClick={() => void ingestion?.start()}>
-    {busy ? <span className={styles.spinner} aria-hidden="true" /> : label}
-  </Button>;
+  return <Tooltip label={label}>
+    <Button variant="ghost" className={`${styles.ingest} ${!canIngest ? styles.off : ""}`}
+      aria-label={label} aria-busy={busy} disabled={!canIngest || busy}
+      onClick={() => void ingestion?.start()}>
+      {busy ? <span className={styles.spinner} aria-hidden="true" /> : <RecordingIcon name="ingest" />}
+    </Button>
+  </Tooltip>;
 }
 
 function Chevron() {

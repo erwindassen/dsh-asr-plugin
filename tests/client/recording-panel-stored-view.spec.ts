@@ -24,6 +24,7 @@ import type {
   IngestionFailure,
   MeetingIngestion,
   StoredMeetings,
+  StoredMeetingsSync,
 } from "../../src/client/use-stored-meetings.js";
 import type { RecordingRpcView, StoredMeetingRpcEntry } from "../../src/recording/rpc-contract.js";
 
@@ -61,11 +62,18 @@ const transcript = {
   segments: [{ seq: 0, startMs: 0, endMs: 1_000, speakerLabel: "Speaker A", text: "Stored segment text" }],
 };
 
+function sync(overrides: Partial<StoredMeetingsSync> = {}): StoredMeetingsSync {
+  return {
+    pending: null, busy: false, failure: null, removed: null,
+    request: vi.fn(), confirm: vi.fn(), cancel: vi.fn(), ...overrides,
+  };
+}
+
 function storedMeetings(overrides: Partial<StoredMeetings> = {}): StoredMeetings {
   return {
     entries: [entry], loading: false, error: null, selected: entry, transcript,
     transcriptLoading: false, transcriptError: null, disabled: false,
-    select: vi.fn(), clear: vi.fn(), reload: vi.fn(), ...overrides,
+    select: vi.fn(), clear: vi.fn(), reload: vi.fn(), sync: sync(), ...overrides,
   };
 }
 
@@ -93,10 +101,14 @@ ReactElement<Record<string, unknown>> | undefined {
   if (!isValidElement(node)) return undefined;
   const element = node as ReactElement<Record<string, unknown>>;
   if (predicate(element)) return element;
+  // Children first: a mocked component renders null, so walking its output
+  // would hide the elements it wraps.
+  const child = findElement(element.props.children as ReactNode, predicate);
+  if (child !== undefined) return child;
   if (typeof element.type === "function") {
     return findElement((element.type as (value: unknown) => ReactNode)(element.props), predicate);
   }
-  return findElement(element.props.children as ReactNode, predicate);
+  return undefined;
 }
 
 function ingestButton(overrides: Partial<PanelViewProps>) {
@@ -222,4 +234,45 @@ it("distinguishes a loading stored transcript from one that failed to load", () 
   const failed = text(RecordingPanelView(props({ preview: [], stored: { failed: true, version: null } })));
   expect(failed).toContain("panel.storedLoadFailed");
   expect(failed).not.toContain("panel.storedLoading");
+});
+
+function control(overrides: Partial<PanelViewProps>, label: string) {
+  const found = findElement(RecordingPanelView(props(overrides)), element =>
+    element.props.children === label);
+  if (found === undefined) throw new Error(`missing control: ${label}`);
+  return found.props;
+}
+
+it("offers a sync control beside the saved meetings heading", () => {
+  const button = control({}, "panel.sync");
+  expect(button).toMatchObject({ disabled: false, "aria-busy": false });
+  void (button.onClick as () => void)();
+});
+
+it("asks before removing the meetings the folder does not hold", () => {
+  const pending = sync({ pending: 2 });
+  const confirm = control({ storedMeetings: storedMeetings({ sync: pending }) }, "panel.syncConfirm:2");
+  expect(confirm).toBeDefined();
+  const remove = control({ storedMeetings: storedMeetings({ sync: pending }) }, "panel.syncRemove");
+  const cancel = control({ storedMeetings: storedMeetings({ sync: pending }) }, "panel.syncCancel");
+  expect(typeof remove.onClick).toBe("function");
+  expect(typeof cancel.onClick).toBe("function");
+});
+
+it("reports when the folder already holds every stored meeting", () => {
+  const rendered = text(RecordingPanelView(props({ storedMeetings: storedMeetings({ sync: sync({ pending: 0 }) }) })));
+  expect(rendered).toContain("panel.syncNothing");
+});
+
+it("reports how many meetings a sync removed", () => {
+  const rendered = text(RecordingPanelView(props({ storedMeetings: storedMeetings({ sync: sync({ removed: 3 }) }) })));
+  expect(rendered).toContain("panel.syncDone:3");
+});
+
+it("names why a sync could not read the folder", () => {
+  for (const [failure, key] of [["notConfigured", "panel.syncNotConfigured"],
+    ["missingFolder", "panel.syncMissingFolder"], ["failed", "panel.syncFailed"]] as const) {
+    const rendered = text(RecordingPanelView(props({ storedMeetings: storedMeetings({ sync: sync({ failure }) }) })));
+    expect(rendered).toContain(key);
+  }
 });

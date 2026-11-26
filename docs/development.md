@@ -74,7 +74,10 @@ recording panel or `/asr-ingest` rather than by a transcript commit.
 in `okf_ingestion`; `src/okf/git-transaction.ts` makes one ingestion one commit;
 `src/okf/panel-ingestion.ts` maps an attempt onto the panel's wire shape;
 `src/application/stored-meeting-panel.ts` is the read model behind the panel's
-meeting list; `src/host/okf-host.ts` wires the slices into `apply`. Bundle writes
+meeting list and `src/application/stored-meeting-sync.ts` reconciles that list with
+the folder, counting through `src/okf/bundle-meetings.ts`; `src/host/okf-host.ts`
+wires the slices into `apply`, and `agentRoute` there gives the child the default
+model selection because a plugin runs outside any agent turn. Bundle writes
 use `node:fs` from host code because the child Agent's workspace is the bundle
 itself. See [okf](okf.md).
 

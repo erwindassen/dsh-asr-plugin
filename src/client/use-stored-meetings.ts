@@ -13,13 +13,30 @@ export const INGEST_POLL_MS = 2_000;
 /** Five minutes: long enough for the agent, short enough to stop a stuck spinner. */
 export const INGEST_POLL_ATTEMPTS = 150;
 
-export type IngestionFailure = "notConfigured" | "busy" | "unavailable" | "timeout";
+export type IngestionFailure = "notConfigured" | "busy" | "noModel" | "unavailable" | "timeout";
 
 export interface MeetingIngestion {
   readonly running: boolean;
   readonly outcome: "succeeded" | "failed" | null;
   readonly failure: IngestionFailure | null;
   readonly start: () => void;
+}
+
+/** Why a folder-to-database sync stopped; the raw message never reaches the UI. */
+export type SyncFailure = "notConfigured" | "missingFolder" | "failed";
+
+export interface StoredMeetingsSync {
+  /** Meetings the folder does not hold, waiting for the user to confirm. */
+  readonly pending: number | null;
+  readonly busy: boolean;
+  readonly failure: SyncFailure | null;
+  /** Meetings the last applied sync removed. */
+  readonly removed: number | null;
+  /** Counts what a sync would remove. */
+  readonly request: () => void;
+  /** Removes those meetings for real. */
+  readonly confirm: () => void;
+  readonly cancel: () => void;
 }
 
 export interface StoredMeetings {
@@ -35,6 +52,8 @@ export interface StoredMeetings {
   readonly select: (entry: StoredMeetingRpcEntry) => void;
   readonly clear: () => void;
   readonly reload: () => void;
+  /** Folder-to-database reconciliation behind the "Sync" button. */
+  readonly sync: StoredMeetingsSync;
 }
 
 function pause(ms: number, signal: AbortSignal): Promise<void> {
@@ -70,7 +89,15 @@ export function ingestionFailure(code: string | null): IngestionFailure {
   if (code === null) return "unavailable";
   if (code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
   if (code.includes("OKF_BUSY")) return "busy";
+  if (code.includes("OKF_NO_MODEL")) return "noModel";
   return "unavailable";
+}
+
+/** Maps a sync refusal to the one sentence the panel can show. */
+export function syncFailure(code: string | null): SyncFailure {
+  if (code !== null && code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
+  if (code !== null && code.includes("OKF_INVALID_DIRECTORY")) return "missingFolder";
+  return "failed";
 }
 
 export interface MeetingIngestionOptions {
@@ -229,8 +256,60 @@ export function useStoredMeetings(options: StoredMeetingsOptions): StoredMeeting
   const clear = useCallback(() => setSelected(null), []);
   const reload = useCallback(() => setReloadToken(token => token + 1), []);
 
+  const [syncPending, setSyncPending] = useState<number | null>(null);
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [syncProblem, setSyncProblem] = useState<SyncFailure | null>(null);
+  const [syncRemoved, setSyncRemoved] = useState<number | null>(null);
+  const syncController = useRef<AbortController | null>(null);
+
+  useEffect(() => () => syncController.current?.abort(), []);
+
+  const runSync = useCallback((apply: boolean) => {
+    syncController.current?.abort();
+    const controller = new AbortController();
+    syncController.current = controller;
+    setSyncBusy(true);
+    setSyncProblem(null);
+    if (apply) setSyncRemoved(null);
+    void client.syncMeetings({ apply }, controller.signal).then(result => {
+      if (!mounted.current || controller.signal.aborted) return;
+      setSyncBusy(false);
+      if (apply) {
+        setSyncPending(null);
+        setSyncRemoved(result.removed);
+        // The list the user is looking at changed underneath them.
+        setSelected(null);
+        setReloadToken(token => token + 1);
+        return;
+      }
+      setSyncPending(result.removed);
+    }).catch((cause: unknown) => {
+      if (!mounted.current || controller.signal.aborted) return;
+      setSyncBusy(false);
+      setSyncPending(null);
+      setSyncProblem(syncFailure(errorCode(cause)));
+    });
+  }, [client, mounted]);
+
+  const requestSync = useCallback(() => runSync(false), [runSync]);
+  const confirmSync = useCallback(() => runSync(true), [runSync]);
+  const cancelSync = useCallback(() => {
+    syncController.current?.abort();
+    setSyncBusy(false);
+    setSyncPending(null);
+  }, []);
+
   return {
     entries, loading, error, selected, transcript, transcriptLoading, transcriptError,
     disabled: active, select, clear, reload,
+    sync: {
+      pending: syncPending,
+      busy: syncBusy,
+      failure: syncProblem,
+      removed: syncRemoved,
+      request: requestSync,
+      confirm: confirmSync,
+      cancel: cancelSync,
+    },
   };
 }

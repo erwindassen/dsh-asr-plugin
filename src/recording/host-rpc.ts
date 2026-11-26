@@ -22,6 +22,7 @@ import {
   type RecordingRpcResult,
   type StoredMeetingRpcEntry,
   type StoredMeetingsRpcPayload,
+  type StoredMeetingsSyncRpcPayload,
   type StoredMeetingTranscriptRpcValue,
   type TranscriptExportRpcPayload,
 } from "./rpc-contract.js";
@@ -77,6 +78,8 @@ export interface OkfIngestionControl {
 export interface RecordingPanelPorts {
   readonly meetings: StoredMeetingSource;
   readonly ingestion: OkfIngestionControl;
+  /** Optional folder-to-database reconciliation for the panel's Sync button. */
+  readonly sync?: (apply: boolean) => Promise<{ readonly removed: number; readonly kept: number }>;
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -183,6 +186,14 @@ function okfIngestPayload(payload: unknown): OkfIngestRpcPayload {
     meeting_id: value.meeting_id,
     ...(value.force === undefined ? {} : { force: value.force as boolean }),
   };
+}
+
+function meetingsSyncPayload(payload: unknown): StoredMeetingsSyncRpcPayload {
+  const value = record(payload);
+  if (value === null || !exact(value, ["apply"])) inputError();
+  const apply = value["apply"];
+  if (apply !== undefined && typeof apply !== "boolean") inputError();
+  return apply === undefined ? {} : { apply };
 }
 
 function transcriptExportPayload(payload: unknown): TranscriptExportRpcPayload {
@@ -360,6 +371,10 @@ export function registerRecordingHostRpc(
           throw new MeetingRepositoryError("MEETING_NOT_FOUND", "Meeting does not exist");
         }
         return { ok: true, value: transcript };
+      }
+      if (panel !== undefined && endpoint === "meetings/sync" && panel.sync !== undefined) {
+        const request = meetingsSyncPayload(payload);
+        return { ok: true, value: await panel.sync(request.apply ?? false) };
       }
       if (panel !== undefined && endpoint === "okf/ingest") {
         const request = okfIngestPayload(payload);

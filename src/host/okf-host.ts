@@ -57,10 +57,64 @@ export interface OkfHost {
  * `AgentHandle` from the registry wraps the driver; the ingestion agent expects
  * the flattened shape, so this adapter owns the one place that difference lives.
  */
+/** Route a child agent needs; the plugin runs outside any agent turn. */
+interface AgentRouteOptions {
+  readonly agentOptions: NonNullable<CreateAgentOptions["agentOptions"]>;
+  readonly agentPreset?: string;
+}
+
+/** Reads the default model selection DSH settings own, plus the composed preset. */
+function agentRoute(context: Context): AgentRouteOptions {
+  const defaults = context.get("agentDefaultModel") as
+    | { currentSelection?: () => unknown }
+    | undefined;
+  let selection: unknown;
+  try {
+    selection = defaults?.currentSelection?.();
+  } catch {
+    selection = undefined;
+  }
+  const fields = (typeof selection === "object" && selection !== null ? selection : {}) as Record<string, unknown>;
+  const route = (typeof fields.route === "object" && fields.route !== null ? fields.route : {}) as Record<string, unknown>;
+  const provider = typeof fields.provider === "string" ? fields.provider : route.provider;
+  const model = typeof fields.model === "string" ? fields.model : route.model;
+  if (typeof provider !== "string" || provider === "" || typeof model !== "string" || model === "") {
+    throw new OkfError(
+      "OKF_NO_MODEL",
+      "Choose a model in DSH settings before summarising a meeting",
+    );
+  }
+  const reasoningEffort = fields.reasoningEffort ?? route.reasoningEffort;
+  const agentOptions: NonNullable<CreateAgentOptions["agentOptions"]> = {
+    provider,
+    model,
+    ...(typeof reasoningEffort === "string" ? { reasoningEffort } : {}),
+  } as NonNullable<CreateAgentOptions["agentOptions"]>;
+
+  const presets = context.get("agentPresets") as
+    | { composedPreset?: (scope: Context) => string | undefined }
+    | undefined;
+  let agentPreset: string | undefined;
+  try {
+    agentPreset = presets?.composedPreset?.(context);
+  } catch {
+    agentPreset = undefined;
+  }
+  return agentPreset === undefined ? { agentOptions } : { agentOptions, agentPreset };
+}
+
 function agentFactory(context: Context): OkfAgentFactory {
   return {
     async create(options: CreateAgentOptions): Promise<OkfAgentHandle> {
-      const handle = await context.agents.create(options);
+      const route = agentRoute(context);
+      const meta = route.agentPreset === undefined
+        ? options.meta
+        : { ...options.meta, agentPreset: route.agentPreset };
+      const handle = await context.agents.create({
+        ...options,
+        agentOptions: route.agentOptions,
+        ...(meta === undefined ? {} : { meta }),
+      });
       return {
         followup: (text: string) => handle.agent.followup(userTextMessage(text)),
         whenIdle: () => handle.agent.whenIdle(),

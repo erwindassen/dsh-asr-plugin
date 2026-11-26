@@ -18,6 +18,8 @@ export type OkfErrorCode =
   | "OKF_BUSY"
   | "OKF_JOURNAL_UNCLOSED"
   | "OKF_NO_TRANSCRIPT"
+  | "OKF_NO_MODEL"
+  | "OKF_SYNC_EMPTY"
   | "CANCELLED_BY_USER";
 
 export class OkfError extends Error {

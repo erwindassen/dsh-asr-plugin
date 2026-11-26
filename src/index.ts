@@ -26,6 +26,7 @@ import { createMacDirectoryPicker } from "./transcripts/directory-picker.js";
 import { createTranscriptExportControl } from "./transcripts/transcript-export-control.js";
 import { installOkfHost, type OkfHost } from "./host/okf-host.js";
 import { createStoredMeetingPanel } from "./application/stored-meeting-panel.js";
+import { createStoredMeetingSync } from "./application/stored-meeting-sync.js";
 import { panelIngestion } from "./okf/panel-ingestion.js";
 import { admittingThrough, recordingHttpConnection, type RecordingWebServer } from "./recording/http-connection.js";
 import { acquireDataRootLease } from "./storage/data-root-lease.js";
@@ -357,6 +358,18 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
         speakerNames: lifetime.okf.speakerNames,
       }),
       ingestion,
+      // The folder is what the user can see, so Syncing it removes the stored
+      // meetings it does not hold — the same deletion the delete tool performs.
+      sync: async (apply: boolean) => {
+        const reconciliation = createStoredMeetingSync({
+          repository,
+          remove: async (meetingId: string, expectedVersion: number) => {
+            await application.deleteMeeting({ meetingId, expectedVersion });
+          },
+          directory: () => okfSettings().directory,
+        });
+        return apply ? reconciliation.run() : reconciliation.preview();
+      },
     };
     let authenticated: Context | undefined;
     context.inject(["connection", "connection.authentication"], (authContext) => {

@@ -10,7 +10,7 @@ import {
   SPEAKER_NAME_MAX_LENGTH,
 } from "../transcripts/speaker-attribution.js";
 import type { RecordingPendingAction, SpeakerAttribution, Translate } from "./RecordingPanel.js";
-import type { IngestionFailure, MeetingIngestion, StoredMeetings } from "./use-stored-meetings.js";
+import type { IngestionFailure, MeetingIngestion, StoredMeetings, SyncFailure } from "./use-stored-meetings.js";
 import { RecordingControls, RecordingIcon } from "./RecordingPanelControls.js";
 import { isRecordingActive } from "./recording-view-state.js";
 import type { ConfigForm } from "@deepseek-ai/dsh-client-ui-settings/client";
@@ -151,18 +151,28 @@ function storedDate(entry: { readonly started_at: string | null }): string {
 }
 
 function ingestionFailureKey(failure: IngestionFailure): "panel.ingestNotConfigured" | "panel.ingestBusy"
-  | "panel.ingestTimeout" | "panel.ingestFailed" {
+  | "panel.ingestTimeout" | "panel.ingestNoModel" | "panel.ingestFailed" {
   if (failure === "notConfigured") return "panel.ingestNotConfigured";
   if (failure === "busy") return "panel.ingestBusy";
   if (failure === "timeout") return "panel.ingestTimeout";
+  if (failure === "noModel") return "panel.ingestNoModel";
   return "panel.ingestFailed";
 }
+
+/** Maps a sync refusal to the sentence the panel shows under the heading. */
+function syncFailureKey(failure: SyncFailure):
+  "panel.syncNotConfigured" | "panel.syncMissingFolder" | "panel.syncFailed" {
+  if (failure === "notConfigured") return "panel.syncNotConfigured";
+  if (failure === "missingFolder") return "panel.syncMissingFolder";
+  return "panel.syncFailed";
+}
+
 
 /** Committed meetings the panel can preview and ingest into the knowledge base. */
 function StoredMeetingsSection({ ingestion, storedMeetings, translate }: Pick<PanelViewProps,
   "ingestion" | "storedMeetings" | "translate">) {
   if (storedMeetings === undefined) return null;
-  const { disabled, entries, error, loading, select, selected, transcriptError, transcriptLoading } = storedMeetings;
+  const { disabled, entries, error, loading, select, selected, transcriptError, transcriptLoading, sync } = storedMeetings;
   const busy = ingestion?.running ?? false;
   const failure = ingestion?.outcome === "failed" ? ingestion.failure : null;
   const emptyHint = error === null ? translate("panel.storedEmpty") : translate("panel.storedLoadFailed");
@@ -170,7 +180,23 @@ function StoredMeetingsSection({ ingestion, storedMeetings, translate }: Pick<Pa
     <div className={styles.storedHeading}>
       <span className={styles.previewTitle}>{translate("panel.storedMeetings")}</span>
       {loading && <span className={styles.spinner} aria-hidden="true" />}
+      <Button variant="ghost" className={styles.syncButton} aria-busy={sync.busy}
+        disabled={sync.busy} onClick={sync.request}>
+        {translate("panel.sync")}
+      </Button>
     </div>
+    {sync.pending !== null && sync.pending > 0 && <div className={styles.syncRow} role="status">
+      <span className={styles.hint}>{translate("panel.syncConfirm", { count: String(sync.pending) })}</span>
+      <Button variant="ghost" onClick={sync.confirm}>{translate("panel.syncRemove")}</Button>
+      <Button variant="ghost" onClick={sync.cancel}>{translate("panel.syncCancel")}</Button>
+    </div>}
+    {sync.pending === 0 && <p className={styles.hint} role="status">{translate("panel.syncNothing")}</p>}
+    {sync.removed !== null && <p className={styles.hint} role="status">
+      {translate("panel.syncDone", { count: String(sync.removed) })}
+    </p>}
+    {sync.failure !== null && <p className={styles.storedError} role="alert">
+      {translate(syncFailureKey(sync.failure))}
+    </p>}
     <p className={styles.hint}>{translate("panel.storedHint")}</p>
     {entries.length === 0 && !loading && <p className={styles.hint}>{emptyHint}</p>}
     {entries.length > 0 && <div className={styles.storedList} role="listbox" aria-label={translate("panel.storedMeetings")}>

@@ -391,6 +391,28 @@ it("starts and reports one meeting's OKF ingestion without accepting extra field
     .toMatchObject({ ok: false });
 });
 
+it("previews and applies one folder reconciliation without accepting extra fields", async () => {
+  let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
+  const sync = vi.fn(async (apply: boolean) => ({ removed: apply ? 2 : 2, kept: 3 }));
+  registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
+    handler = value; return async () => {};
+  } } }, { getRecordingState: () => null } as unknown as MeetingApplication,
+  undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+  { meetings: { list: vi.fn(), transcript: vi.fn() }, ingestion: { start: vi.fn(), status: vi.fn() }, sync });
+  const signal = new AbortController().signal;
+
+  expect(await handler("meetings/sync", {}, signal)).toEqual({ ok: true, value: { removed: 2, kept: 3 } });
+  expect(sync).toHaveBeenLastCalledWith(false);
+  expect(await handler("meetings/sync", { apply: true }, signal))
+    .toEqual({ ok: true, value: { removed: 2, kept: 3 } });
+  expect(sync).toHaveBeenLastCalledWith(true);
+
+  for (const payload of [{ apply: "yes" }, { apply: true, extra: true }]) {
+    expect(await handler("meetings/sync", payload, signal)).toMatchObject({ ok: false });
+  }
+  expect(sync).toHaveBeenCalledTimes(2);
+});
+
 it("keeps the panel endpoints unknown when no panel ports were wired", async () => {
   let handler!: Parameters<RecordingRpcConnection["rpc"]["handle"]>[1];
   registerRecordingHostRpc({ rpc: { handle: (_channel, value) => {
@@ -405,6 +427,7 @@ it("keeps the panel endpoints unknown when no panel ports were wired", async () 
     ["meetings/transcript", { meeting_id: meeting }],
     ["okf/ingest", { meeting_id: meeting }],
     ["okf/ingest/status", { meeting_id: meeting }],
+    ["meetings/sync", {}],
   ] as const) {
     await expect(handler(endpoint, payload, signal)).resolves.toEqual(unknownEndpoint);
   }

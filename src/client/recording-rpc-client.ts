@@ -19,6 +19,7 @@ import {
   type SaveSpeakerNamesRpcPayload,
   type StoredMeetingRpcEntry,
   type StoredMeetingTranscriptRpcPayload,
+  type StoredMeetingsSyncRpcPayload,
   type StoredMeetingTranscriptRpcValue,
   type SpeakerNamesRpcPayload,
   type SpeakerNamesRpcValue,
@@ -75,6 +76,15 @@ function okfIngestValue(value: unknown): OkfIngestRpcValue {
       ? null : nonnegativeInteger(item.transcript_version),
     error_code: nullableString(item.error_code),
     message: nullableString(item.message),
+  };
+}
+
+function storedMeetingsSyncValue(value: unknown): { readonly removed: number; readonly kept: number } {
+  const item = record(value);
+  exact(item, ["removed", "kept"]);
+  return {
+    removed: nonnegativeInteger(item.removed),
+    kept: nonnegativeInteger(item.kept),
   };
 }
 
@@ -411,6 +421,14 @@ export class RecordingRpcClient {
     signal?: AbortSignal,
   ): Promise<OkfIngestRpcValue> {
     return okfIngestValue(await call(this.rpc, "okf/ingest/status", payload, signal));
+  }
+
+  /** Counts, or removes, the stored meetings the OKF folder does not hold. */
+  async syncMeetings(
+    payload: StoredMeetingsSyncRpcPayload,
+    signal?: AbortSignal,
+  ): Promise<{ readonly removed: number; readonly kept: number }> {
+    return storedMeetingsSyncValue(await call(this.rpc, "meetings/sync", payload, signal));
   }
 
   /** Lists CoreAudio devices through the signed helper. */
