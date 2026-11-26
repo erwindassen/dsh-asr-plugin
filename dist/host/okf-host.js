@@ -10,14 +10,51 @@ import { createOkfGitTransaction } from "../okf/git-transaction.js";
 import { createOkfIngestionAgent, } from "../okf/ingestion-agent.js";
 import { userTextMessage } from "../okf/user-message.js";
 import { createOkfIngestionService, } from "../okf/ingestion-service.js";
-/**
- * `AgentHandle` from the registry wraps the driver; the ingestion agent expects
- * the flattened shape, so this adapter owns the one place that difference lives.
- */
+/** Reads the default model selection DSH settings own, plus the composed preset. */
+function agentRoute(context) {
+    const defaults = context.get("agentDefaultModel");
+    let selection;
+    try {
+        selection = defaults?.currentSelection?.();
+    }
+    catch {
+        selection = undefined;
+    }
+    const fields = (typeof selection === "object" && selection !== null ? selection : {});
+    const route = (typeof fields.route === "object" && fields.route !== null ? fields.route : {});
+    const provider = typeof fields.provider === "string" ? fields.provider : route.provider;
+    const model = typeof fields.model === "string" ? fields.model : route.model;
+    if (typeof provider !== "string" || provider === "" || typeof model !== "string" || model === "") {
+        throw new OkfError("OKF_NO_MODEL", "Choose a model in DSH settings before summarising a meeting");
+    }
+    const reasoningEffort = fields.reasoningEffort ?? route.reasoningEffort;
+    const agentOptions = {
+        provider,
+        model,
+        ...(typeof reasoningEffort === "string" ? { reasoningEffort } : {}),
+    };
+    const presets = context.get("agentPresets");
+    let agentPreset;
+    try {
+        agentPreset = presets?.composedPreset?.(context);
+    }
+    catch {
+        agentPreset = undefined;
+    }
+    return agentPreset === undefined ? { agentOptions } : { agentOptions, agentPreset };
+}
 function agentFactory(context) {
     return {
         async create(options) {
-            const handle = await context.agents.create(options);
+            const route = agentRoute(context);
+            const meta = route.agentPreset === undefined
+                ? options.meta
+                : { ...options.meta, agentPreset: route.agentPreset };
+            const handle = await context.agents.create({
+                ...options,
+                agentOptions: route.agentOptions,
+                ...(meta === undefined ? {} : { meta }),
+            });
             return {
                 followup: (text) => handle.agent.followup(userTextMessage(text)),
                 whenIdle: () => handle.agent.whenIdle(),

@@ -2,7 +2,7 @@ import type { RecordingPermissions } from "./permission-contract.js";
 import type { ModelDownloadStatus } from "../assets/model-download-contract.js";
 import type { ModelSettingsStatus } from "../assets/model-settings-contract.js";
 export declare const RECORDING_RPC_CHANNEL = "/dsh-asr-recording";
-export declare const RECORDING_RPC_ENDPOINTS: readonly ["state", "control", "references/candidates", "references/resolve", "models/status", "models/prepare", "models/download/status", "models/download/start", "models/download/cancel", "permissions/status", "permissions/test", "permissions/open-settings", "devices/list", "transcripts/export", "transcripts/choose-directory", "transcripts/speaker-names", "transcripts/save-speaker-names", "okf/choose-directory", "meetings/list", "meetings/transcript", "okf/ingest", "okf/ingest/status"];
+export declare const RECORDING_RPC_ENDPOINTS: readonly ["state", "control", "references/candidates", "references/resolve", "models/status", "models/prepare", "models/download/status", "models/download/start", "models/download/cancel", "permissions/status", "permissions/test", "permissions/open-settings", "devices/list", "transcripts/export", "transcripts/choose-directory", "transcripts/speaker-names", "transcripts/save-speaker-names", "okf/choose-directory", "meetings/list", "meetings/transcript", "meetings/sync", "okf/ingest", "okf/ingest/status"];
 export type RecordingRpcEndpoint = (typeof RECORDING_RPC_ENDPOINTS)[number];
 export type RecordingRpcPhase = "starting" | "recording" | "finalizing" | "completed" | "empty" | "partial" | "failed" | "cancelled";
 export type MeetingReferenceRpcPhase = RecordingRpcPhase | "processing";
@@ -96,6 +96,15 @@ export interface StoredMeetingTranscriptRpcValue {
     readonly duration_ms: number | null;
     readonly segments: readonly RecordingRpcSegment[];
 }
+/** One reconciliation pass over the Open knowledge base folder. */
+export interface StoredMeetingsSyncRpcPayload {
+    /** false (default) only counts; true removes the missing meetings. */
+    readonly apply?: boolean;
+}
+export interface StoredMeetingsSyncRpcValue {
+    readonly removed: number;
+    readonly kept: number;
+}
 export interface OkfIngestRpcPayload {
     readonly meeting_id: string;
     readonly force?: boolean;
@@ -145,7 +154,7 @@ export interface AudioDeviceInventoryRpc {
     readonly default_output_uid: string | null;
     readonly devices: readonly AudioDeviceRpcEntry[];
 }
-export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string | StoredMeetingsRpcValue | StoredMeetingTranscriptRpcValue | OkfIngestRpcValue | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
+export type RecordingRpcValue = RecordingPermissions | null | ModelDownloadStatus | ModelSettingsStatus | RecordingRpcStateValue | RecordingRpcView | TranscriptExportRpcValue | SpeakerNamesRpcValue | AudioDeviceInventoryRpc | string | StoredMeetingsRpcValue | StoredMeetingTranscriptRpcValue | StoredMeetingsSyncRpcValue | OkfIngestRpcValue | readonly MeetingReferenceRpcCandidate[] | MeetingReferenceRpcCandidate;
 export type RecordingRpcResult<T = RecordingRpcValue> = {
     readonly ok: true;
     readonly value: T;

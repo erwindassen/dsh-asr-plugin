@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { OkfError } from "./contracts.js";
 /** Prompt asset shared with the `okf` skill conventions. */
 const INGEST_INSTRUCTION_URL = new URL("../../assets/prompts/okf-ingest.md", import.meta.url);
 /** Skill the child agent must load before it writes any page. */
@@ -168,7 +169,11 @@ export function createOkfIngestionAgent(deps) {
                         signal: controller.signal,
                     });
                 }
-                catch {
+                catch (error) {
+                    // A typed refusal (no model route, no folder) keeps its code so the
+                    // panel can name the problem instead of "could not start".
+                    if (error instanceof OkfError)
+                        throw error;
                     return failed(timedOut
                         ? TIMEOUT_MESSAGE
                         : controller.signal.aborted ? CANCELLED_MESSAGE : WRITER_START_FAILED_MESSAGE);
@@ -186,7 +191,11 @@ export function createOkfIngestionAgent(deps) {
                     return failed(WRITER_FAILED_MESSAGE);
                 return { kind: "ingested" };
             }
-            catch {
+            catch (error) {
+                // Typed refusals travel to the caller so the panel can name the cause;
+                // anything else is an unidentified writer failure and must leak nothing.
+                if (error instanceof OkfError)
+                    throw error;
                 return failed(timedOut
                     ? TIMEOUT_MESSAGE
                     : controller.signal.aborted ? CANCELLED_MESSAGE : WRITER_FAILED_MESSAGE);

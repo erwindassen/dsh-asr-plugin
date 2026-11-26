@@ -20,6 +20,7 @@ export const RECORDING_RPC_ENDPOINTS = [
     "okf/choose-directory",
     "meetings/list",
     "meetings/transcript",
+    "meetings/sync",
     "okf/ingest",
     "okf/ingest/status",
 ];

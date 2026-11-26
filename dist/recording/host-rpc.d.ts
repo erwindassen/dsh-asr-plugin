@@ -51,6 +51,11 @@ export interface OkfIngestionControl {
 export interface RecordingPanelPorts {
     readonly meetings: StoredMeetingSource;
     readonly ingestion: OkfIngestionControl;
+    /** Optional folder-to-database reconciliation for the panel's Sync button. */
+    readonly sync?: (apply: boolean) => Promise<{
+        readonly removed: number;
+        readonly kept: number;
+    }>;
 }
 export declare function registerRecordingHostRpc(connection: RecordingRpcConnection, application: MeetingApplication, modelStatus?: (signal: AbortSignal) => Promise<ModelSettingsStatus>, downloads?: ModelDownloadControl, permissions?: RecordingPermissionControl, prepareModels?: (signal: AbortSignal) => Promise<void>, transcripts?: TranscriptExportControl, devices?: AudioDeviceService, chooseOkfDirectory?: (signal?: AbortSignal) => Promise<string | null>, speakerNames?: SpeakerNameStore, panel?: RecordingPanelPorts): () => Promise<void>;
 export {};

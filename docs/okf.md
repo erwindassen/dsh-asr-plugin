@@ -125,6 +125,22 @@ clears the selection and the panel follows the live draft again. An ingestion ru
 as a job, so the panel polls its attempt and reports success or a short failure
 reason without ever showing a path.
 
+Ingestion summarises with a child agent, and that agent runs on the model selected
+in DSH settings. With no model selected the run refuses with `OKF_NO_MODEL` and the
+panel says so instead of reporting a writer failure.
+
+### Keeping the list in step with the folder
+
+The list is read from the plugin database, so a meeting whose files were removed
+from the bundle folder would linger. **Sync**, next to the *Saved meetings*
+label, reconciles the two: it counts the stored meetings that the folder's
+`references/transcripts/` copies do not cover, asks for confirmation, and then
+deletes them, which also releases any managed audio. It refuses with
+`OKF_NOT_CONFIGURED` when no folder is set and `OKF_INVALID_DIRECTORY` when the
+configured folder is missing, because deleting on a broken setting would wipe the
+library. Only the plugin's own transcript copies count as evidence — the pages a
+summarising agent writes are not proof that a meeting is in the bundle.
+
 ### `/asr-ingest`
 
 ```

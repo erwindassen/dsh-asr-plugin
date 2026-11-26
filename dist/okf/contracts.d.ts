@@ -6,7 +6,7 @@
  * sibling modules, so the slices stay independently replaceable.
  */
 /** Stable error codes surfaced to tools, commands and the settings panel. */
-export type OkfErrorCode = "OKF_NOT_CONFIGURED" | "OKF_INVALID_DIRECTORY" | "OKF_NOT_VERSIONED" | "OKF_PATH_ESCAPE" | "OKF_LINK_OUTSIDE_BUNDLE" | "OKF_AGENT_FAILED" | "OKF_GIT_FAILED" | "OKF_BUSY" | "OKF_JOURNAL_UNCLOSED" | "OKF_NO_TRANSCRIPT" | "CANCELLED_BY_USER";
+export type OkfErrorCode = "OKF_NOT_CONFIGURED" | "OKF_INVALID_DIRECTORY" | "OKF_NOT_VERSIONED" | "OKF_PATH_ESCAPE" | "OKF_LINK_OUTSIDE_BUNDLE" | "OKF_AGENT_FAILED" | "OKF_GIT_FAILED" | "OKF_BUSY" | "OKF_JOURNAL_UNCLOSED" | "OKF_NO_TRANSCRIPT" | "OKF_NO_MODEL" | "OKF_SYNC_EMPTY" | "CANCELLED_BY_USER";
 export declare class OkfError extends Error {
     readonly code: OkfErrorCode;
     constructor(code: OkfErrorCode, message: string, options?: {

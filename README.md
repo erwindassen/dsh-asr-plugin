@@ -142,9 +142,12 @@ transcript, plus generated indexes for upcoming deadlines and pending actions.
 The folder becomes a Git repository and one ingestion is one commit, so every
 change is inspectable and reversible.
 
-Ingestion never starts on its own. Press **Ingest** next to start/stop once a
-meeting is on screen, pick a stored meeting from the list below the transcript to
-ingest an older one, or run `/asr-ingest <meeting-id> [--force]`.
+Ingestion never starts on its own. Press the **Ingest** button next to start/stop
+once a meeting is on screen, pick a stored meeting from the list below the
+transcript to ingest an older one, or run `/asr-ingest <meeting-id> [--force]`. The
+summarising agent uses the model selected in DSH settings. **Sync**, beside the
+*Saved meetings* label, removes the stored meetings the bundle folder no longer
+holds.
 
 See [docs/okf.md](docs/okf.md) for the layout, the transaction and rollback rules,
 and the failure and privacy guarantees.

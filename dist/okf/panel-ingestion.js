@@ -87,6 +87,8 @@ function ingestionMessage(error) {
             return "This meeting has no committed transcript yet.";
         case "OKF_BUSY":
             return "Another ingestion is already running.";
+        case "OKF_NO_MODEL":
+            return "Choose a model in DSH settings first.";
         default:
             return "The ingestion could not start.";
     }

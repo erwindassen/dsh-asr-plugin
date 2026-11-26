@@ -1,5 +1,5 @@
 import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
-import type { OkfAgentPort } from "./contracts.js";
+import { type OkfAgentPort } from "./contracts.js";
 /** Skill the child agent must load before it writes any page. */
 export declare const OKF_INGEST_SKILL_NAME = "okf";
 /** Upper bound for one meeting ingestion; the host may shorten it. */

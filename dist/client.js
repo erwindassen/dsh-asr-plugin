@@ -1698,6 +1698,7 @@ window.__ModuleLoader__.load({
 			"collapse": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJDb2xsYXBzZSI+CjxwYXRoIGlkPSJWZWN0b3IiIGQ9Ik00LjUgMTAuNUw5IDZMMTMuNSAxMC41IiBzdHJva2U9IiM2MTY2NkIiIHN0cm9rZS13aWR0aD0iMS4zNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjwvZz4KPC9zdmc+Cg==",
 			"check": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiB2aWV3Qm94PSIwIDAgMTYgMTYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJjaGVjayI+CjxwYXRoIGlkPSJWZWN0b3IiIGQ9Ik0zLjMzMzMzIDhMNiAxMC42NjY3TDEyLjY2NjcgNCIgc3Ryb2tlPSIjMjM4MDQ3IiBzdHJva2Utd2lkdGg9IjEuMzMzMzMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
 			"export": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJFeHBvcnQiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNOSAyLjI1VjEwLjEyNU05IDEwLjEyNUw1LjYyNSA2Ljc1TTkgMTAuMTI1TDEyLjM3NSA2Ljc1IiBzdHJva2U9IiM2MTY2NkIiIHN0cm9rZS13aWR0aD0iMS4zNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTIuNjI1IDExLjYyNVYxNC4yNUMyLjYyNSAxNC42NjQyIDIuOTYwNzkgMTUgMy4zNzUgMTVIMTQuNjI1QzE1LjAzOTIgMTUgMTUuMzc1IDE0LjY2NDIgMTUuMzc1IDE0LjI1VjExLjYyNSIgc3Ryb2tlPSIjNjE2NjZCIiBzdHJva2Utd2lkdGg9IjEuMzUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
+			"ingest": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJJbmdlc3QiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNOSAyLjI1VjEwLjEyNU05IDEwLjEyNUw1LjYyNSA2Ljc1TTkgMTAuMTI1TDEyLjM3NSA2Ljc1IiBzdHJva2U9IiM2MTY2NkIiIHN0cm9rZS13aWR0aD0iMS4zNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGlkPSJWZWN0b3JfMiIgZD0iTTIuNjI1IDExLjYyNVYxNC4yNUMyLjYyNSAxNC42NjQyIDIuOTYwNzkgMTUgMy4zNzUgMTVIMTQuNjI1QzE1LjAzOTIgMTUgMTUuMzc1IDE0LjY2NDIgMTUuMzc1IDE0LjI1VjExLjYyNSIgc3Ryb2tlPSIjNjE2NjZCIiBzdHJva2Utd2lkdGg9IjEuMzUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
 			"resize": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB2aWV3Qm94PSIwIDAgMTggMTgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJyZXNpemUiPgo8cGF0aCBpZD0iVmVjdG9yIiBkPSJNOS43NSAxNUwxNSA5Ljc1TTEyLjc1IDE1TDE1IDEyLjc1IiBzdHJva2U9IiM4MTg1OEMiIHN0cm9rZS13aWR0aD0iMS4xMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L2c+Cjwvc3ZnPgo=",
 			"micOff": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJpY29uIC8gbWljLW9mZiI+CjxwYXRoIGlkPSJ2ZWN0b3IiIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTAgMy43NUM5LjI5Mjc1IDMuNzUgOC42Njc1IDQuMTAxNjUgOC4yODk2MSA0LjY0MzQxQzguMDI2MzEgNS4wMjA4OSA3LjUwNjg1IDUuMTEzNDYgNy4xMjkzNyA0Ljg1MDE1QzYuNzUxODkgNC41ODY4NSA2LjY1OTMzIDQuMDY3NCA2LjkyMjY0IDMuNjg5OTJDNy41OTg4NiAyLjcyMDQ1IDguNzI0OTcgMi4wODMzMyAxMCAyLjA4MzMzQzEyLjA3MTEgMi4wODMzMyAxMy43NSAzLjc2MjI3IDEzLjc1IDUuODMzMzNWOC43NUMxMy43NSA4LjkzMTA3IDEzLjczNzEgOS4xMDk2MiAxMy43MTIxIDkuMjg0NjZDMTMuNjQ2OSA5Ljc0MDI2IDEzLjIyNDcgMTAuMDU2OCAxMi43NjkxIDkuOTkxNkMxMi4zMTM1IDkuOTI2NDMgMTEuOTk3IDkuNTA0MjcgMTIuMDYyMiA5LjA0ODY3QzEyLjA3NjEgOC45NTE1NSAxMi4wODMzIDguODUxODYgMTIuMDgzMyA4Ljc1VjUuODMzMzNDMTIuMDgzMyA0LjY4Mjc0IDExLjE1MDYgMy43NSAxMCAzLjc1Wk0yLjcyNTM5IDMuNTk2NzJDMy4wNDAxNiAzLjI2MDk2IDMuNTY3NTMgMy4yNDM5NCAzLjkwMzI5IDMuNTU4NzJMMTMuODQ5MiAxMi44ODMxQzEzLjg4NTggMTIuOTExOSAxMy45MjAzIDEyLjk0NDEgMTMuOTUyMyAxMi45Nzk3TDE3LjIzNjYgMTYuMDU4N0MxNy41NzI0IDE2LjM3MzUgMTcuNTg5NCAxNi45MDA5IDE3LjI3NDYgMTcuMjM2NkMxNi45NTk4IDE3LjU3MjQgMTYuNDMyNSAxNy41ODk0IDE2LjA5NjcgMTcuMjc0NkwxMy4yMjc0IDE0LjU4NDZDMTIuNTAxNCAxNC45ODY5IDExLjY5MjQgMTUuMjU3OCAxMC44MzMzIDE1LjM2NVYxNi4yNUgxMi4wODMzQzEyLjU0MzYgMTYuMjUgMTIuOTE2NyAxNi42MjMxIDEyLjkxNjcgMTcuMDgzM0MxMi45MTY3IDE3LjU0MzYgMTIuNTQzNiAxNy45MTY3IDEyLjA4MzMgMTcuOTE2N0g3LjkxNjY3QzcuNDU2NDMgMTcuOTE2NyA3LjA4MzM0IDE3LjU0MzYgNy4wODMzNCAxNy4wODMzQzcuMDgzMzQgMTYuNjIzMSA3LjQ1NjQzIDE2LjI1IDcuOTE2NjcgMTYuMjVIOS4xNjY2N1YxNS4zNjUxQzYuNTE3NDYgMTUuMDM0OCA0LjM1MjM3IDEzLjE1MDQgMy42MDk1MiAxMC42NTQ0QzMuNDc4MjQgMTAuMjEzMyAzLjcyOTQxIDkuNzQ5MjQgNC4xNzA1MyA5LjYxNzk2QzQuNjExNjQgOS40ODY2NyA1LjA3NTY2IDkuNzM3ODQgNS4yMDY5NSAxMC4xNzlDNS44MjE4IDEyLjI0NDkgNy43MzYyMiAxMy43NSAxMCAxMy43NUMxMC42ODM2IDEzLjc1IDExLjMzNDMgMTMuNjEzMiAxMS45MjY5IDEzLjM2NTRMMi43NjMzOSA0Ljc3NDYxQzIuNDI3NjIgNC40NTk4NCAyLjQxMDYxIDMuOTMyNDggMi43MjUzOSAzLjU5NjcyWk0xNS44Mjk1IDkuNjE3OTZDMTYuMjcwNiA5Ljc0OTI0IDE2LjUyMTggMTAuMjEzMyAxNi4zOTA1IDEwLjY1NDRDMTYuMjc3NyAxMS4wMzM0IDE2LjEzMjEgMTEuMzk4MiAxNS45NTcyIDExLjc0NTVDMTUuNzUwMSAxMi4xNTY2IDE1LjI0OTEgMTIuMzIxOSAxNC44MzgxIDEyLjExNDlDMTQuNDI3IDExLjkwNzkgMTQuMjYxNiAxMS40MDY4IDE0LjQ2ODcgMTAuOTk1OEMxNC41OTk3IDEwLjczNTYgMTQuNzA4NyAxMC40NjI1IDE0Ljc5MzEgMTAuMTc5QzE0LjkyNDMgOS43Mzc4NCAxNS4zODg0IDkuNDg2NjcgMTUuODI5NSA5LjYxNzk2WiIgZmlsbD0iIzgxODU4QyIvPgo8L2c+Cjwvc3ZnPgo=",
 			"systemOff": "data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJpY29uIC8gc291bmQtb2ZmLCBzcGVha2VyIj4KPHBhdGggaWQ9InZlY3RvciIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik05LjU4MzMzIDQuMDkxNTdDOS41ODMzMyAzLjcyOTAyIDkuMTUyMzYgMy41Mzk0NCA4Ljg4NTExIDMuNzg0NDJMNy41MTU3MyA1LjAzOTY4QzcuMTc2NDcgNS4zNTA2OCA2LjY0OTMzIDUuMzI3NzYgNi4zMzgzMyA0Ljk4ODQ5QzYuMDI3MzQgNC42NDkyMiA2LjA1MDI2IDQuMTIyMDkgNi4zODk1MiAzLjgxMTA5TDcuNzU4OSAyLjU1NTgzQzkuMDk1MTUgMS4zMzA5MyAxMS4yNSAyLjI3ODg0IDExLjI1IDQuMDkxNTdMMTEuMjUgNy42NjY2N0MxMS4yNSA4LjEyNjkgMTAuODc2OSA4LjUgMTAuNDE2NyA4LjVDOS45NTY0MyA4LjUgOS41ODMzMyA4LjEyNjkgOS41ODMzMyA3LjY2NjY3TDkuNTgzMzMgNC4wOTE1N1pNMS4wNjA4MiAyLjc2MTE1QzEuMzc2ODMgMi40MjY1NSAxLjkwNDI1IDIuNDExNDggMi4yMzg4NSAyLjcyNzQ5TDE3LjIzODkgMTYuODk0MkMxNy41NzM1IDE3LjIxMDIgMTcuNTg4NSAxNy43Mzc2IDE3LjI3MjUgMTguMDcyMkMxNi45NTY1IDE4LjQwNjggMTYuNDI5MSAxOC40MjE5IDE2LjA5NDUgMTguMTA1OEwxMS4yNSAxMy41MzA1TDExLjI1IDE1LjkwODVDMTEuMjUgMTcuNzIxMiA5LjA5NTE2IDE4LjY2OTEgNy43NTg5IDE3LjQ0NDJMNS41NDE2OSAxNS40MTE4QzUuMjUyNzggMTUuMTQ2OSA0Ljg3NTA5IDE1IDQuNDgzMTcgMTVDMi42OTc1NCAxNSAxLjI1IDEzLjU1MjUgMS4yNSAxMS43NjY5VjguMjMzMTlDMS4yNSA3LjA4NDc3IDEuODQ4MzkgNi4wNzY3NiAyLjc1MDUgNS41MDMxOUwxLjA5NDQ4IDMuOTM5MThDMC43NTk4ODIgMy42MjMxNyAwLjc0NDgxMyAzLjA5NTc1IDEuMDYwODIgMi43NjExNVpNNC4wNDcyOCA2LjcyNzkzQzMuMzk0NDMgNi45MTY1MSAyLjkxNjY3IDcuNTE5NiAyLjkxNjY3IDguMjMzMTlWMTEuNzY2OUMyLjkxNjY3IDEyLjYzMiAzLjYxODAxIDEzLjMzMzQgNC40ODMxNyAxMy4zMzM0QzUuMjkyMDggMTMuMzMzNCA2LjA3MTYgMTMuNjM2NiA2LjY2NzkgMTQuMTgzMkw4Ljg4NTExIDE2LjIxNTZDOS4xNTIzNiAxNi40NjA2IDkuNTgzMzMgMTYuMjcxIDkuNTgzMzMgMTUuOTA4NUw5LjU4MzMzIDExLjk1NjRMNC4wNDcyOCA2LjcyNzkzWk0xNi41MTA3IDUuMjk3MTZDMTYuOTE1MiA1LjA3NzU2IDE3LjQyMTEgNS4yMjc0MiAxNy42NDA3IDUuNjMxODlDMTguMzQ2MiA2LjkzMTI4IDE4Ljc0NjYgOC40MjAxMyAxOC43NDY2IDEwQzE4Ljc0NjYgMTEuNTE2IDE4LjM3NzkgMTIuOTQ4MyAxNy43MjQ2IDE0LjIwOTlDMTcuNTEzIDE0LjYxODYgMTcuMDEwMSAxNC43NzgzIDE2LjYwMTQgMTQuNTY2N0MxNi4xOTI3IDE0LjM1NSAxNi4wMzMgMTMuODUyMiAxNi4yNDQ2IDEzLjQ0MzVDMTYuNzc4MSAxMi40MTMyIDE3LjA3OTkgMTEuMjQzMSAxNy4wNzk5IDEwQzE3LjA3OTkgOC43MDQ3NSAxNi43NTIyIDcuNDg4NTEgMTYuMTc2IDYuNDI3MTNDMTUuOTU2NCA2LjAyMjY3IDE2LjEwNjIgNS41MTY3NiAxNi41MTA3IDUuMjk3MTZaTTEzLjE2NjUgNi41ODM2NkMxMy41MzQ1IDYuMzA3MjUgMTQuMDU2OSA2LjM4MTQ5IDE0LjMzMzMgNi43NDk0OEMxNS4wMTM0IDcuNjU0ODYgMTUuNDE2NyA4Ljc4MTUyIDE1LjQxNjcgOS45OTk5N0MxNS40MTY3IDEwLjU0MzEgMTUuMzM2NSAxMS4wNjkgMTUuMTg2NyAxMS41NjU3QzE1LjA1MzggMTIuMDA2NCAxNC41ODg5IDEyLjI1NTkgMTQuMTQ4MyAxMi4xMjNDMTMuNzA3NiAxMS45OTAxIDEzLjQ1ODEgMTEuNTI1MiAxMy41OTEgMTEuMDg0NkMxMy42OTQyIDEwLjc0MjIgMTMuNzUgMTAuMzc4NCAxMy43NSA5Ljk5OTk3QzEzLjc1IDkuMTU0OCAxMy40NzE0IDguMzc3MTEgMTMuMDAwNyA3Ljc1MDQ0QzEyLjcyNDMgNy4zODI0NSAxMi43OTg1IDYuODYwMDcgMTMuMTY2NSA2LjU4MzY2WiIgZmlsbD0iIzgxODU4QyIvPgo8L2c+Cjwvc3ZnPgo="
@@ -1771,6 +1772,8 @@ window.__ModuleLoader__.load({
 			"storedMeta": "Expx1a_storedMeta",
 			"storedRow": "Expx1a_storedRow",
 			"storedTitle": "Expx1a_storedTitle",
+			"syncButton": "Expx1a_syncButton",
+			"syncRow": "Expx1a_syncRow",
 			"text": "Expx1a_text",
 			"toggle": "Expx1a_toggle",
 			"tracks": "Expx1a_tracks",
@@ -1837,17 +1840,20 @@ window.__ModuleLoader__.load({
 		function IngestControl({ canIngest, ingestion, translate }) {
 			const busy = ingestion?.running ?? false;
 			const label = translate(busy ? "panel.ingesting" : "panel.ingest");
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
-				variant: "ghost",
-				className: `${RecordingPanel_module_default.ingest} ${!canIngest ? RecordingPanel_module_default.off : ""}`,
-				"aria-label": label,
-				"aria-busy": busy,
-				disabled: !canIngest || busy,
-				onClick: () => void ingestion?.start(),
-				children: busy ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-					className: RecordingPanel_module_default.spinner,
-					"aria-hidden": "true"
-				}) : label
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+				label,
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+					variant: "ghost",
+					className: `${RecordingPanel_module_default.ingest} ${!canIngest ? RecordingPanel_module_default.off : ""}`,
+					"aria-label": label,
+					"aria-busy": busy,
+					disabled: !canIngest || busy,
+					onClick: () => void ingestion?.start(),
+					children: busy ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+						className: RecordingPanel_module_default.spinner,
+						"aria-hidden": "true"
+					}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(RecordingIcon, { name: "ingest" })
+				})
 			});
 		}
 		function Chevron() {
@@ -2310,12 +2316,19 @@ window.__ModuleLoader__.load({
 			if (failure === "notConfigured") return "panel.ingestNotConfigured";
 			if (failure === "busy") return "panel.ingestBusy";
 			if (failure === "timeout") return "panel.ingestTimeout";
+			if (failure === "noModel") return "panel.ingestNoModel";
 			return "panel.ingestFailed";
+		}
+		/** Maps a sync refusal to the sentence the panel shows under the heading. */
+		function syncFailureKey(failure) {
+			if (failure === "notConfigured") return "panel.syncNotConfigured";
+			if (failure === "missingFolder") return "panel.syncMissingFolder";
+			return "panel.syncFailed";
 		}
 		/** Committed meetings the panel can preview and ingest into the knowledge base. */
 		function StoredMeetingsSection({ ingestion, storedMeetings, translate }) {
 			if (storedMeetings === void 0) return null;
-			const { disabled, entries, error, loading, select, selected, transcriptError, transcriptLoading } = storedMeetings;
+			const { disabled, entries, error, loading, select, selected, transcriptError, transcriptLoading, sync } = storedMeetings;
 			const busy = ingestion?.running ?? false;
 			const failure = ingestion?.outcome === "failed" ? ingestion.failure : null;
 			const emptyHint = error === null ? translate("panel.storedEmpty") : translate("panel.storedLoadFailed");
@@ -2325,13 +2338,59 @@ window.__ModuleLoader__.load({
 				children: [
 					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: RecordingPanel_module_default.storedHeading,
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: RecordingPanel_module_default.previewTitle,
-							children: translate("panel.storedMeetings")
-						}), loading && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
-							className: RecordingPanel_module_default.spinner,
-							"aria-hidden": "true"
-						})]
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: RecordingPanel_module_default.previewTitle,
+								children: translate("panel.storedMeetings")
+							}),
+							loading && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: RecordingPanel_module_default.spinner,
+								"aria-hidden": "true"
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+								variant: "ghost",
+								className: RecordingPanel_module_default.syncButton,
+								"aria-busy": sync.busy,
+								disabled: sync.busy,
+								onClick: sync.request,
+								children: translate("panel.sync")
+							})
+						]
+					}),
+					sync.pending !== null && sync.pending > 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: RecordingPanel_module_default.syncRow,
+						role: "status",
+						children: [
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: RecordingPanel_module_default.hint,
+								children: translate("panel.syncConfirm", { count: String(sync.pending) })
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+								variant: "ghost",
+								onClick: sync.confirm,
+								children: translate("panel.syncRemove")
+							}),
+							/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+								variant: "ghost",
+								onClick: sync.cancel,
+								children: translate("panel.syncCancel")
+							})
+						]
+					}),
+					sync.pending === 0 && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						role: "status",
+						children: translate("panel.syncNothing")
+					}),
+					sync.removed !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.hint,
+						role: "status",
+						children: translate("panel.syncDone", { count: String(sync.removed) })
+					}),
+					sync.failure !== null && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+						className: RecordingPanel_module_default.storedError,
+						role: "alert",
+						children: translate(syncFailureKey(sync.failure))
 					}),
 					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
 						className: RecordingPanel_module_default.hint,
@@ -2649,6 +2708,14 @@ window.__ModuleLoader__.load({
 				message: nullableString(item.message)
 			};
 		}
+		function storedMeetingsSyncValue(value) {
+			const item = record(value);
+			exact(item, ["removed", "kept"]);
+			return {
+				removed: nonnegativeInteger(item.removed),
+				kept: nonnegativeInteger(item.kept)
+			};
+		}
 		function record(value) {
 			if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("INVALID_RESPONSE");
 			return value;
@@ -2948,6 +3015,10 @@ window.__ModuleLoader__.load({
 			async ingestionStatus(payload, signal) {
 				return okfIngestValue(await call(this.rpc, "okf/ingest/status", payload, signal));
 			}
+			/** Counts, or removes, the stored meetings the OKF folder does not hold. */
+			async syncMeetings(payload, signal) {
+				return storedMeetingsSyncValue(await call(this.rpc, "meetings/sync", payload, signal));
+			}
 			/** Lists CoreAudio devices through the signed helper. */
 			async listDevices(signal) {
 				return audioDeviceInventory(await call(this.rpc, "devices/list", {}, signal));
@@ -3002,7 +3073,14 @@ window.__ModuleLoader__.load({
 			if (code === null) return "unavailable";
 			if (code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
 			if (code.includes("OKF_BUSY")) return "busy";
+			if (code.includes("OKF_NO_MODEL")) return "noModel";
 			return "unavailable";
+		}
+		/** Maps a sync refusal to the one sentence the panel can show. */
+		function syncFailure(code) {
+			if (code !== null && code.includes("OKF_NOT_CONFIGURED")) return "notConfigured";
+			if (code !== null && code.includes("OKF_INVALID_DIRECTORY")) return "missingFolder";
+			return "failed";
 		}
 		/**
 		* Starts one user-driven ingestion and polls its attempt until it settles.
@@ -3145,6 +3223,43 @@ window.__ModuleLoader__.load({
 				selected,
 				selectionAttempt
 			]);
+			const select = (0, react.useCallback)((entry) => {
+				setSelected(entry);
+				setSelectionAttempt((attempt) => attempt + 1);
+			}, []);
+			const clear = (0, react.useCallback)(() => setSelected(null), []);
+			const reload = (0, react.useCallback)(() => setReloadToken((token) => token + 1), []);
+			const [syncPending, setSyncPending] = (0, react.useState)(null);
+			const [syncBusy, setSyncBusy] = (0, react.useState)(false);
+			const [syncProblem, setSyncProblem] = (0, react.useState)(null);
+			const [syncRemoved, setSyncRemoved] = (0, react.useState)(null);
+			const syncController = (0, react.useRef)(null);
+			(0, react.useEffect)(() => () => syncController.current?.abort(), []);
+			const runSync = (0, react.useCallback)((apply) => {
+				syncController.current?.abort();
+				const controller = new AbortController();
+				syncController.current = controller;
+				setSyncBusy(true);
+				setSyncProblem(null);
+				if (apply) setSyncRemoved(null);
+				client.syncMeetings({ apply }, controller.signal).then((result) => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setSyncBusy(false);
+					if (apply) {
+						setSyncPending(null);
+						setSyncRemoved(result.removed);
+						setSelected(null);
+						setReloadToken((token) => token + 1);
+						return;
+					}
+					setSyncPending(result.removed);
+				}).catch((cause) => {
+					if (!mounted.current || controller.signal.aborted) return;
+					setSyncBusy(false);
+					setSyncPending(null);
+					setSyncProblem(syncFailure(errorCode$1(cause)));
+				});
+			}, [client, mounted]);
 			return {
 				entries,
 				loading,
@@ -3154,12 +3269,22 @@ window.__ModuleLoader__.load({
 				transcriptLoading,
 				transcriptError,
 				disabled: active,
-				select: (0, react.useCallback)((entry) => {
-					setSelected(entry);
-					setSelectionAttempt((attempt) => attempt + 1);
-				}, []),
-				clear: (0, react.useCallback)(() => setSelected(null), []),
-				reload: (0, react.useCallback)(() => setReloadToken((token) => token + 1), [])
+				select,
+				clear,
+				reload,
+				sync: {
+					pending: syncPending,
+					busy: syncBusy,
+					failure: syncProblem,
+					removed: syncRemoved,
+					request: (0, react.useCallback)(() => runSync(false), [runSync]),
+					confirm: (0, react.useCallback)(() => runSync(true), [runSync]),
+					cancel: (0, react.useCallback)(() => {
+						syncController.current?.abort();
+						setSyncBusy(false);
+						setSyncPending(null);
+					}, [])
+				}
 			};
 		}
 		//#endregion
@@ -4028,6 +4153,16 @@ window.__ModuleLoader__.load({
 			"panel.storedIngested": "已收录",
 			"panel.storedTitle": "已保存的原稿",
 			"panel.storedVersion": "第 {version} 版 · 只读",
+			"panel.sync": "同步",
+			"panel.syncConfirm": "移除 {count} 个不在该文件夹中的会议？",
+			"panel.syncNothing": "所有已存会议都在该文件夹中。",
+			"panel.syncRemove": "移除",
+			"panel.syncCancel": "取消",
+			"panel.syncDone": "已移除 {count} 个会议。",
+			"panel.syncFailed": "无法同步该文件夹。",
+			"panel.syncNotConfigured": "请先在设置中选择知识库文件夹。",
+			"panel.syncMissingFolder": "知识库文件夹不存在。",
+			"panel.ingestNoModel": "请先在 DSH 设置中选择模型。",
 			"panel.storedEmptyTranscript": "这场会议还没有可显示的原稿。",
 			"panel.activity": "录音状态指示（不是声音音量）",
 			"panel.track.on": "采集中",
@@ -4133,6 +4268,16 @@ window.__ModuleLoader__.load({
 			"panel.storedIngested": "Ingested",
 			"panel.storedTitle": "Stored transcript",
 			"panel.storedVersion": "v{version} · read-only",
+			"panel.sync": "Sync",
+			"panel.syncConfirm": "Remove {count} meetings that are not in this folder?",
+			"panel.syncNothing": "Every stored meeting is in this folder.",
+			"panel.syncRemove": "Remove",
+			"panel.syncCancel": "Cancel",
+			"panel.syncDone": "Removed {count} meetings.",
+			"panel.syncFailed": "Could not sync the folder.",
+			"panel.syncNotConfigured": "Choose an Open knowledge base folder in settings first.",
+			"panel.syncMissingFolder": "The Open knowledge base folder does not exist.",
+			"panel.ingestNoModel": "Choose a model in DSH settings first.",
 			"panel.storedEmptyTranscript": "This meeting has no transcript segments yet.",
 			"panel.activity": "Recording status indicator (not audio level)",
 			"panel.track.on": "Capturing",
@@ -4260,6 +4405,6 @@ if (typeof document !== "undefined" && !document.querySelector("style[data-plugi
         const style = document.createElement("style");
         style.dataset.plugin = "@huliux/dsh-asr-plugin";
         style.dataset.pluginCss = "@huliux/dsh-asr-plugin/client";
-        style.textContent = "._2-6Zyq_page{width:100%;min-width:0;max-width:640px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);gap:12px;font-size:13px;line-height:20px;display:grid}._2-6Zyq_card{border:.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);background:var(--dsw-alias-settings-card-fill);min-width:0;padding:20px}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_modelTitle,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading,._2-6Zyq_saveRow{align-items:center;gap:12px;display:flex}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading{justify-content:space-between}._2-6Zyq_heading{align-items:flex-start;padding:4px 0 8px}._2-6Zyq_heading>div,._2-6Zyq_modelCopy{min-width:0}._2-6Zyq_heading>button,._2-6Zyq_modelRow>button{flex-shrink:0}._2-6Zyq_title{margin:0 0 4px;font-size:14px;font-weight:600;line-height:22px}._2-6Zyq_label{font-weight:500}._2-6Zyq_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:12px;line-height:18px}._2-6Zyq_modelBlock{padding:2px 0 18px}._2-6Zyq_modelBlock+._2-6Zyq_modelBlock{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:18px}._2-6Zyq_modelTitle{flex-wrap:wrap;gap:8px;margin-bottom:4px}._2-6Zyq_runtimeRow{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:12px}._2-6Zyq_loading,._2-6Zyq_notice,._2-6Zyq_error{color:var(--dsw-alias-label-secondary);align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;line-height:18px;display:flex}._2-6Zyq_loading>*,._2-6Zyq_notice>*,._2-6Zyq_error>*{flex-shrink:0;align-self:center}._2-6Zyq_error{color:var(--dsw-alias-label-error)}._2-6Zyq_instructions{gap:12px;min-width:0;padding-top:16px;display:grid}._2-6Zyq_command{gap:6px;min-width:0;display:grid}._2-6Zyq_diagnostics{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary);margin:0;padding-left:18px;font-size:12px;line-height:18px}._2-6Zyq_diagnostics:empty{display:none}._2-6Zyq_diagnosticGroups{gap:14px;margin:16px 0;display:grid}._2-6Zyq_diagnosticGroup+._2-6Zyq_diagnosticGroup{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:14px}._2-6Zyq_helpHeading{width:fit-content;max-width:100%}._2-6Zyq_connectionSummary{color:var(--dsw-alias-label-secondary);margin-left:12px;font-size:12px}._2-6Zyq_downloadRouting{gap:8px;min-width:0;margin-top:16px;display:grid}._2-6Zyq_downloadRouting label{margin-top:4px}._2-6Zyq_downloadActions{flex-wrap:wrap;gap:8px;display:flex}._2-6Zyq_saveRow{flex-wrap:wrap;margin-top:12px}._2-6Zyq_downloadProgress{gap:8px;min-width:0;margin-top:12px;display:grid}._2-6Zyq_progressHeading>span{align-items:center;gap:8px;display:flex}._2-6Zyq_progressBytes{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:12px}._2-6Zyq_downloadProgress progress{width:100%;height:4px;accent-color:var(--dsw-alias-label-primary)}@media (width<=600px){._2-6Zyq_card{padding:16px}._2-6Zyq_heading,._2-6Zyq_modelRow{gap:8px}._2-6Zyq_modelTitle{gap:4px}}@media (width<=980px){._2-6Zyq_page{padding-bottom:180px}}._2-6Zyq_proxyOptions{gap:8px;margin-top:4px;display:grid}._2-6Zyq_proxyOptions a{width:fit-content}._2-6Zyq_preparationSteps{color:var(--dsw-alias-label-secondary);gap:8px;margin:4px 0 0;padding:0;font-size:12px;list-style:none;display:grid}._2-6Zyq_preparationSteps li{align-items:center;gap:8px;display:flex}.Expx1a_panel{z-index:1200;box-sizing:border-box;pointer-events:auto;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;font-size:12px;line-height:18px;display:flex;position:fixed;box-shadow:0 1px 3px #00000008,0 6px 20px -4px #00000012}.Expx1a_panel[data-expanded=true]{border-radius:16px}.Expx1a_header{box-sizing:border-box;flex-shrink:0;align-items:center;gap:4px;height:46px;padding:5px;display:flex}.Expx1a_header>*{flex-shrink:0}.Expx1a_header>.Expx1a_spacer{flex:auto;min-width:0}.Expx1a_panel button{border-radius:8px;padding:0}.Expx1a_panel button:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.Expx1a_control{flex-shrink:0;width:36px;min-width:24px;height:36px}.Expx1a_split{flex-shrink:0;align-items:center;display:inline-flex;position:relative}.Expx1a_splitMain{border-top-right-radius:0;border-bottom-right-radius:0;width:32px;min-width:22px}.Expx1a_caret{width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary);border-top-left-radius:0;border-bottom-left-radius:0}.Expx1a_caret:hover,.Expx1a_caretOpen{color:var(--dsw-alias-label-primary)}.Expx1a_caretIcon{display:block}.Expx1a_menu{z-index:10;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);border-radius:10px;flex-direction:column;width:max-content;min-width:180px;max-width:320px;max-height:240px;padding:4px;display:flex;position:absolute;bottom:calc(100% + 6px);left:0;overflow:auto;box-shadow:0 6px 20px -4px #0000001f}.Expx1a_menuItem{width:100%;color:var(--dsw-alias-label-primary);text-align:left;overflow-wrap:anywhere;background:0 0;border-radius:6px;align-items:center;gap:6px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_menuItem:hover{background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_menu[data-below=true]{top:calc(100% + 6px);bottom:auto}.Expx1a_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:6px 8px;font-size:12px;line-height:18px;display:block}.Expx1a_menuCheck{width:10px;color:var(--dsw-alias-label-primary);display:inline-block}.Expx1a_mainControl{flex-shrink:0;gap:6px;width:60px;min-width:48px;height:36px}.Expx1a_move{cursor:grab;touch-action:none;width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary)}.Expx1a_move:active{cursor:grabbing}.Expx1a_toggle{width:28px;min-width:24px;height:36px;color:var(--dsw-alias-label-secondary)}.Expx1a_spacer{flex:1;min-width:0}.Expx1a_icon{background:currentColor;flex-shrink:0;width:20px;height:20px;display:block;mask-position:50%;mask-size:contain;mask-repeat:no-repeat}.Expx1a_play,.Expx1a_actionIcon{width:24px;height:24px}.Expx1a_grip{width:5.4px;height:8.4px}.Expx1a_expand,.Expx1a_collapse,.Expx1a_resize .Expx1a_icon{width:18px;height:18px}.Expx1a_check{width:16px;height:16px;color:var(--dsw-alias-state-success-primary)}.Expx1a_off{color:var(--dsw-alias-label-tertiary)}.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_error,.Expx1a_errorControl{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}.Expx1a_errorControl{width:28px;min-width:28px}.Expx1a_error.Expx1a_noSignal,.Expx1a_errorControl.Expx1a_noSignal{color:var(--dsw-alias-state-warn-label)}.Expx1a_body{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.Expx1a_status{flex-shrink:0;justify-content:space-between;align-items:center;gap:8px;padding:16px;display:flex}.Expx1a_phase{align-items:center;gap:8px;font-weight:500;display:inline-flex}.Expx1a_tracks{flex-wrap:wrap;flex-shrink:0;gap:8px;padding:0 16px;display:flex}.Expx1a_chip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;align-items:center;padding:4px 8px;font-size:11px;line-height:17px;display:inline-flex}.Expx1a_chip.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_body>.Expx1a_error{margin:8px 16px 0}.Expx1a_recognizer{align-items:center;gap:4px;min-width:0;display:inline-flex}.Expx1a_recognizerLabel{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:11px;line-height:17px}.Expx1a_recognizerSelect{border:1px solid var(--dsw-alias-interactive-border);height:22px;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;padding:0 4px;font-family:inherit;font-size:11px}.Expx1a_recognizerSelect:disabled{opacity:.5}.Expx1a_hint,.Expx1a_segmentMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px;line-height:17px}.Expx1a_hint.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_preview{flex-direction:column;flex:1;min-height:80px;padding:16px;display:flex}.Expx1a_previewHeading{justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;display:flex}.Expx1a_previewTitle{font-weight:500}.Expx1a_segments{overscroll-behavior:contain;flex:1;min-height:0;overflow:auto}.Expx1a_segment{color:var(--dsw-alias-label-secondary);gap:4px;margin-bottom:12px;display:grid}.Expx1a_segment:last-child{color:var(--dsw-alias-label-primary);margin-bottom:0}.Expx1a_text{overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-size:14px;line-height:23px}.Expx1a_footer{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;align-items:center;gap:4px;padding:10px 8px 10px 12px;display:flex}.Expx1a_footer>.Expx1a_hint{overflow-wrap:anywhere;flex:1;min-width:0}.Expx1a_utility{width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_resize{cursor:nwse-resize;touch-action:none;width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_wave{flex-shrink:0}.Expx1a_wave path{transform-box:fill-box;transform-origin:50%}.Expx1a_wave[data-recording-wave=moving] path{animation:.9s ease-in-out infinite Expx1a_recordingWave}.Expx1a_wave path:nth-child(2){animation-delay:-.45s}.Expx1a_wave path:nth-child(3){animation-delay:-.225s}.Expx1a_wave path:nth-child(4){animation-delay:-.675s}.Expx1a_wave[data-recording-wave=still]{color:var(--dsw-alias-label-tertiary)}.Expx1a_spinner{box-sizing:border-box;border:2px solid var(--dsw-alias-border-l3);border-top-color:var(--dsw-alias-label-primary);border-radius:50%;width:18px;height:18px;animation:1s linear infinite Expx1a_recordingSpin}@keyframes Expx1a_recordingWave{0%,to{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes Expx1a_recordingSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.Expx1a_wave[data-recording-wave=moving] path,.Expx1a_spinner{animation:none}}.Expx1a_error{white-space:pre-line}.Expx1a_attribution{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;padding:12px 16px}.Expx1a_attribution p{margin:8px 0 0}.Expx1a_attributionSummary{color:var(--dsw-alias-label-primary);font-weight:500}.Expx1a_attributionSummary:focus-visible,.Expx1a_attributionInput:focus-visible{outline:2px solid var(--dsw-alias-interactive-border);outline-offset:1px;border-radius:4px}.Expx1a_attributionFields{flex-direction:column;gap:8px;margin-top:8px;display:flex}.Expx1a_attributionField{grid-template-columns:minmax(64px,.4fr) 1fr;align-items:center;gap:8px;display:grid}.Expx1a_attributionLabel{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}.Expx1a_attributionInput{border:1px solid var(--dsw-alias-interactive-border);min-width:0;height:24px;color:var(--dsw-alias-label-primary);font:inherit;background:0 0;border-radius:6px;padding:0 6px}.Expx1a_attributionError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;margin:6px 16px 0;font-size:11px;line-height:17px}.Expx1a_panel .Expx1a_ingest{min-width:60px;height:24px;color:var(--dsw-alias-label-primary);flex-shrink:0;padding:0 10px;font-size:12px;line-height:18px}.Expx1a_panel .Expx1a_ingest:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}.Expx1a_stored{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex-shrink:0;gap:8px;padding:12px 16px;display:flex}.Expx1a_storedHeading{align-items:center;gap:8px;display:flex}.Expx1a_stored .Expx1a_hint,.Expx1a_stored p{margin:0}.Expx1a_stored .Expx1a_spinner{border-width:1.5px;width:14px;height:14px}.Expx1a_storedList{overscroll-behavior:contain;flex-direction:column;gap:2px;max-height:140px;display:flex;overflow:auto}.Expx1a_panel .Expx1a_storedRow{width:100%;color:var(--dsw-alias-label-primary);text-align:left;background:0 0;border-radius:6px;align-items:center;gap:8px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_panel .Expx1a_storedRow:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_panel .Expx1a_storedRow[aria-selected=true]{background:var(--dsw-alias-interactive-bg-hover);box-shadow:inset 2px 0 0 var(--dsw-alias-label-primary)}.Expx1a_panel .Expx1a_storedRow:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}.Expx1a_storedTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.Expx1a_storedMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;flex-shrink:0;font-size:11px}.Expx1a_storedError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:11px;line-height:17px}\n";
+        style.textContent = "._2-6Zyq_page{width:100%;min-width:0;max-width:640px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);gap:12px;font-size:13px;line-height:20px;display:grid}._2-6Zyq_card{border:.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);background:var(--dsw-alias-settings-card-fill);min-width:0;padding:20px}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_modelTitle,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading,._2-6Zyq_saveRow{align-items:center;gap:12px;display:flex}._2-6Zyq_heading,._2-6Zyq_modelRow,._2-6Zyq_runtimeRow,._2-6Zyq_progressHeading{justify-content:space-between}._2-6Zyq_heading{align-items:flex-start;padding:4px 0 8px}._2-6Zyq_heading>div,._2-6Zyq_modelCopy{min-width:0}._2-6Zyq_heading>button,._2-6Zyq_modelRow>button{flex-shrink:0}._2-6Zyq_title{margin:0 0 4px;font-size:14px;font-weight:600;line-height:22px}._2-6Zyq_label{font-weight:500}._2-6Zyq_description{color:var(--dsw-alias-label-secondary);margin:0;font-size:12px;line-height:18px}._2-6Zyq_modelBlock{padding:2px 0 18px}._2-6Zyq_modelBlock+._2-6Zyq_modelBlock{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:18px}._2-6Zyq_modelTitle{flex-wrap:wrap;gap:8px;margin-bottom:4px}._2-6Zyq_runtimeRow{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:12px}._2-6Zyq_loading,._2-6Zyq_notice,._2-6Zyq_error{color:var(--dsw-alias-label-secondary);align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;line-height:18px;display:flex}._2-6Zyq_loading>*,._2-6Zyq_notice>*,._2-6Zyq_error>*{flex-shrink:0;align-self:center}._2-6Zyq_error{color:var(--dsw-alias-label-error)}._2-6Zyq_instructions{gap:12px;min-width:0;padding-top:16px;display:grid}._2-6Zyq_command{gap:6px;min-width:0;display:grid}._2-6Zyq_diagnostics{overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary);margin:0;padding-left:18px;font-size:12px;line-height:18px}._2-6Zyq_diagnostics:empty{display:none}._2-6Zyq_diagnosticGroups{gap:14px;margin:16px 0;display:grid}._2-6Zyq_diagnosticGroup+._2-6Zyq_diagnosticGroup{border-top:.5px solid var(--dsw-alias-border-l1);padding-top:14px}._2-6Zyq_helpHeading{width:fit-content;max-width:100%}._2-6Zyq_connectionSummary{color:var(--dsw-alias-label-secondary);margin-left:12px;font-size:12px}._2-6Zyq_downloadRouting{gap:8px;min-width:0;margin-top:16px;display:grid}._2-6Zyq_downloadRouting label{margin-top:4px}._2-6Zyq_downloadActions{flex-wrap:wrap;gap:8px;display:flex}._2-6Zyq_saveRow{flex-wrap:wrap;margin-top:12px}._2-6Zyq_downloadProgress{gap:8px;min-width:0;margin-top:12px;display:grid}._2-6Zyq_progressHeading>span{align-items:center;gap:8px;display:flex}._2-6Zyq_progressBytes{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:12px}._2-6Zyq_downloadProgress progress{width:100%;height:4px;accent-color:var(--dsw-alias-label-primary)}@media (width<=600px){._2-6Zyq_card{padding:16px}._2-6Zyq_heading,._2-6Zyq_modelRow{gap:8px}._2-6Zyq_modelTitle{gap:4px}}@media (width<=980px){._2-6Zyq_page{padding-bottom:180px}}._2-6Zyq_proxyOptions{gap:8px;margin-top:4px;display:grid}._2-6Zyq_proxyOptions a{width:fit-content}._2-6Zyq_preparationSteps{color:var(--dsw-alias-label-secondary);gap:8px;margin:4px 0 0;padding:0;font-size:12px;list-style:none;display:grid}._2-6Zyq_preparationSteps li{align-items:center;gap:8px;display:flex}.Expx1a_panel{z-index:1200;box-sizing:border-box;pointer-events:auto;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;font-size:12px;line-height:18px;display:flex;position:fixed;box-shadow:0 1px 3px #00000008,0 6px 20px -4px #00000012}.Expx1a_panel[data-expanded=true]{border-radius:16px}.Expx1a_header{box-sizing:border-box;flex-shrink:0;align-items:center;gap:4px;height:46px;padding:5px;display:flex}.Expx1a_header>*{flex-shrink:0}.Expx1a_header>.Expx1a_spacer{flex:auto;min-width:0}.Expx1a_panel button{border-radius:8px;padding:0}.Expx1a_panel button:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.Expx1a_control{flex-shrink:0;width:36px;min-width:24px;height:36px}.Expx1a_split{flex-shrink:0;align-items:center;display:inline-flex;position:relative}.Expx1a_splitMain{border-top-right-radius:0;border-bottom-right-radius:0;width:32px;min-width:22px}.Expx1a_caret{width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary);border-top-left-radius:0;border-bottom-left-radius:0}.Expx1a_caret:hover,.Expx1a_caretOpen{color:var(--dsw-alias-label-primary)}.Expx1a_caretIcon{display:block}.Expx1a_menu{z-index:10;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-settings-card-fill);border-radius:10px;flex-direction:column;width:max-content;min-width:180px;max-width:320px;max-height:240px;padding:4px;display:flex;position:absolute;bottom:calc(100% + 6px);left:0;overflow:auto;box-shadow:0 6px 20px -4px #0000001f}.Expx1a_menuItem{width:100%;color:var(--dsw-alias-label-primary);text-align:left;overflow-wrap:anywhere;background:0 0;border-radius:6px;align-items:center;gap:6px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_menuItem:hover{background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_menu[data-below=true]{top:calc(100% + 6px);bottom:auto}.Expx1a_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:6px 8px;font-size:12px;line-height:18px;display:block}.Expx1a_menuCheck{width:10px;color:var(--dsw-alias-label-primary);display:inline-block}.Expx1a_mainControl{flex-shrink:0;gap:6px;width:60px;min-width:48px;height:36px}.Expx1a_move{cursor:grab;touch-action:none;width:16px;min-width:12px;height:36px;color:var(--dsw-alias-label-tertiary)}.Expx1a_move:active{cursor:grabbing}.Expx1a_toggle{width:28px;min-width:24px;height:36px;color:var(--dsw-alias-label-secondary)}.Expx1a_spacer{flex:1;min-width:0}.Expx1a_icon{background:currentColor;flex-shrink:0;width:20px;height:20px;display:block;mask-position:50%;mask-size:contain;mask-repeat:no-repeat}.Expx1a_play,.Expx1a_actionIcon{width:24px;height:24px}.Expx1a_grip{width:5.4px;height:8.4px}.Expx1a_expand,.Expx1a_collapse,.Expx1a_resize .Expx1a_icon{width:18px;height:18px}.Expx1a_check{width:16px;height:16px;color:var(--dsw-alias-state-success-primary)}.Expx1a_off{color:var(--dsw-alias-label-tertiary)}.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_error,.Expx1a_errorControl{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}.Expx1a_errorControl{width:28px;min-width:28px}.Expx1a_error.Expx1a_noSignal,.Expx1a_errorControl.Expx1a_noSignal{color:var(--dsw-alias-state-warn-label)}.Expx1a_body{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.Expx1a_status{flex-shrink:0;justify-content:space-between;align-items:center;gap:8px;padding:16px;display:flex}.Expx1a_phase{align-items:center;gap:8px;font-weight:500;display:inline-flex}.Expx1a_tracks{flex-wrap:wrap;flex-shrink:0;gap:8px;padding:0 16px;display:flex}.Expx1a_chip{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary);border-radius:8px;align-items:center;padding:4px 8px;font-size:11px;line-height:17px;display:inline-flex}.Expx1a_chip.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_body>.Expx1a_error{margin:8px 16px 0}.Expx1a_recognizer{align-items:center;gap:4px;min-width:0;display:inline-flex}.Expx1a_recognizerLabel{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:11px;line-height:17px}.Expx1a_recognizerSelect{border:1px solid var(--dsw-alias-interactive-border);height:22px;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;padding:0 4px;font-family:inherit;font-size:11px}.Expx1a_recognizerSelect:disabled{opacity:.5}.Expx1a_hint,.Expx1a_segmentMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px;line-height:17px}.Expx1a_hint.Expx1a_warning{color:var(--dsw-alias-state-warn-label)}.Expx1a_preview{flex-direction:column;flex:1;min-height:80px;padding:16px;display:flex}.Expx1a_previewHeading{justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px;display:flex}.Expx1a_previewTitle{font-weight:500}.Expx1a_segments{overscroll-behavior:contain;flex:1;min-height:0;overflow:auto}.Expx1a_segment{color:var(--dsw-alias-label-secondary);gap:4px;margin-bottom:12px;display:grid}.Expx1a_segment:last-child{color:var(--dsw-alias-label-primary);margin-bottom:0}.Expx1a_text{overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-size:14px;line-height:23px}.Expx1a_footer{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;align-items:center;gap:4px;padding:10px 8px 10px 12px;display:flex}.Expx1a_footer>.Expx1a_hint{overflow-wrap:anywhere;flex:1;min-width:0}.Expx1a_utility{width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_resize{cursor:nwse-resize;touch-action:none;width:24px;min-width:24px;height:24px;color:var(--dsw-alias-label-tertiary)}.Expx1a_wave{flex-shrink:0}.Expx1a_wave path{transform-box:fill-box;transform-origin:50%}.Expx1a_wave[data-recording-wave=moving] path{animation:.9s ease-in-out infinite Expx1a_recordingWave}.Expx1a_wave path:nth-child(2){animation-delay:-.45s}.Expx1a_wave path:nth-child(3){animation-delay:-.225s}.Expx1a_wave path:nth-child(4){animation-delay:-.675s}.Expx1a_wave[data-recording-wave=still]{color:var(--dsw-alias-label-tertiary)}.Expx1a_spinner{box-sizing:border-box;border:2px solid var(--dsw-alias-border-l3);border-top-color:var(--dsw-alias-label-primary);border-radius:50%;width:18px;height:18px;animation:1s linear infinite Expx1a_recordingSpin}@keyframes Expx1a_recordingWave{0%,to{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes Expx1a_recordingSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.Expx1a_wave[data-recording-wave=moving] path,.Expx1a_spinner{animation:none}}.Expx1a_error{white-space:pre-line}.Expx1a_attribution{border-top:1px solid var(--dsw-alias-border-l2);flex-shrink:0;padding:12px 16px}.Expx1a_attribution p{margin:8px 0 0}.Expx1a_attributionSummary{color:var(--dsw-alias-label-primary);font-weight:500}.Expx1a_attributionSummary:focus-visible,.Expx1a_attributionInput:focus-visible{outline:2px solid var(--dsw-alias-interactive-border);outline-offset:1px;border-radius:4px}.Expx1a_attributionFields{flex-direction:column;gap:8px;margin-top:8px;display:flex}.Expx1a_attributionField{grid-template-columns:minmax(64px,.4fr) 1fr;align-items:center;gap:8px;display:grid}.Expx1a_attributionLabel{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}.Expx1a_attributionInput{border:1px solid var(--dsw-alias-interactive-border);min-width:0;height:24px;color:var(--dsw-alias-label-primary);font:inherit;background:0 0;border-radius:6px;padding:0 6px}.Expx1a_attributionError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;margin:6px 16px 0;font-size:11px;line-height:17px}.Expx1a_panel .Expx1a_ingest{min-width:60px;height:24px;color:var(--dsw-alias-label-primary);flex-shrink:0;padding:0 10px;font-size:12px;line-height:18px}.Expx1a_panel .Expx1a_ingest:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}.Expx1a_stored{border-top:1px solid var(--dsw-alias-border-l2);flex-direction:column;flex-shrink:0;gap:8px;padding:12px 16px;display:flex}.Expx1a_storedHeading{align-items:center;gap:8px;display:flex}.Expx1a_syncButton{flex-shrink:0;margin-left:auto}.Expx1a_syncRow{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.Expx1a_stored .Expx1a_hint,.Expx1a_stored p{margin:0}.Expx1a_stored .Expx1a_spinner{border-width:1.5px;width:14px;height:14px}.Expx1a_storedList{overscroll-behavior:contain;flex-direction:column;gap:2px;max-height:140px;display:flex;overflow:auto}.Expx1a_panel .Expx1a_storedRow{width:100%;color:var(--dsw-alias-label-primary);text-align:left;background:0 0;border-radius:6px;align-items:center;gap:8px;padding:6px 8px;font-size:12px;line-height:18px;display:flex}.Expx1a_panel .Expx1a_storedRow:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}.Expx1a_panel .Expx1a_storedRow[aria-selected=true]{background:var(--dsw-alias-interactive-bg-hover);box-shadow:inset 2px 0 0 var(--dsw-alias-label-primary)}.Expx1a_panel .Expx1a_storedRow:disabled{color:var(--dsw-alias-label-tertiary);cursor:default}.Expx1a_storedTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.Expx1a_storedMeta{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;flex-shrink:0;font-size:11px}.Expx1a_storedError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:11px;line-height:17px}\n";
         document.head.appendChild(style);
       }

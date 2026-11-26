@@ -5,12 +5,27 @@ import type { RecordingRpcClient } from "./recording-rpc-client.js";
 export declare const INGEST_POLL_MS = 2000;
 /** Five minutes: long enough for the agent, short enough to stop a stuck spinner. */
 export declare const INGEST_POLL_ATTEMPTS = 150;
-export type IngestionFailure = "notConfigured" | "busy" | "unavailable" | "timeout";
+export type IngestionFailure = "notConfigured" | "busy" | "noModel" | "unavailable" | "timeout";
 export interface MeetingIngestion {
     readonly running: boolean;
     readonly outcome: "succeeded" | "failed" | null;
     readonly failure: IngestionFailure | null;
     readonly start: () => void;
+}
+/** Why a folder-to-database sync stopped; the raw message never reaches the UI. */
+export type SyncFailure = "notConfigured" | "missingFolder" | "failed";
+export interface StoredMeetingsSync {
+    /** Meetings the folder does not hold, waiting for the user to confirm. */
+    readonly pending: number | null;
+    readonly busy: boolean;
+    readonly failure: SyncFailure | null;
+    /** Meetings the last applied sync removed. */
+    readonly removed: number | null;
+    /** Counts what a sync would remove. */
+    readonly request: () => void;
+    /** Removes those meetings for real. */
+    readonly confirm: () => void;
+    readonly cancel: () => void;
 }
 export interface StoredMeetings {
     readonly entries: readonly StoredMeetingRpcEntry[];
@@ -25,6 +40,8 @@ export interface StoredMeetings {
     readonly select: (entry: StoredMeetingRpcEntry) => void;
     readonly clear: () => void;
     readonly reload: () => void;
+    /** Folder-to-database reconciliation behind the "Sync" button. */
+    readonly sync: StoredMeetingsSync;
 }
 /**
  * Only the categories the panel can explain are kept; the raw message may name
@@ -32,6 +49,8 @@ export interface StoredMeetings {
  * A failed RPC wraps the host code inside its message, so match on containment.
  */
 export declare function ingestionFailure(code: string | null): IngestionFailure;
+/** Maps a sync refusal to the one sentence the panel can show. */
+export declare function syncFailure(code: string | null): SyncFailure;
 export interface MeetingIngestionOptions {
     readonly client: RecordingRpcClient;
     readonly meetingId: string | null;
