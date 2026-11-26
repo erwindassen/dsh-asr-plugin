@@ -36,6 +36,7 @@ import {
   type MeetingRepository,
 } from "./storage/meeting-repository.js";
 import { registerMeetingTools } from "./tools/meeting-tools.js";
+import { registerOkfTools } from "./tools/okf-tools.js";
 import { createDshWorkerSpawner } from "./worker/dsh-spawner.js";
 import { createPackagedWorkerLaunch } from "./worker/launch.js";
 import {
@@ -325,6 +326,7 @@ export async function apply(context: Context, config: ParsedConfig): Promise<voi
         };
       },
     });
+    registerOkfTools(context, { pages: okf.pages });
     const downloads = new ModelDownloadController({ dataRoot: paths.dataRoot, packageRoot: PACKAGE_ROOT,
       jobs: context.jobs, transport: context.subprocess, settings: () => {
         const current = effectiveConfig<ParsedConfig>(context);

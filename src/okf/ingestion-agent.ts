@@ -27,8 +27,14 @@ export interface OkfAgentHandle {
   dispose?(): Promise<void>;
 }
 
+/** What the host needs to lend the child its one write authority. */
+export interface OkfAgentSeed {
+  readonly meetingId: string;
+  readonly directory: string;
+}
+
 export interface OkfAgentFactory {
-  create(options: CreateAgentOptions): Promise<OkfAgentHandle>;
+  create(options: CreateAgentOptions, seed: OkfAgentSeed): Promise<OkfAgentHandle>;
 }
 
 export interface OkfIngestionAgentDeps {
@@ -223,7 +229,7 @@ export function createOkfIngestionAgent(deps: OkfIngestionAgentDeps): OkfAgentPo
             sessionId: deps.sessionId() as CreateAgentOptions["sessionId"],
             meta: { cwd: request.directory, origin: "subagent" },
             signal: controller.signal,
-          });
+          }, { meetingId: request.meeting.meetingId, directory: request.directory });
         } catch (error) {
           // A typed refusal (no model route, no folder) keeps its code so the
           // panel can name the problem instead of "could not start".

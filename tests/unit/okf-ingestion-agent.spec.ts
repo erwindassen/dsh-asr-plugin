@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 
 import { createOkfIngestionAgent, DEFAULT_OKF_AGENT_TIMEOUT_MS, OKF_INGEST_SKILL_NAME } from "../../src/okf/ingestion-agent.js";
-import type { OkfAgentHandle } from "../../src/okf/ingestion-agent.js";
+import type { OkfAgentHandle, OkfAgentSeed } from "../../src/okf/ingestion-agent.js";
 import { OkfError } from "../../src/okf/contracts.js";
 import type { OkfAgentPort, OkfAgentRequest, OkfMeetingView } from "../../src/okf/contracts.js";
 
@@ -69,6 +69,7 @@ function makeRequest(overrides: { readonly signal?: AbortSignal; readonly transc
 interface Harness {
   readonly port: OkfAgentPort;
   readonly created: CreateAgentOptions[];
+  readonly seeds: OkfAgentSeed[];
   readonly skills: string[];
 }
 
@@ -79,11 +80,13 @@ function harness(overrides: {
   readonly sessionId?: () => string;
 } = {}): Harness {
   const created: CreateAgentOptions[] = [];
+  const seeds: OkfAgentSeed[] = [];
   const skills: string[] = [];
   const port = createOkfIngestionAgent({
     agents: {
-      async create(options) {
+      async create(options, seed) {
         created.push(options);
+        seeds.push(seed);
         return overrides.create === undefined ? fakeHandle().handle : await overrides.create(options);
       },
     },
@@ -94,10 +97,16 @@ function harness(overrides: {
     sessionId: overrides.sessionId ?? (() => SESSION_ID),
     ...(overrides.timeoutMs === undefined ? {} : { timeoutMs: overrides.timeoutMs }),
   });
-  return { port, created, skills };
+  return { port, created, seeds, skills };
 }
 
 describe("createOkfIngestionAgent", () => {
+  it("hands the bundle and the meeting to the host so it can lend a writer", async () => {
+    const test = harness({ create: async () => fakeHandle().handle });
+    await test.port.ingest(makeRequest());
+    expect(test.seeds).toEqual([{ meetingId: MEETING.meetingId, directory: BUNDLE }]);
+  });
+
   it("does not create a child when the okf skill is unavailable", async () => {
     const test = harness({ skillAvailable: () => false });
     const outcome = await test.port.ingest(makeRequest());

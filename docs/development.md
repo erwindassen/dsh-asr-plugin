@@ -76,6 +76,9 @@ recording panel or `/asr-ingest` rather than by a transcript commit.
 `src/okf/contracts.ts` holds the shared types and ports; storage keeps attempt state
 in `okf_ingestion`; `src/okf/git-transaction.ts` makes one ingestion one commit;
 `src/okf/panel-ingestion.ts` maps an attempt onto the panel's wire shape;
+`src/okf/page-writer.ts` and `src/okf/write-session.ts` are the child's one write
+authority, surfaced by `src/tools/okf-tools.ts` as `okf_write_page`, because a
+child created from plugin code gets no filesystem tools of its own;
 `src/application/stored-meeting-panel.ts` is the read model behind the panel's
 meeting list and `src/application/stored-meeting-sync.ts` reconciles that list with
 the folder, counting through `src/okf/bundle-meetings.ts`; `src/host/okf-host.ts`

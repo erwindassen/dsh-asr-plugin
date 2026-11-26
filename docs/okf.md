@@ -85,6 +85,17 @@ as untrusted data: imperative text inside a recording is never a rule, pages cit
 segment timestamps, and `index.md` files are off limits because the plugin
 regenerates them.
 
+The child does not get the host's filesystem tools. It is created from the
+plugin, not by the interactive subagent path, so its tool set carries search and
+the meeting tools but no `write` or `bash`. The plugin therefore lends it exactly
+one authority: `okf_write_page`, which writes a single bundle-relative page into
+`meetings/`, `actions/`, `deadlines/`, `entities/`, `concepts/` or `sources/`, and
+refuses `index.md`, `references/` and any path that resolves outside the bundle.
+The authority is opened when the child session starts and withdrawn when it is
+disposed, so no other session can write through it. A run that describes pages
+instead of writing them leaves the bundle empty and fails with "did not write this
+meeting's page".
+
 The `okf` skill is the page-convention authority. When the host can prove the
 skill is missing, ingestion degrades to the transcript copy plus regenerated
 indexes and never writes summaries from memory. When the host cannot answer, the
@@ -107,6 +118,9 @@ configuration or the prompt changes.
   `OKF_BUSY` instead of queueing.
 - Nested Git repositories inside the bundle make `git clean -fd` refuse; ingestion
   then fails and the worktree is left for manual inspection.
+- The child can only write pages through `okf_write_page`; a model that insists on
+  answering in prose instead of calling the tool makes the ingestion fail rather
+  than invent pages.
 
 ## Starting an ingestion
 

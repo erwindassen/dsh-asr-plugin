@@ -3,6 +3,8 @@ import { dirname, join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 
 import { JobId, type JobRegistry } from "@deepseek-ai/dsh-jobs";
+import type { Context } from "@deepseek-ai/cordis";
+import type { ToolDefinition } from "@deepseek-ai/dsh-tools";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createOkfBundleLock } from "../../src/okf/bundle-lock.js";
@@ -40,6 +42,8 @@ import {
   createOkfIngestionRepository,
   type OkfIngestionRepository,
 } from "../../src/storage/okf-ingestion-repository.js";
+import { registerOkfTools } from "../../src/tools/okf-tools.js";
+import { createPageWriteRegistry } from "../../src/okf/write-session.js";
 import {
   createRealGitPort,
   createTemporaryRoot,
@@ -211,6 +215,8 @@ function defaultAgentPages(request: OkfAgentRequest): readonly OkfFile[] {
 
 interface HarnessOptions {
   readonly agent?: FakeAgentPlan;
+  /** Replaces the fake writer, for tests that drive the child's real authority. */
+  readonly agentPort?: OkfAgentPort;
 }
 
 interface Harness {
@@ -220,6 +226,7 @@ interface Harness {
   readonly database: DatabaseSync;
   readonly attempts: OkfIngestionRepository;
   readonly agent: FakeAgent;
+  readonly agentPort: OkfAgentPort;
   readonly jobs: RecordingJobs;
   readonly logs: readonly string[];
   readonly service: OkfIngestionService;
@@ -293,7 +300,8 @@ async function createHarness(options: HarnessOptions = {}): Promise<Harness> {
   };
   const jobs = createRecordingJobs();
   const logs: string[] = [];
-  const agent = new FakeAgent(options.agent);
+  const fakeAgent = new FakeAgent(options.agent);
+  const agent: OkfAgentPort = options.agentPort ?? fakeAgent;
 
   const serviceFor = (directory: string): OkfIngestionService => {
     const settings: OkfSettings = { directory, ingest: true };
@@ -318,7 +326,8 @@ async function createHarness(options: HarnessOptions = {}): Promise<Harness> {
     meetings,
     database,
     attempts,
-    agent,
+    agent: fakeAgent,
+    agentPort: agent,
     jobs,
     logs,
     service: serviceFor(bundle),
@@ -571,6 +580,59 @@ describe.skipIf(!gitAvailable())("createOkfIngestionService", () => {
         errorMessage: expect.stringContaining("ENOENT"),
       }),
     ]);
+  });
+
+  it("writes pages through okf_write_page, the only writer the child has", async () => {
+    const registry = createPageWriteRegistry();
+    const registered: ToolDefinition[] = [];
+    registerOkfTools(
+      {
+        tools: {
+          register: (definition: ToolDefinition) => {
+            registered.push(definition);
+            return () => undefined;
+          },
+        },
+      } as unknown as Context,
+      { pages: registry },
+    );
+    const tool = registered[0];
+    if (tool === undefined) throw new Error("okf_write_page was not registered");
+    const sessionId = "okf-ingest-page-tool";
+    const write = async (path: string, content: string): Promise<unknown> =>
+      await tool.execute({ path, content }, { agent: { session: { id: sessionId } } } as never);
+
+    const test = await createHarness({
+      agentPort: {
+        async ingest(request: OkfAgentRequest): Promise<OkfAgentOutcome> {
+          registry.open(sessionId, { root: request.directory, meetingId: request.meeting.meetingId });
+          try {
+            const page = await write(meetingRelativePath(request.meeting), [
+              "---",
+              "type: Meeting",
+              `id: ${request.meeting.meetingId}`,
+              "status: stable",
+              `sources: [${request.meeting.meetingId}]`,
+              "---",
+              "",
+              "# Written through the tool",
+              "",
+            ].join("\n"));
+            expect(page).toMatchObject({ relative_path: MEETING_PAGE });
+            return { kind: "ingested" };
+          } finally {
+            registry.close(sessionId);
+          }
+        },
+      },
+    });
+
+    const outcome = await test.service.run({ meetingId: MEETING_ID });
+
+    expect(outcome).toMatchObject({ kind: "ingested" });
+    await expect(readFile(bundlePath(test.bundle, MEETING_PAGE), "utf8")).resolves.toContain("Written through the tool");
+    await expect(lastSubject(test.bundle)).resolves.toBe(`ingest ${MEETING_ID}@v1`);
+    expect(registry.get(sessionId)).toBeUndefined();
   });
 
   it("ignores an attribution reader that no longer knows the meeting", async () => {

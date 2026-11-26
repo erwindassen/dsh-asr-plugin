@@ -20,7 +20,9 @@ import {
   createOkfIngestionAgent,
   type OkfAgentFactory,
   type OkfAgentHandle,
+  type OkfAgentSeed,
 } from "../okf/ingestion-agent.js";
+import { createPageWriteRegistry, type OkfPageWriteRegistry } from "../okf/write-session.js";
 import { userTextMessage } from "../okf/user-message.js";
 import {
   createOkfIngestionService,
@@ -49,6 +51,8 @@ export interface OkfHost {
   readonly attempts: OkfIngestionRepository;
   /** Per-meeting speaker attribution, shared with the recording panel RPC. */
   readonly speakerNames: SpeakerNameRepository;
+  /** Write authority the summarising child uses through `okf_write_page`. */
+  readonly pages: OkfPageWriteRegistry;
   hasCommand: boolean;
   dispose(): Promise<void>;
 }
@@ -103,7 +107,8 @@ function agentRoute(context: Context): AgentRouteOptions {
   return agentPreset === undefined ? { agentOptions } : { agentOptions, agentPreset };
 }
 
-function agentFactory(context: Context): OkfAgentFactory {
+/** Exported for tests: the adapter owns the model route and the write session. */
+export function okfAgentFactory(context: Context, pages: OkfPageWriteRegistry): OkfAgentFactory {
   // Cordis resolves a service proxy against the fiber that reads it, and the
   // plugin root never injected `agents`, so `context.agents` threw "cannot get
   // property \"agents\" without inject" the moment a summarising child was
@@ -116,7 +121,7 @@ function agentFactory(context: Context): OkfAgentFactory {
     };
   });
   return {
-    async create(options: CreateAgentOptions): Promise<OkfAgentHandle> {
+    async create(options: CreateAgentOptions, seed: OkfAgentSeed): Promise<OkfAgentHandle> {
       const route = agentRoute(context);
       const meta = route.agentPreset === undefined
         ? options.meta
@@ -133,11 +138,18 @@ function agentFactory(context: Context): OkfAgentFactory {
         agentOptions: route.agentOptions,
         ...(meta === undefined ? {} : { meta }),
       });
+      // The child's tool set has no filesystem tools, so the plugin lends it one
+      // writer for this bundle only, for as long as the child lives.
+      const sessionId = String(options.sessionId);
+      pages.open(sessionId, { root: seed.directory, meetingId: seed.meetingId });
       return {
         followup: (text: string) => handle.agent.followup(userTextMessage(text)),
         whenIdle: () => handle.agent.whenIdle(),
         interrupt: () => handle.agent.cancel({ kind: "parent" }),
-        dispose: async () => { await handle.dispose(); },
+        dispose: async () => {
+          pages.close(sessionId);
+          await handle.dispose();
+        },
       };
     },
   };
@@ -185,6 +197,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
   const database = openMeetingDatabase(options.databasePath);
   const attempts = createOkfIngestionRepository(database);
   const speakerNames = createSpeakerNameRepository(database);
+  const pages = createPageWriteRegistry();
   const service = createOkfIngestionService({
     repository: options.repository,
     attempts,
@@ -192,7 +205,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
     git: createOkfGitTransaction(createOkfGitPort(context)),
     lock: createOkfBundleLock(),
     agent: createOkfIngestionAgent({
-      agents: agentFactory(context),
+      agents: okfAgentFactory(context, pages),
       skillAvailable: skillProbe(context),
       sessionId: () => `okf-ingest-${randomUUID()}`,
     }),
@@ -233,6 +246,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
     service,
     attempts,
     speakerNames,
+    pages,
     hasCommand,
     async dispose(): Promise<void> {
       // Abort in-flight ingestions first: closing the connection underneath a
