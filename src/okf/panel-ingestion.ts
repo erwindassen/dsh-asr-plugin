@@ -76,7 +76,9 @@ export function panelIngestion(service: OkfIngestionService): PanelIngestion {
           state: record.state === "failed" ? "failed" : "succeeded",
           transcript_version: record.transcriptVersion,
           error_code: record.errorCode ?? null,
-          message: record.state === "failed" ? "Ingestion failed" : null,
+          // The stored message already names the failing step (and folds the
+          // bundle path), so the panel can show it instead of a dead end.
+          message: record.state === "failed" ? record.errorMessage ?? "Ingestion failed" : null,
         };
       }
       if (pending.has(meetingId)) {

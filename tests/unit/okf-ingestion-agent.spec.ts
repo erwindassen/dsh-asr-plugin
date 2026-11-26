@@ -134,12 +134,13 @@ describe("createOkfIngestionAgent", () => {
     expect(hook.state.disposed).toBe(true);
   });
 
-  it("returns a failed outcome without paths when the child cannot start", async () => {
-    const test = harness({ create: async () => { throw new Error("spawn failed at /secret/path"); } });
+  it("reports why the child could not start without repeating the bundle path", async () => {
+    const test = harness({ create: async () => { throw new Error(`spawn failed for ${BUNDLE}/nested`); } });
     const outcome = await test.port.ingest(makeRequest());
     expect(outcome.kind).toBe("failed");
-    expect(outcome.message).toBe("The Open knowledge base writer could not start.");
-    expect(outcome.message).not.toContain("/secret");
+    expect(outcome.message).toContain("The Open knowledge base writer could not start.");
+    expect(outcome.message).toContain("spawn failed for <bundle>/nested");
+    expect(outcome.message).not.toContain(BUNDLE);
   });
 
   it("keeps a typed refusal instead of blaming the writer", async () => {

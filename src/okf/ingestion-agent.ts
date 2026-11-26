@@ -56,6 +56,21 @@ function isAborted(signal: AbortSignal | undefined): boolean {
   return signal !== undefined && signal.aborted;
 }
 
+/**
+ * Explain why the child agent could not be created.
+ *
+ * The agent factory fails for reasons the user can act on (an unknown model
+ * route, a session backend refusing the id, a missing workspace), and the
+ * fixed sentence we used to report hid all of them behind "could not start".
+ * The cause is folded to one line with the bundle path removed.
+ */
+function startFailure(error: unknown, directory: string): string {
+  const name = error instanceof Error && error.name !== "" ? error.name : "Error";
+  const detail = error instanceof Error ? error.message : String(error);
+  const folded = detail.split(directory).join("<bundle>");
+  return `${WRITER_START_FAILED_MESSAGE} ${name}: ${singleLine(folded, 300)}`;
+}
+
 function singleLine(value: string, limit = 200): string {
   const line = value.replace(/\s+/gu, " ").trim();
   return line.length > limit ? `${line.slice(0, limit - 1)}…` : line;
@@ -215,7 +230,7 @@ export function createOkfIngestionAgent(deps: OkfIngestionAgentDeps): OkfAgentPo
           if (error instanceof OkfError) throw error;
           return failed(timedOut
             ? TIMEOUT_MESSAGE
-            : controller.signal.aborted ? CANCELLED_MESSAGE : WRITER_START_FAILED_MESSAGE);
+            : controller.signal.aborted ? CANCELLED_MESSAGE : startFailure(error, request.directory));
         }
 
         if (controller.signal.aborted) {

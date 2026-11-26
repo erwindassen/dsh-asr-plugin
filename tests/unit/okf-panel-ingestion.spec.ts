@@ -94,14 +94,18 @@ describe("panelIngestion", () => {
     expect(ingestion.status(MEETING_ID).state).toBe("idle");
   });
 
-  it("reports a terminal failure with its code and no cause text", async () => {
+  it("reports a terminal failure with its code and the step that failed", async () => {
     const test = fakeService();
     const ingestion = panelIngestion(test.service);
     await ingestion.start(MEETING_ID, { force: false });
-    test.record = record({ state: "failed", errorCode: "OKF_GIT_FAILED", errorMessage: "at /secret/bundle" });
+    test.record = record({
+      state: "failed",
+      errorCode: "OKF_AGENT_FAILED",
+      errorMessage: "The Open knowledge base writer could not start. Error: unknown model route",
+    });
     const value = ingestion.status(MEETING_ID);
-    expect(value).toMatchObject({ state: "failed", error_code: "OKF_GIT_FAILED" });
-    expect(JSON.stringify(value)).not.toContain("/secret");
+    expect(value).toMatchObject({ state: "failed", error_code: "OKF_AGENT_FAILED" });
+    expect(value.message).toBe("The Open knowledge base writer could not start. Error: unknown model route");
   });
 
   it("maps a synchronous refusal to a short message", async () => {
