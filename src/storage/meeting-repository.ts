@@ -15,6 +15,7 @@ import {
   searchMeetings as queryMeetings,
 } from "./meeting-query.js";
 import { parseMeetingRow } from "./row-mappers.js";
+import { listStoredMeetings as queryStoredMeetings } from "./stored-meeting-query.js";
 import {
   beginRecordingFinalization as beginRecordingFinalizationState,
   createRecording as createRecordingState,
@@ -81,6 +82,7 @@ export interface MeetingRepository {
   getCommittedTranscriptSnapshot(meetingId: string): CommittedTranscriptSnapshot;
   getMeetingPage(input: GetMeetingPageInput): MeetingPage;
   listMeetingReferenceRecords(input: ListMeetingReferenceRecordsInput): readonly MeetingRecord[];
+  listStoredMeetings(limit: number): readonly MeetingRecord[];
   listDeletingMeetings(): readonly MeetingRecord[];
   listRecordingsNeedingRecovery(): readonly MeetingRecord[];
   recordDeletionFailure(input: RecordDeletionFailureInput): MeetingRecord;
@@ -319,6 +321,10 @@ class SqliteMeetingRepository implements MeetingRepository {
 
   listMeetingReferenceRecords(input: ListMeetingReferenceRecordsInput): readonly MeetingRecord[] {
     return queryMeetingReferenceRecords(this.database, input);
+  }
+
+  listStoredMeetings(limit: number): readonly MeetingRecord[] {
+    return queryStoredMeetings(this.database, limit);
   }
 
   listDeletingMeetings(): readonly MeetingRecord[] {
