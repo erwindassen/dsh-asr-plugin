@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Input, Switch } from "@deepseek-ai/dsh-client-ui-primitives";
+import { Button, Input } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { ConfigPageForm } from "@deepseek-ai/dsh-client-ui-plugin-manager/client";
 import type { ClientConnectionRpc } from "@deepseek-ai/dsh-client-connection/client";
 import { callRecordingRpc } from "./recording-rpc-transport.js";
@@ -100,11 +100,6 @@ function OkfSettingsSection({ binding, t }: { readonly binding: OkfSettingsBindi
           disabled={!writable || picking}
           onChange={event => setDraft({ directory: event.target.value, autoIngest: value.autoIngest })} />
       </label>
-      <div className={styles.runtimeRow}>
-        <span className={styles.label}>{t("okfAutoIngest")}</span>
-        <Switch checked={value.autoIngest} label={t("okfAutoIngest")} disabled={!writable || picking}
-          onChange={next => setDraft({ directory: value.directory, autoIngest: next })} />
-      </div>
     </div>
     <div className={styles.downloadActions}>
       <Button size="sm" variant="outline" disabled={!writable || picking} onClick={() => { void choose(); }}>

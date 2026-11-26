@@ -222,14 +222,6 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
     }
     const settings = deps.settings();
     const directory = requireConfiguredDirectory(settings);
-    if (settings.ingest !== true && request.force !== true) {
-      return {
-        kind: "disabled",
-        meetingId: request.meetingId,
-        jobId: null,
-        message: "Automatic ingestion is turned off; run /asr-ingest to ingest this meeting",
-      };
-    }
     const view: OkfMeetingView = buildOkfMeetingView(
       deps.repository,
       request.meetingId,
@@ -240,7 +232,10 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
       const signal = combined(request);
       const inspection = await deps.git.inspect(root, signal);
       if (!inspection.versioned) {
-        throw new OkfError("OKF_NOT_VERSIONED", "The Open knowledge base folder is not a Git repository");
+        // The folder the user picked in settings is the bundle by definition, so
+        // the first ingestion makes it a repository instead of refusing to run.
+        // `initialise` is idempotent and leaves an empty tree uncommitted.
+        await deps.git.initialise(root, signal);
       }
       const interrupted = await deps.git.recoverInterrupted(root, signal);
       if (interrupted !== undefined) {
@@ -400,14 +395,6 @@ export function createOkfIngestionService(deps: OkfIngestionDeps): OkfIngestionS
           meetingId: request.meetingId,
           jobId: null,
           message: "Choose an Open knowledge base folder in settings first",
-        };
-      }
-      if (settings.ingest !== true && request.force !== true) {
-        return {
-          kind: "disabled",
-          meetingId: request.meetingId,
-          jobId: null,
-          message: "Automatic ingestion is switched off; pass --force to ingest anyway",
         };
       }
       if (shutdownController.signal.aborted) {

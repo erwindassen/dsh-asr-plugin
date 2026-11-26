@@ -521,19 +521,22 @@ describe.skipIf(!gitAvailable())("createOkfIngestionService", () => {
     });
   });
 
-  it("fails with OKF_NOT_VERSIONED before recording an attempt in a plain folder", async () => {
+  it("initialises a folder that is not a repository yet and keeps its files", async () => {
     const harness = await createHarness();
     const plain = join(harness.root, "plain");
     await mkdir(plain);
     await writeFile(join(plain, "note.md"), "# Not a repository\n", "utf8");
-    const treeBefore = await hashTree(plain);
 
-    const error = await failedRun(harness.serviceFor(plain));
+    const outcome = await harness.serviceFor(plain).run({ meetingId: MEETING_ID });
 
-    expectOkfError(error, "OKF_NOT_VERSIONED");
-    expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toHaveLength(0);
-    expect(await hashTree(plain)).toBe(treeBefore);
-    await expect(readdir(join(plain, ".git"))).rejects.toMatchObject({ code: "ENOENT" });
+    // The folder chosen in settings is the bundle, so the first run makes it a
+    // repository instead of refusing: the user's own files become the baseline.
+    expect(outcome.kind).toBe("ingested");
+    expect(await readFile(join(plain, "note.md"), "utf8")).toBe("# Not a repository\n");
+    expect(await commitCount(plain)).toBe(2);
+    expect(await lastSubject(plain)).toBe(`ingest ${MEETING_ID}@v1`);
+    expect(await statusPorcelain(plain)).toBe("");
+    expect(harness.attempts.listForMeeting(MEETING_ID, 10)).toHaveLength(1);
   });
 
   it("does not start work when no folder is configured", async () => {

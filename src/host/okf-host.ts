@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Context } from "@deepseek-ai/cordis";
 import type { CreateAgentOptions } from "@deepseek-ai/dsh-agent";
 
-import { createOkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
+import { createOkfIngestionRepository, type OkfIngestionRepository } from "../storage/okf-ingestion-repository.js";
 import { createSpeakerNameRepository, type SpeakerNameRepository } from "../storage/speaker-name-repository.js";
 import { openMeetingDatabase } from "../storage/database.js";
 import type { MeetingRepository } from "../storage/meeting-repository.js";
@@ -27,7 +27,6 @@ import {
   type OkfIngestionService,
   type OkfSettings,
 } from "../okf/ingestion-service.js";
-import { startOkfIngestion, withTranscriptCommitHook } from "../okf/trigger.js";
 
 /** Command runtime as reached through `context.get("commands")`; the package is not installed. */
 interface CommandRuntime {
@@ -43,9 +42,11 @@ export interface OkfHostOptions {
 }
 
 export interface OkfHost {
-  /** Repository whose `commitTranscript` starts an automatic ingestion. */
+  /** Unwrapped repository; ingestion is user-driven, so commits start nothing. */
   readonly repository: MeetingRepository;
   readonly service: OkfIngestionService;
+  /** Ingestion attempt log, shared with the recording panel's read model. */
+  readonly attempts: OkfIngestionRepository;
   /** Per-meeting speaker attribution, shared with the recording panel RPC. */
   readonly speakerNames: SpeakerNameRepository;
   hasCommand: boolean;
@@ -127,17 +128,9 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
     jobs: context.jobs,
     logger: (line) => { context.logger("dsh-asr").info(line); },
   });
-  const repository = withTranscriptCommitHook(options.repository, {
-    onCommitted: (meetingId) => {
-      const record = options.repository.getMeeting(meetingId);
-      startOkfIngestion(service, {
-        settings: options.settings,
-        ...(record?.committedStatus === null || record?.committedStatus === undefined
-          ? {}
-          : { committedStatus: record.committedStatus }),
-      }, meetingId);
-    },
-  });
+  // Ingestion is user-driven: the panel button and `/asr-ingest` are the only
+  // entry points, so committing a transcript never starts work on its own.
+  const repository = options.repository;
   const definition = createAsrIngestCommand({
     directory: () => options.settings().directory,
     // No session-scoped reference is available to a plugin command yet.
@@ -166,6 +159,7 @@ export function installOkfHost(context: Context, options: OkfHostOptions): OkfHo
   return {
     repository,
     service,
+    attempts,
     speakerNames,
     hasCommand,
     async dispose(): Promise<void> {
