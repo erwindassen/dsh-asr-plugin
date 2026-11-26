@@ -5,11 +5,17 @@ import type { RecordingRpcClient } from "./recording-rpc-client.js";
 export declare const INGEST_POLL_MS = 2000;
 /** Five minutes: long enough for the agent, short enough to stop a stuck spinner. */
 export declare const INGEST_POLL_ATTEMPTS = 150;
-export type IngestionFailure = "notConfigured" | "busy" | "noModel" | "unavailable" | "timeout";
+export type IngestionFailure = "notConfigured" | "busy" | "noModel" | "noTranscript" | "unavailable" | "timeout";
 export interface MeetingIngestion {
     readonly running: boolean;
     readonly outcome: "succeeded" | "failed" | null;
     readonly failure: IngestionFailure | null;
+    /**
+     * The failing step in the host's own words. The category above is all the UI
+     * needs to offer advice; this is what makes a novel failure debuggable instead
+     * of a shrug ("The meeting could not be added…").
+     */
+    readonly detail: string | null;
     readonly start: () => void;
 }
 /** Why a folder-to-database sync stopped; the raw message never reaches the UI. */

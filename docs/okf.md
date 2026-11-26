@@ -68,6 +68,10 @@ escapes fail the link gate. `http(s)` targets are allowed.
    `git reset --hard <baseline>` plus `git clean -fd`, so the worktree ends
    byte-identical to where it started.
 
+The attempt row is written before the folder is prepared, so a failure while
+checking or initialising the Git repository is also recorded; the panel prints
+that failing step under its message instead of a generic retry notice.
+
 Attempt state lives in the `okf_ingestion` table (schema version 6, additive) and
 is surfaced by `meeting_get` as an `okf` block: `state`, `transcript_version`,
 `attempt`, `finished_at`, `error_code`.
@@ -139,7 +143,10 @@ deletes them, which also releases any managed audio. It refuses with
 `OKF_NOT_CONFIGURED` when no folder is set and `OKF_INVALID_DIRECTORY` when the
 configured folder is missing, because deleting on a broken setting would wipe the
 library. Only the plugin's own transcript copies count as evidence — the pages a
-summarising agent writes are not proof that a meeting is in the bundle.
+summarising agent writes are not proof that a meeting is in the bundle. One sync
+considers the newest 50 stored meetings, the storage page size; a meeting older
+than that page is never removed by a sync, so a very large library needs several
+passes only if it is also very large on disk.
 
 ### `/asr-ingest`
 

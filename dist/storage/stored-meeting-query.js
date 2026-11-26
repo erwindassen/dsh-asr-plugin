@@ -1,7 +1,12 @@
 import { inReadOperation } from "./database.js";
 import { MeetingRepositoryError } from "./errors.js";
 import { parseMeetingRow } from "./row-mappers.js";
-const MAX_STORED_MEETINGS = 50;
+/**
+ * Largest page the panel may ask for. Exported so a reconciliation asks the
+ * repository for a page it actually accepts instead of discovering the bound
+ * as an INVALID_INPUT error.
+ */
+export const MAX_STORED_MEETINGS = 50;
 /**
  * Committed meetings the panel can reopen, newest first.
  *

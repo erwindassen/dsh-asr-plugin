@@ -8,8 +8,12 @@
  * only returns committed transcripts, so drafts are out of scope by design).
  */
 import type { MeetingRepository } from "../storage/meeting-repository.js";
-/** Upper bound for one reconciliation; far above any realistic library. */
-export declare const MAX_SYNC_MEETINGS = 500;
+/**
+ * Upper bound for one reconciliation. It is the storage page size: the query
+ * rejects anything larger, and asking for a bigger page turned every sync into
+ * "Stored meeting limit is invalid" instead of a count.
+ */
+export declare const MAX_SYNC_MEETINGS = 50;
 export interface StoredMeetingSyncResult {
     /** Stored meetings the folder does not hold. */
     readonly removed: number;

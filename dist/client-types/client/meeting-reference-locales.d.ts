@@ -61,6 +61,7 @@ export declare const zh: {
     readonly "panel.syncNotConfigured": "请先在设置中选择知识库文件夹。";
     readonly "panel.syncMissingFolder": "知识库文件夹不存在。";
     readonly "panel.ingestNoModel": "请先在 DSH 设置中选择模型。";
+    readonly "panel.ingestNoTranscript": "该会议还没有已提交的转写。";
     readonly "panel.storedEmptyTranscript": "这场会议还没有可显示的原稿。";
     readonly "panel.activity": "录音状态指示（不是声音音量）";
     readonly "panel.track.on": "采集中";
@@ -190,6 +191,7 @@ export declare const en: {
     "panel.syncNotConfigured": string;
     "panel.syncMissingFolder": string;
     "panel.ingestNoModel": string;
+    "panel.ingestNoTranscript": string;
     "panel.storedEmptyTranscript": string;
     "panel.activity": string;
     "panel.track.on": string;
